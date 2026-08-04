@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bebas Neue', 'Oswald', sans-serif;
+}
+
+@layer base {
+  :root {
+    --brand-black: #000000;
+    --brand-white: #ffffff;
+    --brand-red: #C21E3C;
+    --brand-red-hover: #A0152F;
+    --brand-dark-card: #0A0A0A;
+    --brand-dark-border: #1F1F1F;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--brand-black);
+    color: var(--brand-white);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Bebas Neue', 'Oswald', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .font-syne {
+    font-family: 'Syne', sans-serif;
+  }
+}
+
+/* Custom Utilities */
+.text-brand-red {
+  color: #C21E3C;
+}
+
+.bg-brand-red {
+  background-color: #C21E3C;
+}
+
+.border-brand-red {
+  border-color: #C21E3C;
+}
+
+.bg-brand-card {
+  background-color: #0A0A0A;
+}
+
+.border-brand-border {
+  border-color: #1A1A1A;
+}
+
+/* Custom Organic Wave Shapes like reference */
+.hero-curve-bg {
+  background: radial-gradient(circle at 50% 20%, #1a1a1a 0%, #050505 60%, #000000 100%);
+}
+
+.curve-mask-top {
+  clip-path: ellipse(120% 80% at 50% 20%);
+}
+
+.curve-fluid {
+  border-radius: 40px 180px 40px 140px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C21E3C;
+}
+
+/* Hide scrollbar for clean horizontal carousel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

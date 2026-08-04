@@ -1,0 +1,6 @@
+{
+  "name": "ZOID — Retro Football & Modern Streetwear",
+  "description": "Exclusive retro football jersey & streetwear store with luxury editorial aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
