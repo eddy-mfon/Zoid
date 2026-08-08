@@ -20,12 +20,12 @@ export const CollectionsGrid: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(headerRef, { once: true, margin: '-60px' });
 
-  const tabs = ['ALL', 'CLUBS', 'NATIONAL TEAMS', 'LIMITED DROPS'];
+  const tabs = ['ALL', 'Club', 'National', 'Limited Drop'];
 
   const filteredJerseys = JERSEYS.filter((j) => {
-    if (activeTab === 'CLUBS') return j.category === 'Club';
-    if (activeTab === 'NATIONAL TEAMS') return j.category === 'National';
-    if (activeTab === 'LIMITED DROPS') return j.isLimitedDrop;
+    if (activeTab === 'Club') return j.category === 'Club';
+    if (activeTab === 'National') return j.category === 'National';
+    if (activeTab === 'Limited Drop') return j.isLimitedDrop;
     return true;
   });
 

@@ -128,7 +128,7 @@ export const HeroSection: React.FC = () => {
             to="/about"
             className="backdrop-blur-md bg-white/5 border border-white/20 hover:border-[#C21E3C]/70 hover:bg-white/10 text-white px-9 py-4 rounded-full font-sans text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300"
           >
-            OUR ETHOS
+            ABOUT US
           </Link>
         </motion.div>
 

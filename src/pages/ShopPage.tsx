@@ -14,10 +14,11 @@ export const ShopPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating'>('featured');
   const [showWishlistOnly, setShowWishlistOnly] = useState<boolean>(filterParam === 'wishlist');
+  const [groupBy, setGroupBy] = useState<'category' | 'team'>('category');
 
   const { wishlistIds } = useWishlist();
 
-  const categories = ['ALL', 'Club', 'National', 'Retro Collection', 'Limited Drop'];
+  const categories = ['ALL', 'Club', 'National', 'Limited Drop'];
 
   const filteredJerseys = useMemo(() => {
     return JERSEYS.filter((jersey) => {
@@ -51,6 +52,16 @@ export const ShopPage: React.FC = () => {
     });
   }, [selectedCategory, searchQuery, sortBy, showWishlistOnly, wishlistIds]);
 
+  const groupedJerseys = useMemo(() => {
+    if (groupBy !== 'team') return {};
+    return filteredJerseys.reduce((acc: Record<string, typeof filteredJerseys>, jersey) => {
+      const team = jersey.clubOrCountry;
+      if (!acc[team]) acc[team] = [];
+      acc[team].push(jersey);
+      return acc;
+    }, {});
+  }, [filteredJerseys, groupBy]);
+
   return (
     <div className="min-h-screen bg-black text-white pt-8 pb-20 px-6 sm:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -68,9 +79,27 @@ export const ShopPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Filter Bar */}
-        <div className="bg-[#0A0A0A] border border-neutral-900 rounded-2xl p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-xl">
-          
+        {/* Filter Bar — sticky so it stays visible while scrolling */}
+        <div className="sticky top-[57px] z-30 bg-black/90 backdrop-blur-md -mx-6 sm:-mx-8 px-6 sm:px-8 py-3 border-b border-neutral-900 shadow-xl">
+          <div className="max-w-7xl mx-auto flex gap-2 mb-3 border-b border-neutral-900 pb-3">
+            <button
+              onClick={() => setGroupBy('category')}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold uppercase transition-colors ${
+                groupBy === 'category' ? 'bg-white text-black' : 'bg-neutral-900 text-neutral-400 hover:text-white'
+              }`}
+            >
+              BROWSE BY CATEGORY
+            </button>
+            <button
+              onClick={() => setGroupBy('team')}
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold uppercase transition-colors ${
+                groupBy === 'team' ? 'bg-white text-black' : 'bg-neutral-900 text-neutral-400 hover:text-white'
+              }`}
+            >
+              BROWSE BY TEAM
+            </button>
+          </div>
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
           {/* Category Tabs */}
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             {categories.map((cat) => (
@@ -120,7 +149,7 @@ export const ShopPage: React.FC = () => {
               <ArrowUpDown className="w-3.5 h-3.5 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
-
+          </div>
         </div>
 
         {/* Product Grid - 3 columns on desktop like screenshot */}
@@ -142,6 +171,21 @@ export const ShopPage: React.FC = () => {
             >
               RESET FILTERS
             </button>
+          </div>
+        ) : groupBy === 'team' ? (
+          <div className="space-y-12">
+            {Object.entries(groupedJerseys).sort(([a], [b]) => a.localeCompare(b)).map(([team, jerseys]) => (
+              <div key={team}>
+                <h2 className="font-display text-2xl font-bold uppercase text-white mb-6 border-b border-neutral-900 pb-2">
+                  {team}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  {jerseys.map((jersey) => (
+                    <ProductCard key={jersey.id} jersey={jersey} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">

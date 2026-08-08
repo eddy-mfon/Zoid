@@ -22,6 +22,7 @@ export const CheckoutModal: React.FC = () => {
   const [telegramInfo, setTelegramInfo] = useState('');
   const [notes, setNotes] = useState('');
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [isExpress, setIsExpress] = useState(false);
 
   const presetRooms = ['A102', 'B215', 'C307', 'D410', 'CUSTOM'];
 
@@ -41,7 +42,8 @@ export const CheckoutModal: React.FC = () => {
       fullName: fullName.trim(),
       roomNumber: selectedRoom.trim(),
       telegramHandleOrPhone: telegramInfo.trim(),
-      notes: notes.trim()
+      notes: notes.trim(),
+      deliveryMethod: isExpress ? 'EXPRESS' : 'STANDARD'
     };
 
     const order = placeOrder(checkoutData);
@@ -117,6 +119,10 @@ export const CheckoutModal: React.FC = () => {
                   <span>TELEGRAM:</span>
                   <span className="text-white">{completedOrder.checkoutInfo.telegramHandleOrPhone}</span>
                 </div>
+                <div className="flex justify-between text-neutral-400 pb-2 border-b border-neutral-800 mt-2">
+                  <span>DELIVERY METHOD:</span>
+                  <span className="text-white font-bold">{completedOrder.deliveryMethod === 'EXPRESS' ? 'Express (₦8,000)' : 'Standard (₦4,500)'}</span>
+                </div>
 
                 <div className="pt-2">
                   <span className="text-neutral-400 block mb-2 font-bold">JERSEYS ORDERED:</span>
@@ -130,7 +136,7 @@ export const CheckoutModal: React.FC = () => {
 
                 <div className="flex justify-between text-sm font-bold text-white pt-3 border-t border-neutral-800">
                   <span>TOTAL PAID:</span>
-                  <span className="text-[#C21E3C]">{formatNaira(completedOrder.total)}</span>
+                  <span className="text-[#C21E3C]">{formatNaira(completedOrder.total + 4500 + (completedOrder.deliveryMethod === 'EXPRESS' ? 3500 : 0))}</span>
                 </div>
               </div>
 
@@ -140,6 +146,22 @@ export const CheckoutModal: React.FC = () => {
               >
                 RETURN TO STORE
               </button>
+
+              <div className="mt-8 bg-[#0088CC]/10 border border-[#0088CC]/30 rounded-2xl p-6 flex flex-col items-center w-full max-w-sm mx-auto">
+                <Send className="w-8 h-8 text-[#0088CC] mb-3" />
+                <h3 className="font-display text-lg font-bold uppercase text-white mb-2">JOIN OUR TELEGRAM COMMUNITY</h3>
+                <p className="text-neutral-300 text-xs text-center mb-4 leading-relaxed">
+                  Get real-time updates on deliveries, new drops, price changes & stock alerts
+                </p>
+                <a
+                  href="https://t.me/zoidkits"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#0088CC] text-white px-6 py-3 rounded-full font-mono text-xs font-bold tracking-wider uppercase hover:bg-[#0077b5] transition-colors w-full text-center"
+                >
+                  JOIN ZOID TELEGRAM →
+                </a>
+              </div>
             </div>
           ) : (
             /* Checkout Form View */
@@ -239,6 +261,41 @@ export const CheckoutModal: React.FC = () => {
                     />
                   </div>
 
+                  {/* Delivery Option */}
+                  <div>
+                    <label className="text-xs font-mono text-neutral-400 block uppercase mb-1.5 flex items-center gap-1.5">
+                      DELIVERY METHOD
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsExpress(false)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          !isExpress
+                            ? 'bg-[#C21E3C]/10 border-[#C21E3C] text-white'
+                            : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                        }`}
+                      >
+                        <div className="font-bold text-sm mb-1 text-white">Standard Delivery</div>
+                        <div className="text-xs">3-5 working days</div>
+                        <div className="text-xs mt-1 font-bold">₦4,500</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsExpress(true)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          isExpress
+                            ? 'bg-[#C21E3C]/10 border-[#C21E3C] text-white'
+                            : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                        }`}
+                      >
+                        <div className="font-bold text-sm mb-1 text-white">Express Delivery</div>
+                        <div className="text-xs">24-48 hours</div>
+                        <div className="text-xs mt-1 font-bold">₦8,000</div>
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* Right Column: Order Summary */}
@@ -277,13 +334,24 @@ export const CheckoutModal: React.FC = () => {
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span>DELIVERY TO ROOM</span>
-                        <span className="text-emerald-400 font-bold">FREE</span>
+                        <span>DELIVERY FEE</span>
+                        <span className="text-white font-bold">{isExpress ? '₦8,000' : '₦4,500'}</span>
                       </div>
                       <div className="flex justify-between text-base font-bold text-white border-t border-neutral-800 pt-2">
                         <span>TOTAL</span>
-                        <span className="text-[#C21E3C]">{formatNaira(total)}</span>
+                        <span className="text-[#C21E3C]">{formatNaira(total + (isExpress ? 8000 : 4500))}</span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Time Reminder */}
+                  <div className="bg-amber-950/40 border border-amber-500/30 rounded-2xl px-4 py-3.5 flex gap-3 items-start">
+                    <span className="text-amber-400 text-base leading-none mt-0.5">&#9888;</span>
+                    <div>
+                      <p className="text-amber-300 font-mono text-[9px] font-black uppercase tracking-wider mb-1">DELIVERY NOTICE</p>
+                      <p className="text-amber-200/80 text-[11px] font-sans leading-relaxed">
+                        Your order will arrive <strong>on or before 2 weeks</strong> from confirmed payment.
+                      </p>
                     </div>
                   </div>
 

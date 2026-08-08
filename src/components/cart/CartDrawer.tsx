@@ -192,7 +192,7 @@ export const CartDrawer: React.FC = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>ROOM DELIVERY</span>
-                    <span className="text-emerald-400 font-bold">FREE EXPRESS</span>
+                    <span className="text-white font-bold">DELIVERY INCL. ₦4,500</span>
                   </div>
                   <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-neutral-800">
                     <span>TOTAL</span>

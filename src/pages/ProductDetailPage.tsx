@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { JERSEYS } from '../data/jerseys';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { Heart, ShoppingBag, ArrowLeft, ShieldCheck, Truck, Sparkles, Check } from 'lucide-react';
+import { Heart, ShoppingBag, ShieldCheck, Truck, Sparkles, Check, ChevronDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNaira } from '../utils/format';
 
@@ -13,9 +13,16 @@ export const ProductDetailPage: React.FC = () => {
 
   const jersey = JERSEYS.find((j) => j.id === id) || JERSEYS[0];
 
-  const [selectedSize, setSelectedSize] = useState<'S' | 'M' | 'L' | 'XL' | 'XXL'>('L');
+  const [selectedSize, setSelectedSize] = useState<'M' | 'L' | 'XL' | 'XXL'>('L');
   const [selectedImage, setSelectedImage] = useState<string>(jersey.mainImage);
   const [quantity, setQuantity] = useState<number>(1);
+
+  React.useEffect(() => {
+    setSelectedImage(jersey.mainImage);
+    setSelectedSize('L');
+    setQuantity(1);
+  }, [jersey.id, jersey.mainImage]);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const { addToCart, setIsCartOpen } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
@@ -38,14 +45,14 @@ export const ProductDetailPage: React.FC = () => {
     <div className="min-h-screen bg-black text-white py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
-        {/* Back Link */}
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-xs font-mono text-neutral-400 hover:text-white mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>BACK TO CATALOG</span>
-        </button>
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-2 text-xs font-mono text-neutral-500 mb-8" aria-label="Breadcrumb">
+          <Link to="/shop" className="hover:text-[#C21E3C] transition-colors uppercase tracking-wider">Shop</Link>
+          <span className="text-neutral-700">›</span>
+          <Link to={`/shop?category=${jersey.category}`} className="hover:text-[#C21E3C] transition-colors uppercase tracking-wider">{jersey.category}</Link>
+          <span className="text-neutral-700">›</span>
+          <span className="text-neutral-300 uppercase tracking-wider truncate max-w-[200px]">{jersey.name}</span>
+        </nav>
 
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start mb-20">
@@ -146,6 +153,61 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Size Chart Toggle */}
+            <div className="bg-[#0A0A0A] border border-neutral-800 rounded-2xl overflow-hidden mt-2 mb-4">
+              <button
+                onClick={() => setIsSizeGuideOpen(!isSizeGuideOpen)}
+                className="w-full flex items-center justify-between p-4 text-sm font-mono text-neutral-300 hover:text-white transition-colors"
+              >
+                <span>SIZE GUIDE</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isSizeGuideOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isSizeGuideOpen && (
+                <div className="p-4 border-t border-neutral-900">
+                  <table className="w-full text-xs font-mono text-left mb-3">
+                    <thead className="text-neutral-500 border-b border-neutral-800">
+                      <tr>
+                        <th className="py-2">SIZE</th>
+                        <th className="py-2">CHEST (cm)</th>
+                        <th className="py-2">LENGTH (cm)</th>
+                        <th className="py-2">SHOULDERS (cm)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-neutral-300">
+                      <tr className="border-b border-neutral-900/50">
+                        <td className="py-2 text-white font-bold">M</td>
+                        <td className="py-2">96-101</td>
+                        <td className="py-2">71</td>
+                        <td className="py-2">43</td>
+                      </tr>
+                      <tr className="border-b border-neutral-900/50">
+                        <td className="py-2 text-white font-bold">L</td>
+                        <td className="py-2">101-106</td>
+                        <td className="py-2">73</td>
+                        <td className="py-2">45</td>
+                      </tr>
+                      <tr className="border-b border-neutral-900/50">
+                        <td className="py-2 text-white font-bold">XL</td>
+                        <td className="py-2">106-111</td>
+                        <td className="py-2">75</td>
+                        <td className="py-2">47</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-white font-bold">XXL</td>
+                        <td className="py-2">111-116</td>
+                        <td className="py-2">77</td>
+                        <td className="py-2">49</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p className="text-[10px] text-neutral-500 italic">
+                    Measurements are for the jersey itself. For a looser fit, size up.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Quantity */}
             <div className="flex items-center justify-between bg-[#0A0A0A] border border-neutral-800 rounded-2xl p-4">
               <span className="text-xs font-mono text-neutral-400 uppercase">QUANTITY</span>
@@ -196,10 +258,6 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Spec Details */}
             <div className="bg-[#0A0A0A] border border-neutral-900 rounded-2xl p-4 text-xs font-mono text-neutral-400 space-y-2">
-              <div className="flex justify-between border-b border-neutral-900 pb-2">
-                <span>FABRIC:</span>
-                <span className="text-white">{jersey.fabricInfo}</span>
-              </div>
               <div className="flex justify-between border-b border-neutral-900 pb-2">
                 <span>DELIVERY:</span>
                 <span className="text-emerald-400 font-bold">ROOM DELIVERY SUPPORTED</span>

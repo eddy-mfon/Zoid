@@ -26,7 +26,7 @@ export const JERSEYS: Jersey[] = [
       'AC Milan — seven-time European champions. The stripes that Maldini, Shevchenko, and Kaká made legendary.',
     fabricInfo: 'Lightweight Performance Poly-Knit with Moisture-Wicking Technology',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -53,7 +53,7 @@ export const JERSEYS: Jersey[] = [
       'Aston Villa — European Cup winners and Premier League stalwarts since 1874. Now competing at the highest level of European football.',
     fabricInfo: 'Breathable Recycled Performance Mesh',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -81,7 +81,7 @@ export const JERSEYS: Jersey[] = [
       'Barcelona\'s iconic blue-and-red stripes have graced the shoulders of Cruyff, Ronaldinho, Messi, and the greatest football dynasties ever assembled.',
     fabricInfo: 'Dri-Fit ADV Engineered Jacquard with Ventilation Zones',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -108,7 +108,7 @@ export const JERSEYS: Jersey[] = [
       'Inter Milan — treble winners, European giants, the pride of the Nerazzurri. This kit carries the legacy of Ronaldo, Zanetti, and Lukaku.',
     fabricInfo: 'AeroSwift Performance Poly with Cooling Knit Technology',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -136,7 +136,7 @@ export const JERSEYS: Jersey[] = [
       'Los Blancos — fifteen European Cup titles and counting. This pure white kit carries the spirit of Di Stéfano, Zidane, Ronaldo, and Bellingham.',
     fabricInfo: 'Adidas HEAT.RDY Lightweight Performance Fabric',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -163,7 +163,7 @@ export const JERSEYS: Jersey[] = [
       'Juventus — Italy\'s most decorated club. The black-and-white shirt worn by Del Piero, Zidane, and Pogba.',
     fabricInfo: 'Adidas Climalite Performance Knit',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -190,7 +190,7 @@ export const JERSEYS: Jersey[] = [
       'Liverpool FC — six European Cups, the Kop, and a city\'s soul. YNWA.',
     fabricInfo: 'Nike Dri-FIT ADV Vapor-Knit Performance Fabric',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -217,7 +217,7 @@ export const JERSEYS: Jersey[] = [
       'Olympique Lyonnais — seven consecutive Ligue 1 titles and Europe\'s most feared women\'s side. The Lion of Lyon.',
     fabricInfo: 'Adidas AEROREADY Lightweight Performance Mesh',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -243,7 +243,7 @@ export const JERSEYS: Jersey[] = [
       'Manchester City — treble winners, serial champions, a machine built for trophies. This kit is from their golden era.',
     fabricInfo: 'Puma Drycell Performance Fabric',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -270,7 +270,7 @@ export const JERSEYS: Jersey[] = [
       'Manchester United — 20 league titles, three European Cups. The Theatre of Dreams. Red, white, and black forever.',
     fabricInfo: 'Adidas Climalite Engineered Performance Knit',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -297,7 +297,7 @@ export const JERSEYS: Jersey[] = [
       'Newcastle United — the Toon Army, St James\' Park, and one of English football\'s most passionate clubs. Back on the European stage.',
     fabricInfo: 'Castore TechFit Performance Poly-Knit',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
 
@@ -326,7 +326,7 @@ export const JERSEYS: Jersey[] = [
       'Brazil 1998 — Ronaldo, Rivaldo, Roberto Carlos, and Bebeto. The squad that reached the final in Paris and gave the world beautiful football.',
     fabricInfo: 'Vintage-Weave Polyester Replica with Satin CBF Badge',
     fit: 'Relaxed Vintage',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -353,7 +353,7 @@ export const JERSEYS: Jersey[] = [
       'England — 1966 World Cup winners and perennial contenders. The Three Lions shirt carries the weight of a nation\'s dreams.',
     fabricInfo: 'Nike Dri-FIT ADV Vapor-Knit Performance Fabric',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -381,7 +381,7 @@ export const JERSEYS: Jersey[] = [
       'France — two-time World Champions (1998, 2018). The FFF crest represents the most talented national team generation in a generation.',
     fabricInfo: 'Nike Dri-FIT Strike Performance Knit',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -408,7 +408,7 @@ export const JERSEYS: Jersey[] = [
       'Germany — four-time World Champions. The DFB eagle has overseen victories in 1954, 1974, 1990, and 2014. Hunt for number five begins.',
     fabricInfo: 'Adidas HEAT.RDY Aeroknit Performance Technology',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -435,7 +435,7 @@ export const JERSEYS: Jersey[] = [
       'Japan — Asian powerhouse, consistent World Cup qualifiers, and a nation that has shown the world it can compete with the best.',
     fabricInfo: 'Adidas Climacool Breathable Engineered Knit',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -462,7 +462,7 @@ export const JERSEYS: Jersey[] = [
       'Norway — home of Haaland, one of football\'s most lethal strikers. A nation rising to challenge the world\'s best.',
     fabricInfo: 'Nike Dri-FIT Performance Mesh with Recycled Poly',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -490,7 +490,7 @@ export const JERSEYS: Jersey[] = [
       'Spain — World Cup winners in 2010, European Champions in 2024. La Roja tiki-taka dynasty and the Yamal generation.',
     fabricInfo: 'Adidas Authentic Performance Poly-Knit with Ventilation Channels',
     fit: 'Slim Athletic',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   {
@@ -516,7 +516,7 @@ export const JERSEYS: Jersey[] = [
       'Spain — the gold standard of European football. This classic home kit represents a footballing philosophy that changed the game.',
     fabricInfo: 'Standard Performance Polyester with Embroidered RFEF Badge',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL'],
+    availableSizes: ['M', 'L', 'XL'],
     inStock: true,
   },
   {
@@ -543,7 +543,7 @@ export const JERSEYS: Jersey[] = [
       'USA 2026 — the host nation takes on the world. Pulisic, Reyna, and a golden generation ready to prove America belongs among football\'s elite.',
     fabricInfo: 'Nike Dri-FIT ADV Performance Knit with UPF Protection',
     fit: 'Standard Fit',
-    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableSizes: ['M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
 ];

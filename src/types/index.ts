@@ -22,13 +22,13 @@ export interface Jersey {
   historyDetails: string;
   fabricInfo: string;
   fit: 'Standard Fit' | 'Relaxed Vintage' | 'Slim Athletic';
-  availableSizes: ('S' | 'M' | 'L' | 'XL' | 'XXL')[];
+  availableSizes: ('M' | 'L' | 'XL' | 'XXL')[];
   inStock: boolean;
 }
 
 export interface CartItem {
   jersey: Jersey;
-  size: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  size: 'M' | 'L' | 'XL' | 'XXL';
   quantity: number;
 }
 
@@ -37,6 +37,7 @@ export interface OrderCheckoutData {
   roomNumber: string; // e.g., A102, B215, C307
   telegramHandleOrPhone: string;
   notes?: string;
+  deliveryMethod: 'STANDARD' | 'EXPRESS';
 }
 
 export interface Order {
@@ -47,5 +48,6 @@ export interface Order {
   discount: number;
   total: number;
   checkoutInfo: OrderCheckoutData;
+  deliveryMethod: 'STANDARD' | 'EXPRESS';
   status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'DELIVERED';
 }

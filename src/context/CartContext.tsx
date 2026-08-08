@@ -4,7 +4,7 @@ import { useToast } from './ToastContext';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (jersey: Jersey, size: 'S' | 'M' | 'L' | 'XL' | 'XXL', quantity?: number) => void;
+  addToCart: (jersey: Jersey, size: 'M' | 'L' | 'XL' | 'XXL', quantity?: number) => void;
   removeFromCart: (jerseyId: string, size: string) => void;
   updateQuantity: (jerseyId: string, size: string, quantity: number) => void;
   clearCart: () => void;
@@ -53,7 +53,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [cartItems]);
 
-  const addToCart = (jersey: Jersey, size: 'S' | 'M' | 'L' | 'XL' | 'XXL' = 'L', quantity: number = 1) => {
+  const addToCart = (jersey: Jersey, size: 'M' | 'L' | 'XL' | 'XXL' = 'L', quantity: number = 1) => {
     setCartItems((prev) => {
       const existingIndex = prev.findIndex((item) => item.jersey.id === jersey.id && item.size === size);
       if (existingIndex > -1) {
@@ -123,6 +123,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       discount,
       total,
       checkoutInfo: checkoutData,
+      deliveryMethod: checkoutData.deliveryMethod,
       status: 'CONFIRMED'
     };
 

@@ -332,6 +332,17 @@ export const CheckoutPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Delivery Time Reminder */}
+                <div className="bg-amber-950/40 border border-amber-500/30 rounded-2xl px-5 py-4 flex gap-3 items-start">
+                  <span className="text-amber-400 text-lg leading-none mt-0.5">&#9888;</span>
+                  <div>
+                    <p className="text-amber-300 font-mono text-[10px] font-black uppercase tracking-wider mb-1">DELIVERY NOTICE</p>
+                    <p className="text-amber-200/80 text-xs font-sans leading-relaxed">
+                      Your order will be delivered <strong>on or before 2 weeks</strong> from the date of confirmed payment. Express options may be available — contact us on Telegram for more details.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Submit Order CTA Button */}
                 <button
                   type="submit"
