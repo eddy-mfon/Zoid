@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowDownRight } from "lucide-react";
 
 const assets = {
-  mark: "/manus-storage/zoid-mark_c4232248.png",
+  mark: "/zoid-logo.svg",
 };
 
 export default function Footer() {

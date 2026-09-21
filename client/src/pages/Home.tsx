@@ -1,13 +1,12 @@
-/* ZOID Storefront — Community-First Redesign */
+/* ZOID Storefront — Branding-First Homepage: no shop/add-to-bag. Pure identity and story. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { products, searchProducts } from "@/lib/catalog";
-import { useShop } from "@/contexts/ShopContext";
 import { useZoidMotion } from "@/hooks/useZoidMotion";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp,
-  Heart, Menu, Search, ShoppingBag, X,
-  Flame, Sparkles, Tag,
+  Heart, Menu, Search, X,
+  Play, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,28 +42,30 @@ const archiveSnippets = [
   { id: "3", title: "Street Culture & Sportswear", author: "Amina B.", loc: "Lekki, Lagos", text: "In Lagos, jerseys are everyday luxury — a badge of identity.", img: STORY_IMG },
 ];
 
-/* ── Tab definitions ── */
-const TABS = [
-  { id: "bestsellers", label: "Bestsellers", Icon: Flame },
-  { id: "special",     label: "Special Kits", Icon: Sparkles },
-  { id: "discounts",   label: "Discounts",    Icon: Tag },
-] as const;
-type TabId = typeof TABS[number]["id"];
+/* ── Brand pillars ── */
+const pillars = [
+  { num: "01", title: "CURATE", text: "Every piece earns its place through story, provenance, and material honesty." },
+  { num: "02", title: "ARCHIVE", text: "We preserve football memory — from dusty Lagos pitches to European stadiums." },
+  { num: "03", title: "RISE", text: "Crafted for the ones who grind without guarantee. Built on grit, worn with intent." },
+];
 
 export default function Home() {
   const pageRef = useRef<HTMLElement | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [prevHero, setPrevHero] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>("bestsellers");
-  const [cartOpen, setCartOpen] = useState(false);
   const [utilityOpen, setUtilityOpen] = useState<"search" | "saved" | null>(null);
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<string[]>([]);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activePillar, setActivePillar] = useState(0);
+  const [hoveredArchive, setHoveredArchive] = useState<string | null>(null);
 
-  const { addToBag, bag, count: cartCount } = useShop();
+  useZoidMotion(pageRef);
+
+  /* Scrolled state */
+  const scrolled = scrollY > 20;
 
   /* Auto-carousel with crossfade */
   useEffect(() => {
@@ -77,14 +78,18 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  /* Fade out prevHero after 600 ms */
+  /* Fade out prevHero after 700ms */
   useEffect(() => {
     if (prevHero === null) return;
     const t = setTimeout(() => setPrevHero(null), 700);
     return () => clearTimeout(t);
   }, [prevHero]);
 
-  useZoidMotion(pageRef);
+  /* Pillar auto-cycle */
+  useEffect(() => {
+    const t = setInterval(() => setActivePillar((p) => (p + 1) % pillars.length), 3500);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -92,7 +97,7 @@ export default function Home() {
 
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setUtilityOpen(null); };
     const onScroll = () => {
-      setScrolled(window.scrollY > 44);
+      setScrollY(window.scrollY);
       setShowScrollTop(window.scrollY > 500);
     };
     window.addEventListener("keydown", onKey);
@@ -105,13 +110,6 @@ export default function Home() {
 
   /* Search */
   const searchResults = useMemo(() => (query.trim() ? searchProducts(query) : []), [query]);
-
-  /* Curated items by tab */
-  const curatedItems = useMemo(() => {
-    if (activeTab === "bestsellers") return products.slice(0, 4);
-    if (activeTab === "special") return products.filter((p) => p.category.includes("SPECIAL") || p.category.includes("ARCHIVE")).slice(0, 4);
-    return products.slice(4, 8);
-  }, [activeTab]);
 
   function goHero(idx: number) {
     setPrevHero(heroIndex);
@@ -138,7 +136,6 @@ export default function Home() {
           <img src={MARK} alt="" /><span>ZOID</span><i />
         </Link>
         <div className="nav-frame">
-          <span className="nav-context">FIELD / 01</span>
           <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
             {navLinks.map(({ label, href }) => (
               <Link key={label} href={href} onClick={() => setMobileMenu(false)}
@@ -167,14 +164,7 @@ export default function Home() {
             )}
           </button>
 
-          <button
-            className="bag-button" title="Bag" aria-label={`Bag, ${cartCount} items`}
-            onClick={() => setCartOpen(true)}
-          >
-            <ShoppingBag size={15} /><span>{cartCount}</span>
-          </button>
-
-          <button className="mobile-toggle" onClick={() => setMobileMenu(!mobileMenu)}>
+          <button className="mobile-toggle" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Toggle menu">
             {mobileMenu ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -260,7 +250,6 @@ export default function Home() {
 
       {/* ── HERO CAROUSEL ──────────────────────────── */}
       <section className="hero" id="top" style={{ position: "relative", overflow: "hidden" }}>
-        {/* Previous slide fading out */}
         {prevHero !== null && (
           <div style={{
             position: "absolute", inset: 0, zIndex: 0,
@@ -269,7 +258,6 @@ export default function Home() {
             opacity: 0, transition: "opacity 0.7s ease"
           }} />
         )}
-        {/* Current slide */}
         <div style={{
           position: "absolute", inset: 0, zIndex: 1,
           backgroundImage: `url(${heroSlides[heroIndex].img})`,
@@ -316,31 +304,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── KEEP RISING (new drops) ─────────────────── */}
-      <section style={{ background: "#111", borderBottom: "1px solid #1f1f1f", padding: "60px clamp(24px,8vw,120px)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
-          <div>
-            <p className="eyebrow" style={{ color: "var(--pink)" }}>NEW DROPS & NEEDED NUMERICALS</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(42px,6vw,80px)", margin: "8px 0 12px", textTransform: "uppercase", color: "#fff" }}>KEEP RISING.</h2>
-            <p style={{ color: "#aaa", fontSize: 13, maxWidth: 460, margin: "0 0 12px" }}>Fresh releases, rare cuts, and performance gym kits for the ones still rising.</p>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.12)", border: "1px solid var(--pink)", borderRadius: 4, color: "#fff", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--pink)" }} />
-              2-WEEK DELIVERY GUARANTEE: ALL PURCHASES DELIVERED ON OR BEFORE 2 WEEKS AFTER ORDER
+      {/* ── BRAND PILLARS ───────────────────────────── */}
+      <section style={{ background: "#0d0d0d", borderBottom: "1px solid #1f1f1f", padding: "72px clamp(24px,8vw,120px)" }}>
+        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 32 }}>WHAT ZOID STANDS FOR</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 0, border: "1px solid #222" }}>
+          {pillars.map((p, i) => (
+            <div
+              key={p.num}
+              onClick={() => setActivePillar(i)}
+              style={{
+                padding: "40px 36px",
+                borderRight: i < pillars.length - 1 ? "1px solid #222" : "none",
+                cursor: "pointer",
+                background: activePillar === i ? "rgba(231,25,75,0.07)" : "transparent",
+                borderTop: activePillar === i ? "2px solid var(--pink)" : "2px solid transparent",
+                transition: "background 0.3s ease, border-color 0.3s ease",
+              }}
+            >
+              <span style={{ fontSize: 9, color: activePillar === i ? "var(--pink)" : "#555", letterSpacing: "0.18em", display: "block", marginBottom: 12 }}>{p.num}</span>
+              <h3 style={{ fontFamily: "Anton", fontSize: "clamp(28px,3vw,42px)", margin: "0 0 16px", color: activePillar === i ? "#fff" : "#aaa", transition: "color 0.3s ease" }}>{p.title}</h3>
+              <p style={{ color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{p.text}</p>
             </div>
-          </div>
-          <Link className="pink-button" href="/collection">
-            View All Drops <ArrowDownRight size={16} />
-          </Link>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {products.slice(0, 4).map((item) => (
-            <Link key={item.slug} href={`/product/${item.slug}`} style={{ display: "block", background: "#181818", borderRadius: 2, overflow: "hidden", transition: "transform 0.25s ease" }}>
-              <img src={item.image} alt={item.name} style={{ width: "100%", height: 200, objectFit: "cover", display: "block", transition: "transform 0.35s ease" }} />
-              <div style={{ padding: "12px 14px" }}>
-                <strong style={{ display: "block", color: "#fff", fontSize: 13 }}>{item.name}</strong>
-                <small style={{ color: "var(--pink)", fontWeight: 700 }}>{item.price}</small>
-              </div>
-            </Link>
           ))}
         </div>
       </section>
@@ -359,8 +343,14 @@ export default function Home() {
         </div>
         <div style={{ position: "relative" }}>
           <img src={STORY_IMG} alt="ZOID story" style={{ width: "100%", height: 400, objectFit: "cover" }} />
-          <div style={{ position: "absolute", bottom: 20, left: 20, border: "1px solid var(--pink)", padding: "10px 14px", background: "rgba(9,9,9,0.7)", color: "#fff", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.4 }}>
-            ZOID<br />FIELD<br />NOTES
+          {/* Animated overlay label */}
+          <div style={{
+            position: "absolute", bottom: 20, left: 20,
+            background: "var(--pink)", color: "#fff",
+            padding: "10px 14px", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.4,
+            fontWeight: 700,
+          }}>
+            ARCHIVE-LED<br />SINCE LAGOS
           </div>
         </div>
       </section>
@@ -376,115 +366,49 @@ export default function Home() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}>
           {archiveSnippets.map((s) => (
-            <div key={s.id} style={{ background: "#161616", border: "1px solid #222", borderRadius: 2 }}>
+            <Link
+              key={s.id}
+              href="/archives"
+              onMouseEnter={() => setHoveredArchive(s.id)}
+              onMouseLeave={() => setHoveredArchive(null)}
+              style={{
+                background: "#161616", border: "1px solid #222", borderRadius: 2,
+                display: "block", overflow: "hidden",
+                transform: hoveredArchive === s.id ? "translateY(-6px)" : "none",
+                boxShadow: hoveredArchive === s.id ? "0 16px 40px rgba(0,0,0,0.5)" : "none",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                borderTop: hoveredArchive === s.id ? "2px solid var(--pink)" : "2px solid transparent",
+              }}
+            >
               <img src={s.img} alt={s.title} style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }} />
               <div style={{ padding: 20 }}>
                 <p className="eyebrow" style={{ color: "#666", marginBottom: 6 }}>{s.loc} · {s.author}</p>
                 <h3 style={{ fontFamily: "Anton", fontSize: 18, color: "#fff", margin: "0 0 10px" }}>{s.title}</h3>
-                <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>"{s.text}"</p>
+                <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: "0 0 12px" }}>"{s.text}"</p>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--pink)", fontSize: 9, letterSpacing: "0.16em", fontWeight: 700 }}>
+                  READ STORY <ChevronRight size={12} />
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* ── CURATED FORWARD ─────────────────────────── */}
-      <section id="shop" style={{ padding: "80px clamp(24px,8vw,120px)", background: "#111" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20, marginBottom: 36 }}>
-          <div>
-            <p className="eyebrow">CURATED SELECTION</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(40px,6vw,80px)", margin: "8px 0 0", textTransform: "uppercase", color: "#fff" }}>
-              CURATED <span style={{ color: "var(--pink)" }}>FORWARD.</span>
-            </h2>
-          </div>
-          {/* Tab bar — text only, no stretched icons */}
-          <div style={{ display: "flex", gap: 4, background: "#1a1a1a", padding: 4, borderRadius: 6, flexWrap: "wrap" }}>
-            {TABS.map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                style={{
-                  padding: "9px 18px", fontSize: 10,
-                  letterSpacing: "0.14em", textTransform: "uppercase",
-                  fontWeight: 600, borderRadius: 4,
-                  background: activeTab === id ? "var(--pink)" : "transparent",
-                  color: activeTab === id ? "#fff" : "#888",
-                  transition: "background 0.2s, color 0.2s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
-          {curatedItems.map((item) => (
-            <div key={item.slug} style={{ background: "#161616", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <Link href={`/product/${item.slug}`}>
-                  <img src={item.image} alt={item.name} style={{ width: "100%", height: 260, objectFit: "cover", display: "block", transition: "transform 0.35s ease" }} />
-                </Link>
-                <button
-                  onClick={() => toggleSaved(item.slug)}
-                  aria-label={saved.includes(item.slug) ? "Remove from wishlist" : "Save to wishlist"}
-                  style={{
-                    position: "absolute", top: 10, right: 10,
-                    width: 34, height: 34, borderRadius: "50%",
-                    background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer",
-                    display: "grid", placeItems: "center",
-                    color: saved.includes(item.slug) ? "var(--pink)" : "#fff",
-                    transition: "color 0.2s",
-                  }}
-                >
-                  <Heart size={16} fill={saved.includes(item.slug) ? "currentColor" : "none"} />
-                </button>
-              </div>
-              <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-                <p className="eyebrow" style={{ fontSize: 8, color: "#666", margin: 0 }}>{item.category}</p>
-                <strong style={{ color: "#fff", fontSize: 13 }}>{item.name}</strong>
-                <small style={{ color: "#888" }}>{item.tone}</small>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 12, borderTop: "1px solid #222" }}>
-                  <span style={{ color: "var(--pink)", fontWeight: 700, fontSize: 14 }}>{item.price}</span>
-                  <button
-                    className="pink-button small"
-                    onClick={() => addToBag(item, item.sizes[0])}
-                  >
-                    Add to Bag
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* High-Impact Eye-Catching CTA Banner after Curated Forward */}
-        <div style={{
-          marginTop: 64, textAlign: "center", padding: "64px 32px",
-          background: "linear-gradient(135deg, #181818 0%, #0d0d0d 100%)",
-          border: "1px solid var(--pink)", borderRadius: 8,
-          boxShadow: "0 0 35px rgba(231,25,75,0.25)",
-          position: "relative", overflow: "hidden"
-        }}>
-          <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, background: "rgba(231,25,75,0.15)", borderRadius: "50%", filter: "blur(40px)" }} />
-          <p className="eyebrow" style={{ color: "var(--pink)", letterSpacing: "0.22em", marginBottom: 12 }}>FULL COLLECTION AVAILABLE</p>
-          <h3 style={{ fontFamily: "Anton", fontSize: "clamp(36px,5vw,64px)", color: "#fff", margin: "0 0 16px", textTransform: "uppercase", textShadow: "0 0 20px rgba(231,25,75,0.3)" }}>
-            READY FOR THE FULL EDIT?
-          </h3>
-          <p style={{ color: "#ccc", maxWidth: 500, margin: "0 auto 32px", fontSize: 14, lineHeight: 1.7 }}>
-            Explore our complete archive: retro club jerseys, national team kits, limited releases, and performance gym gear.
-          </p>
-          <Link
-            className="pink-button"
-            href="/collection"
-            style={{
-              fontSize: 13, padding: "0 36px", minHeight: 52,
-              boxShadow: "0 4px 25px rgba(231,25,75,0.5)",
-              transform: "scale(1.04)"
-            }}
-          >
+      {/* ── SHOP CTA — branding, no product grid ────── */}
+      <section style={{ padding: "80px clamp(24px,8vw,120px)", background: "#111", textAlign: "center" }}>
+        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 16 }}>THE COLLECTION IS LIVE</p>
+        <h2 style={{ fontFamily: "Anton", fontSize: "clamp(40px,6vw,80px)", margin: "0 0 20px", textTransform: "uppercase", color: "#fff" }}>
+          READY FOR<br /><span style={{ color: "var(--pink)" }}>THE EDIT?</span>
+        </h2>
+        <p style={{ color: "#aaa", maxWidth: 500, margin: "0 auto 32px", fontSize: 14, lineHeight: 1.7 }}>
+          Explore our complete archive: retro club jerseys, national team kits, limited releases, and performance gym gear. 2-week delivery guarantee.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link className="pink-button" href="/collection" style={{ fontSize: 13, padding: "0 36px", minHeight: 52 }}>
             ENTER SHOP CATALOGUE <ArrowDownRight size={18} />
+          </Link>
+          <Link className="ghost-button" href="/about" style={{ fontSize: 13, padding: "0 36px", minHeight: 52 }}>
+            OUR STORY
           </Link>
         </div>
       </section>
@@ -498,7 +422,7 @@ export default function Home() {
               <img src={MARK} alt="" style={{ height: 15 }} />ZOID
             </Link>
             <p style={{ color: "#666", fontSize: 12, lineHeight: 1.7, margin: "0 0 20px" }}>
-              Curating before creating.<br />Archive sportswear &amp; community identity from Lagos.
+              Curating before creating.<br />Archive sportswear & community identity from Lagos.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               {["IG", "TW", "TT"].map((s) => (
@@ -524,9 +448,9 @@ export default function Home() {
               ))}
             </div>
           </div>
-          {/* Field Notes */}
+          {/* Newsletter */}
           <div>
-            <h4 style={{ color: "var(--pink)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 16 }}>Field Notes</h4>
+            <h4 style={{ color: "var(--pink)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 16 }}>Stay Updated</h4>
             <p style={{ color: "#666", fontSize: 12, lineHeight: 1.65, marginBottom: 14 }}>Get drop alerts and archive updates direct to your inbox.</p>
             <div style={{ display: "flex", gap: 6 }}>
               <input
@@ -540,49 +464,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Bottom bar */}
         <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 20, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, color: "#444", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
           <span>© ZOID STUDIOS / 2026</span>
           <span>Lagos — Nigeria</span>
           <span>Built on grit <b style={{ color: "var(--pink)" }}>•</b> Worn with intent</span>
         </div>
       </footer>
-
-      {/* ── CART DRAWER ─────────────────────────────── */}
-      {cartOpen && (
-        <div className="drawer-backdrop" onClick={() => setCartOpen(false)}>
-          <aside className="cart-drawer" onClick={(e) => e.stopPropagation()}>
-            <div className="drawer-head">
-              <div><p className="eyebrow">YOUR SELECTION</p><h3>THE BAG / {cartCount.toString().padStart(2, "0")}</h3></div>
-              <button onClick={() => setCartOpen(false)}><X size={20} /></button>
-            </div>
-            {bag.length > 0 ? (
-              <>
-                {bag.map((item) => (
-                  <div key={`${item.slug}-${item.size}`} className="drawer-item">
-                    <img src={item.image} alt="" />
-                    <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.price}</span>
-                      <small>Size {item.size} · Qty {item.quantity}</small>
-                    </div>
-                  </div>
-                ))}
-                <button className="pink-button checkout" onClick={() => { setCartOpen(false); window.location.assign("/checkout"); }}>
-                  Proceed to checkout <ArrowDownRight size={17} />
-                </button>
-              </>
-            ) : (
-              <div className="empty-bag">
-                <ShoppingBag size={32} />
-                <p>Your bag is waiting for a first pick.</p>
-                <button className="line-link" onClick={() => setCartOpen(false)}>Explore the edit <ArrowDownRight size={16} /></button>
-              </div>
-            )}
-          </aside>
-        </div>
-      )}
 
       {/* ── SCROLL-TO-TOP FAB ───────────────────────── */}
       {showScrollTop && (

@@ -10,7 +10,6 @@ interface NavbarProps {
   setUtilityOpen: (type: "search" | "saved" | null) => void;
   setCartOpen: (open: boolean) => void;
   savedCount: number;
-  context?: string;
 }
 
 const assets = {
@@ -25,10 +24,11 @@ export default function Navbar({
   setUtilityOpen,
   setCartOpen,
   savedCount,
-  context = "FIELD / 01"
 }: NavbarProps) {
   const [location] = useLocation();
   const { count: cartCount } = useShop();
+
+  const isShopOrProduct = location.startsWith("/collection") || location.startsWith("/product");
 
   const navItems = [
     { label: "Home", href: "/" },
@@ -45,7 +45,6 @@ export default function Navbar({
         <i />
       </Link>
       <div className="nav-frame">
-        <span className="nav-context">{context}</span>
         <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"} aria-label="Main navigation">
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href.startsWith("/#") && location === "/");
@@ -80,15 +79,17 @@ export default function Navbar({
           <Heart size={16} fill={savedCount ? "currentColor" : "none"} />
           <b>{savedCount || ""}</b>
         </button>
-        <button 
-          className="bag-button" 
-          title="Bag" 
-          aria-label={`Open bag with ${cartCount} items`} 
-          onClick={() => setCartOpen(true)}
-        >
-          <ShoppingBag size={15} />
-          <span>{cartCount}</span>
-        </button>
+        {isShopOrProduct && (
+          <button 
+            className="bag-button" 
+            title="Bag" 
+            aria-label={`Open bag with ${cartCount} items`} 
+            onClick={() => setCartOpen(true)}
+          >
+            <ShoppingBag size={15} />
+            <span>{cartCount}</span>
+          </button>
+        )}
         <button 
           className="mobile-toggle" 
           aria-label="Toggle menu" 

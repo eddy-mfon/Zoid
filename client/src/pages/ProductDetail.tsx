@@ -1,10 +1,12 @@
 /* ZOID Concrete Ritual: product pages behave like archive dossiers—specific, tactile, and practical. */
 import { useEffect, useRef, useState } from "react";
 import { useZoidMotion } from "@/hooks/useZoidMotion";
-import { AlertTriangle, ArrowDownRight, ArrowLeft, ArrowUp, Check, ChevronRight, Menu, Ruler, ShoppingBag, X } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowLeft, ArrowUp, Check, ChevronRight, Menu, Minus, Plus, Ruler, ShoppingBag, X } from "lucide-react";
 import { Link, useLocation, useRoute } from "wouter";
 import { productBySlug, products } from "@/lib/catalog";
 import { useShop } from "@/contexts/ShopContext";
+
+const MARK = "/zoid-logo.svg";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
@@ -14,31 +16,41 @@ export default function ProductDetail() {
   const product = productBySlug(params?.slug) ?? products[0];
   const { addToBag, count, bag } = useShop();
   const [size, setSize] = useState(product.sizes[0]);
+  const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const activeStock = product.stock[size] ?? 0;
   const lowStock = activeStock > 0 && activeStock <= 3;
 
-  useEffect(() => { setSize(product.sizes[0]); setAdded(false); }, [product.slug]);
-
-  // Scroll-to-top visibility + smooth body scroll
+  // Immediate scroll reset on mount or product switch — use instant behavior to avoid scroll-down bug
   useEffect(() => {
-    const el = pageRef.current ?? document.documentElement;
-    const onScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    // Ensure smooth scroll on detail page
-    document.documentElement.style.scrollBehavior = "smooth";
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      document.documentElement.style.scrollBehavior = "";
+    // Use a small timeout to ensure React has finished rendering before scroll
+    const timer = requestAnimationFrame(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+    setSize(product.sizes[0]);
+    setQuantity(1);
+    setAdded(false);
+    return () => cancelAnimationFrame(timer);
+  }, [product.slug]);
+
+  // Scroll tracking
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowScrollTop(window.scrollY > 400);
     };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   function handleAdd() {
     if (!activeStock) return;
-    addToBag(product, size);
+    addToBag(product, size, quantity);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 850);
   }
@@ -47,17 +59,21 @@ export default function ProductDetail() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // How many of this product/size are currently in bag
+  const inBagCount = bag
+    .filter((item) => item.slug === product.slug && item.size === size)
+    .reduce((acc, item) => acc + item.quantity, 0);
+
   return (
     <main className="zoid-shell detail-page" ref={pageRef} style={{ overscrollBehavior: "none" }}>
       {/* Navbar */}
-      <header className="topbar">
+      <header className={scrolled ? "topbar topbar-scrolled" : "topbar"}>
         <Link className="brand" href="/">
-          <img src="/manus-storage/zoid-mark_c4232248.png" alt="" />
+          <img src={MARK} alt="ZOID" />
           <span>ZOID</span>
           <i />
         </Link>
         <div className="nav-frame">
-          <span className="nav-context">FIELD / 03</span>
           <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
             <Link href="/">Home</Link>
             <Link className="active" href="/collection">Shop</Link>
@@ -66,7 +82,7 @@ export default function ProductDetail() {
           </nav>
         </div>
         <div className="top-actions action-rail">
-          {/* Bag button now opens cart drawer */}
+          {/* Bag button opens cart drawer */}
           <button
             className="bag-button"
             aria-label={`Open bag, ${count} items`}
@@ -98,13 +114,12 @@ export default function ProductDetail() {
 
       {/* Product Layout */}
       <section className="detail-layout">
-        {/* Image panel — single clean hero image, no tabs */}
+        {/* Image panel */}
         <div className="detail-gallery">
-          <div className="detail-route">FIELD / EVIDENCE</div>
           <div className="detail-gallery-stage">
             <img src={product.image} alt={product.name} />
           </div>
-          <div className="detail-image-note">ZOID ARCHIVE<br />LAGOS / 2026</div>
+          {/* No 'ZOID ARCHIVE' overlay text — removed per task */}
         </div>
 
         {/* Info panel */}
@@ -153,19 +168,69 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* Quantity Selector */}
+          <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <span style={{ fontSize: 9, letterSpacing: "0.16em", color: "#9d9891", textTransform: "uppercase" }}>QUANTITY</span>
+              <span style={{ fontSize: 11, color: "var(--pink)", fontWeight: 600 }}>{quantity} {quantity === 1 ? "piece" : "pieces"}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", background: "#161616", border: "1px solid #333", borderRadius: 4, overflow: "hidden" }}>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                  style={{ width: 42, height: 38, display: "grid", placeItems: "center", color: quantity <= 1 ? "#555" : "#fff", cursor: quantity <= 1 ? "not-allowed" : "pointer" }}
+                >
+                  <Minus size={15} />
+                </button>
+                <span style={{ minWidth: 44, textAlign: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(activeStock || 10, q + 1))}
+                  disabled={quantity >= activeStock}
+                  aria-label="Increase quantity"
+                  style={{ width: 42, height: 38, display: "grid", placeItems: "center", color: quantity >= activeStock ? "#555" : "#fff", cursor: quantity >= activeStock ? "not-allowed" : "pointer" }}
+                >
+                  <Plus size={15} />
+                </button>
+              </div>
+              {/* In-bag counter for this product+size */}
+              {inBagCount > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", background: "rgba(231,25,75,0.1)",
+                  border: "1px solid rgba(231,25,75,0.3)", borderRadius: 4,
+                }}>
+                  <ShoppingBag size={13} style={{ color: "var(--pink)" }} />
+                  <span style={{ fontSize: 10, color: "var(--pink)", fontWeight: 600 }}>
+                    {inBagCount} in bag
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Add to Bag CTA */}
           <button
             disabled={!activeStock}
             className={added ? "pink-button detail-add added" : "pink-button detail-add"}
             onClick={handleAdd}
           >
-            {added ? <><Check size={17} /> Added to bag</> : <>Add to Bag <ArrowDownRight size={17} /></>}
+            {added ? <><Check size={17} /> Added {quantity} to bag</> : <>Add {quantity > 1 ? `${quantity} items ` : ""}to Bag <ArrowDownRight size={17} /></>}
           </button>
 
-          {/* Quick checkout shortcut */}
-          <Link href="/checkout" className="ghost-button" style={{ marginTop: 10, width: "100%", justifyContent: "center" }}>
-            <ShoppingBag size={15} /> Go to Checkout <ChevronRight size={15} />
-          </Link>
+          {/* View bag shortcut */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="ghost-button"
+            style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+          >
+            <ShoppingBag size={15} /> View Bag ({count} items) <ChevronRight size={15} />
+          </button>
 
           <div className="detail-meta">
             <div>
@@ -194,33 +259,35 @@ export default function ProductDetail() {
 
       {/* Footer */}
       <footer className="footer detail-footer">
-        <div className="footer-brand">
-          <Link className="brand" href="/"><img src="/manus-storage/zoid-mark_c4232248.png" alt="" /><span>ZOID</span><i /></Link>
-          <p>Curating before creating.<br />Made for the ones still rising.</p>
+        <div className="footer-topline">
+          <span>ZOID / LAGOS</span>
+          <span>CURATING BEFORE CREATING</span>
         </div>
-        <div className="footer-links">
-          <div>
-            <p className="eyebrow">Explore</p>
-            <Link href="/collection">Shop all</Link>
-            <Link href="/about">About</Link>
-            <Link href="/archives">Archives</Link>
-          </div>
-          <div>
-            <p className="eyebrow">Connect</p>
-            <a href="#top">Instagram</a>
-            <a href="#top">Contact</a>
-          </div>
+        <div className="footer-core">
+          <Link className="footer-wordmark" href="/">
+            <img src={MARK} alt="" />
+            <span>ZOID</span>
+          </Link>
+          <p>For the ones still rising.<br />Archive-led sportwear from Lagos.</p>
+          <Link className="footer-cta" href="/collection">
+            Enter the edit <ArrowDownRight size={16} />
+          </Link>
+        </div>
+        <div className="footer-bottom">
+          <span>© ZOID / 2026</span>
+          <span>Lagos — Nigeria</span>
+          <span>Built on grit <b>•</b> Worn with intent</span>
         </div>
       </footer>
 
-      {/* Cart mini-drawer */}
+      {/* Cart Drawer */}
       {cartOpen && (
         <div className="drawer-backdrop" onClick={() => setCartOpen(false)}>
           <aside className="cart-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-head">
               <div>
                 <p className="eyebrow">YOUR SELECTION</p>
-                <h3>THE BAG / {count.toString().padStart(2, "0")}</h3>
+                <h3>THE BAG / {count.toString().padStart(2, "00")}</h3>
               </div>
               <button onClick={() => setCartOpen(false)} aria-label="Close bag"><X size={20} /></button>
             </div>

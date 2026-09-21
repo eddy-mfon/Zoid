@@ -50,7 +50,6 @@ export default function About() {
           <i />
         </Link>
         <div className="nav-frame">
-          <span className="nav-context">FIELD / ABOUT</span>
           <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
             <Link href="/" onClick={() => setMobileMenu(false)}>Home</Link>
             <Link href="/collection" onClick={() => setMobileMenu(false)}>Shop</Link>
@@ -59,9 +58,6 @@ export default function About() {
           </nav>
         </div>
         <div className="top-actions action-rail">
-          <Link href="/collection" className="bag-button" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <ShoppingBag size={15} /> {count} Bag
-          </Link>
           <button className="mobile-toggle" onClick={() => setMobileMenu(!mobileMenu)}>
             {mobileMenu ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -132,14 +128,6 @@ export default function About() {
         </div>
         <div style={{ position: "relative" }}>
           <img src={storyImg} alt="ZOID community" style={{ width: "100%", height: 480, objectFit: "cover", filter: "grayscale(0.2)" }} />
-          <div style={{
-            position: "absolute", bottom: 24, left: 24,
-            border: "1px solid var(--pink)", padding: "12px 16px",
-            background: "rgba(9,9,9,0.7)", color: "#fff",
-            fontSize: 11, letterSpacing: "0.16em", lineHeight: 1.3
-          }}>
-            ZOID<br />FIELD<br />NOTES
-          </div>
         </div>
       </section>
 

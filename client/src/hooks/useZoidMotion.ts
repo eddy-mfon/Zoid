@@ -51,7 +51,17 @@ export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: {
         const navLinks = root.querySelectorAll<HTMLElement>(".nav-links a");
         if (navbar) {
           gsap.fromTo(navbar, { y: -24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: .65, ease: "power3.out" });
-          ScrollTrigger.create({ trigger: root, start: "top top", end: "+=500", onUpdate: (self) => gsap.to(navbar, { y: self.direction === 1 ? -76 : 0, duration: .24, ease: "power2.out", overwrite: true }) });
+          ScrollTrigger.create({
+            trigger: root,
+            start: "top -80",
+            onUpdate: (self) => {
+              if (window.scrollY < 50) {
+                gsap.to(navbar, { y: 0, duration: 0.2, ease: "power2.out", overwrite: true });
+              } else {
+                gsap.to(navbar, { y: self.direction === 1 ? -76 : 0, duration: 0.24, ease: "power2.out", overwrite: true });
+              }
+            }
+          });
         }
         if (hero && heroCopy) {
           const heroTimeline = gsap.timeline({ defaults: { ease: "power4.out" } });

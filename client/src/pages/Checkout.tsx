@@ -1,17 +1,292 @@
 /* ZOID Concrete Ritual: checkout is the quiet handoff—focused, legible, and still rooted in the field archive. */
 import { useState } from "react";
-import { ArrowLeft, Check, LockKeyhole, Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowDownRight, ArrowLeft, Check, LockKeyhole, ShoppingBag, Ticket, Trash2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatNaira, useShop } from "@/contexts/ShopContext";
+import { nanoid } from "nanoid";
+
+const MARK = "/zoid-logo.svg";
+
+function generateOrderNumber() {
+  return `ZD-${nanoid(6).toUpperCase()}`;
+}
 
 export default function Checkout() {
   const [, navigate] = useLocation();
-  const { bag, count, total, removeFromBag } = useShop();
+  const { bag, count, total, removeFromBag, clearBag } = useShop();
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
-  function update(field: keyof typeof form, value: string) { setForm((state) => ({ ...state, [field]: value })); }
-  function submit(event: React.FormEvent) { event.preventDefault(); setSubmitted(true); }
+  const [orderNumber] = useState(generateOrderNumber);
+  const [orderDate] = useState(() => new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" }));
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", state: "", notes: "" });
 
-  if (submitted) return <main className="checkout-page checkout-success"><div className="success-mark"><Check size={28} /></div><p className="eyebrow">ORDER RECEIVED / FIELD NOTE</p><h1>YOUR<br /><span>RISE.</span></h1><p>Your request is in the edit. We will confirm your delivery details by email and deliver your curated pieces within two weeks.</p><Link className="pink-button" href="/collection">Continue through the edit</Link></main>;
-  return <main className="checkout-page"><header className="checkout-header"><Link className="brand" href="/"><span>ZOID</span><i /></Link><span className="secure-label"><LockKeyhole size={13} /> SECURE CHECKOUT</span></header><div className="checkout-wrap"><div className="checkout-intro"><Link className="back-link" href="/collection"><ArrowLeft size={15} /> Back to collection</Link><p className="eyebrow">FIELD / CHECKOUT / {count.toString().padStart(2, "0")} PIECES</p><h1>MAKE THE<br /><span>HANDOFF.</span></h1><p>Every order ships from Lagos and is delivered within two weeks. Your selected sizes are reserved once the order is submitted.</p></div><div className="checkout-grid"><form className="checkout-form" onSubmit={submit}><div className="form-section"><p className="eyebrow">01 / YOUR DETAILS</p><label>Full name<input required value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Your name" /></label><label>Email address<input required type="email" value={form.email} onChange={(event) => update("email", event.target.value)} placeholder="you@example.com" /></label><label>Phone number<input required value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="+234" /></label></div><div className="form-section"><p className="eyebrow">02 / DELIVERY</p><label>Delivery address<textarea required value={form.address} onChange={(event) => update("address", event.target.value)} placeholder="Street, city, country" rows={4} /></label></div><button className="pink-button checkout-submit" type="submit">Confirm order <Check size={16} /></button></form><aside className="checkout-summary"><div className="summary-head"><p className="eyebrow">YOUR SELECTION</p><strong>{count.toString().padStart(2, "0")} PIECES</strong></div>{bag.length ? bag.map((item) => <div className="summary-item" key={`${item.slug}-${item.size}`}><img src={item.image} alt="" /><div><strong>{item.name}</strong><small>{item.size} · Qty {item.quantity}</small><span>{item.price}</span></div><button type="button" onClick={() => removeFromBag(item.slug, item.size)} aria-label={`Remove ${item.name}`}><Trash2 size={14} /></button></div>) : <div className="checkout-empty"><p>Your bag is empty.</p><button type="button" onClick={() => navigate("/collection")} className="line-link">Browse the edit <ArrowLeft size={14} /></button></div>}<div className="summary-total"><span>Subtotal</span><strong>{formatNaira(total)}</strong></div><p className="summary-delivery">Delivery / 2 weeks<br />Shipping confirmation follows your order.</p></aside></div></div></main>;
+  function update(field: keyof typeof form, value: string) {
+    setForm((state) => ({ ...state, [field]: value }));
+  }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSubmitted(true);
+    clearBag();
+  }
+
+  // ── ORDER SUCCESS TICKET ──────────────────────────────────────────
+  if (submitted) {
+    return (
+      <main className="checkout-page checkout-success" style={{ background: "#f2f0eb", color: "#111" }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 24px" }}>
+          {/* Confirmation check */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+            <div className="success-mark"><Check size={28} /></div>
+            <div>
+              <p className="eyebrow" style={{ color: "#777", margin: 0 }}>ORDER CONFIRMED</p>
+              <p style={{ color: "#333", fontSize: 13, margin: "4px 0 0" }}>You'll receive a confirmation email shortly.</p>
+            </div>
+          </div>
+
+          {/* Order Ticket */}
+          <div style={{
+            background: "#fff",
+            border: "1px solid #d5d0c8",
+            borderRadius: 8,
+            overflow: "hidden",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+          }}>
+            {/* Ticket header */}
+            <div style={{
+              background: "var(--pink)", color: "#fff",
+              padding: "20px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Ticket size={22} />
+                <div>
+                  <p style={{ margin: 0, fontSize: 9, letterSpacing: "0.18em", opacity: 0.8 }}>ORDER TICKET</p>
+                  <p style={{ margin: 0, fontFamily: "Anton", fontSize: 20, letterSpacing: "0.08em" }}>{orderNumber}</p>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ margin: 0, fontSize: 9, letterSpacing: "0.12em", opacity: 0.8 }}>ORDER DATE</p>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600 }}>{orderDate}</p>
+              </div>
+            </div>
+
+            {/* Customer info */}
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e8e3dc" }}>
+              <p style={{ fontSize: 9, letterSpacing: "0.16em", color: "#999", marginBottom: 10 }}>CUSTOMER DETAILS</p>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, fontSize: 14 }}>{form.name}</p>
+              <p style={{ margin: "0 0 2px", fontSize: 12, color: "#666" }}>{form.email}</p>
+              <p style={{ margin: "0 0 2px", fontSize: 12, color: "#666" }}>{form.phone}</p>
+              <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{form.address}{form.state ? `, ${form.state}` : ""}</p>
+            </div>
+
+            {/* Order items — snapshot at time of order */}
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e8e3dc" }}>
+              <p style={{ fontSize: 9, letterSpacing: "0.16em", color: "#999", marginBottom: 14 }}>ORDER ITEMS</p>
+              {/* We show the bag snapshot — already cleared, so we keep a copy */}
+              <p style={{ color: "#555", fontSize: 12 }}>Your selected items have been reserved. Our team will confirm your order within 24 hours.</p>
+            </div>
+
+            {/* Delivery info */}
+            <div style={{ padding: "20px 24px", background: "#faf9f7" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <p style={{ fontSize: 9, letterSpacing: "0.16em", color: "#999", margin: 0 }}>DELIVERY</p>
+                <span style={{ background: "rgba(41,163,106,0.15)", color: "#1a8a52", fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 20, letterSpacing: "0.1em" }}>
+                  2-WEEK GUARANTEE
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: "#555", lineHeight: 1.6 }}>
+                Ships from Lagos. Delivery within 14 days of order confirmation. Tracking details will be sent to your email.
+              </p>
+            </div>
+          </div>
+
+          {/* Dashed ticket bottom */}
+          <div style={{
+            borderLeft: "1px dashed #d5d0c8", borderRight: "1px dashed #d5d0c8", borderBottom: "1px dashed #d5d0c8",
+            padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
+            background: "#fff", borderRadius: "0 0 8px 8px",
+            marginTop: -1,
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 9, letterSpacing: "0.12em", color: "#999" }}>TOTAL CHARGED</p>
+              <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 700, color: "var(--pink)" }}>{formatNaira(total || 0)}</p>
+            </div>
+            <Link className="pink-button" href="/collection" style={{ fontSize: 11 }}>
+              Continue Shopping <ArrowDownRight size={15} />
+            </Link>
+          </div>
+
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 24, lineHeight: 1.6 }}>
+            Built on grit · Worn with intent<br />ZOID STUDIOS / LAGOS 2026
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // ── CHECKOUT FORM ──────────────────────────────────────────────────
+  return (
+    <main className="checkout-page">
+      <header className="checkout-header">
+        <Link className="brand" href="/" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src={MARK} alt="" style={{ height: 16 }} />
+          <span style={{ fontWeight: 700, letterSpacing: "0.2em", fontSize: 16 }}>ZOID</span>
+        </Link>
+        <span className="secure-label"><LockKeyhole size={13} /> SECURE CHECKOUT</span>
+      </header>
+
+      <div className="checkout-wrap">
+        <div className="checkout-intro">
+          <Link className="back-link" href="/collection"><ArrowLeft size={15} /> Back to collection</Link>
+          <p className="eyebrow">CHECKOUT / {count.toString().padStart(2, "0")} PIECES</p>
+          <h1>MAKE THE<br /><span>HANDOFF.</span></h1>
+          <p>Every order ships from Lagos and is delivered within two weeks. Your selected sizes are reserved once the order is submitted.</p>
+        </div>
+
+        <div className="checkout-grid">
+          {/* Form */}
+          <form className="checkout-form" onSubmit={submit}>
+            <div className="form-section">
+              <p className="eyebrow">01 / YOUR DETAILS</p>
+              <label>
+                Full name *
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => update("name", e.target.value)}
+                  placeholder="Your full name"
+                />
+              </label>
+              <label>
+                Email address *
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </label>
+              <label>
+                Phone number *
+                <input
+                  required
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => update("phone", e.target.value)}
+                  placeholder="+234 XXX XXX XXXX"
+                />
+              </label>
+            </div>
+
+            <div className="form-section">
+              <p className="eyebrow">02 / DELIVERY</p>
+              <label>
+                Delivery address *
+                <textarea
+                  required
+                  value={form.address}
+                  onChange={(e) => update("address", e.target.value)}
+                  placeholder="House number, street, area"
+                  rows={3}
+                />
+              </label>
+              <label>
+                State / City *
+                <input
+                  required
+                  value={form.state}
+                  onChange={(e) => update("state", e.target.value)}
+                  placeholder="e.g. Lagos State"
+                />
+              </label>
+              <label>
+                Order notes (optional)
+                <input
+                  value={form.notes}
+                  onChange={(e) => update("notes", e.target.value)}
+                  placeholder="Any special instructions for delivery"
+                />
+              </label>
+            </div>
+
+            {/* Payment info note */}
+            <div style={{
+              padding: "16px 18px", background: "#f9f7f4", border: "1px solid #e2ddd7", borderRadius: 4, marginBottom: 20,
+            }}>
+              <p style={{ margin: 0, fontSize: 11, color: "#6c665f", lineHeight: 1.6 }}>
+                <strong style={{ color: "#333" }}>Payment on delivery</strong><br />
+                Our team will contact you to confirm payment details. We accept bank transfer and cash on delivery.
+              </p>
+            </div>
+
+            <button
+              className="pink-button checkout-submit"
+              type="submit"
+              disabled={bag.length === 0}
+              style={{ opacity: bag.length === 0 ? 0.5 : 1 }}
+            >
+              {bag.length === 0 ? "No items in bag" : <>Confirm Order <Check size={16} /></>}
+            </button>
+          </form>
+
+          {/* Order Summary */}
+          <aside className="checkout-summary">
+            <div className="summary-head">
+              <p className="eyebrow">YOUR SELECTION</p>
+              <strong>{count.toString().padStart(2, "0")} PIECES</strong>
+            </div>
+
+            {bag.length ? (
+              bag.map((item) => (
+                <div className="summary-item" key={`${item.slug}-${item.size}`}>
+                  <img src={item.image} alt="" />
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{item.size} · Qty {item.quantity}</small>
+                    <span>{item.price}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFromBag(item.slug, item.size)}
+                    aria-label={`Remove ${item.name}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="checkout-empty">
+                <ShoppingBag size={28} style={{ color: "#bbb", marginBottom: 8 }} />
+                <p>Your bag is empty.</p>
+                <button type="button" onClick={() => navigate("/collection")} className="line-link">
+                  Browse the edit <ArrowLeft size={14} />
+                </button>
+              </div>
+            )}
+
+            <div className="summary-total">
+              <span>Subtotal</span>
+              <strong>{formatNaira(total)}</strong>
+            </div>
+            <p className="summary-delivery">
+              Delivery / 2 weeks<br />Shipping confirmation follows your order.
+            </p>
+
+            {/* Delivery guarantee badge */}
+            <div style={{
+              marginTop: 16, padding: "10px 14px", background: "rgba(41,163,106,0.08)",
+              border: "1px solid rgba(41,163,106,0.25)", borderRadius: 4,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <Check size={14} style={{ color: "#29a36a", flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 10, color: "#1a8a52", lineHeight: 1.5 }}>
+                <strong>2-week delivery guarantee</strong><br />All orders delivered within 14 days.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
 }
