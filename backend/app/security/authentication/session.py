@@ -19,26 +19,34 @@ from app.config import get_settings
 from app.security.authentication.schemas import TokenPayload
 from app.shared.exceptions import AuthenticationError
 
-# Used only when no JWT_SECRET is configured (local development). Production
-# deployments must set JWT_SECRET; the composition root surfaces this clearly.
-_DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me"
+# Used only when no JWT_SECRET is configured (local development). Kept at 32+
+# bytes to satisfy the HMAC key-length guidance. Production deployments must
+# set JWT_SECRET; the composition root surfaces the fallback clearly.
+_DEV_FALLBACK_SECRET = "dev-insecure-secret-change-me-in-production-please"
 
 
 @dataclass(frozen=True)
 class SessionClaims:
-    """A verified session: the subject (user id) and its lifetime."""
+    """A verified session: the subject (user id), its role and its lifetime.
+
+    The role is carried as a session claim so the backend can enforce
+    authorization at the edge from a verified token, independently of the
+    frontend. (Re-validating the role against the database is a later
+    hardening concern.)
+    """
 
     subject: str
     issued_at: int
     expires_at: int
+    role: str = "customer"
 
 
 class AbstractSessionStrategy(ABC):
     """Issue and verify opaque session tokens for a subject."""
 
     @abstractmethod
-    def issue(self, subject: str) -> tuple[str, SessionClaims]:
-        """Return ``(token, claims)`` for ``subject``."""
+    def issue(self, subject: str, *, role: str = "customer") -> tuple[str, SessionClaims]:
+        """Return ``(token, claims)`` for ``subject`` with the given ``role``."""
 
     @abstractmethod
     def verify(self, token: str) -> SessionClaims:
@@ -68,15 +76,17 @@ class JwtCookieSessionStrategy(AbstractSessionStrategy):
     def ttl_seconds(self) -> int:
         return self._ttl_seconds
 
-    def issue(self, subject: str) -> tuple[str, SessionClaims]:
+    def issue(self, subject: str, *, role: str = "customer") -> tuple[str, SessionClaims]:
         now = int(time.time())
         expires_at = now + self._ttl_seconds
         token = jwt.encode(
-            {"sub": subject, "iat": now, "exp": expires_at},
+            {"sub": subject, "iat": now, "exp": expires_at, "role": role},
             self._secret,
             algorithm=self._algorithm,
         )
-        return token, SessionClaims(subject=subject, issued_at=now, expires_at=expires_at)
+        return token, SessionClaims(
+            subject=subject, issued_at=now, expires_at=expires_at, role=role
+        )
 
     def verify(self, token: str) -> SessionClaims:
         try:
@@ -88,6 +98,7 @@ class JwtCookieSessionStrategy(AbstractSessionStrategy):
             subject=payload.sub,
             issued_at=payload.iat,
             expires_at=payload.exp,
+            role=payload.role,
         )
 
 

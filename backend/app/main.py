@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
 from app.config import get_settings
+from app.security.protection import configure_protection
 from app.shared.exceptions import AppError, status_for
 
 
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
         """Translate framework-free domain errors into HTTP responses."""
         return JSONResponse(status_code=status_for(exc), content={"detail": exc.message})
 
+    configure_protection(app)
     app.include_router(api_router, prefix=settings.api_v1_prefix)
     return app
 

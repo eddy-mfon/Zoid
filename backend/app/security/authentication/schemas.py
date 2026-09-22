@@ -15,3 +15,4 @@ class TokenPayload(BaseModel):
     sub: str = Field(description="Subject — the authenticated user id.")
     iat: int = Field(description="Issued-at, seconds since the epoch.")
     exp: int = Field(description="Expiry, seconds since the epoch.")
+    role: str = Field(default="customer", description="Authorization role claim.")

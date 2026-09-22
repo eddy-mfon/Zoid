@@ -101,7 +101,7 @@ class AuthService:
         if user is None:
             raise AuthenticationError("Invalid email or password.")
 
-        token, _claims = self._session.issue(str(user.id))
+        token, _claims = self._session.issue(str(user.id), role=user.role)
         return AuthenticatedSession(user=user, token=token)
 
     async def get_user(self, user_id: int) -> User:
