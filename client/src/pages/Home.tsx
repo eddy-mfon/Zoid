@@ -6,7 +6,7 @@ import { useZoidMotion } from "@/hooks/useZoidMotion";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp,
   Heart, Menu, Search, X,
-  Play, ChevronRight,
+  ChevronRight, Sparkles, Flame,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -82,7 +82,7 @@ export default function Home() {
   useEffect(() => {
     if (prevHero === null) return;
     const t = setTimeout(() => setPrevHero(null), 700);
-    return () => clearTimeout(t);
+    return () => clearInterval(t);
   }, [prevHero]);
 
   /* Pillar auto-cycle */
@@ -114,10 +114,6 @@ export default function Home() {
   function goHero(idx: number) {
     setPrevHero(heroIndex);
     setHeroIndex(idx);
-  }
-
-  function toggleSaved(slug: string) {
-    setSaved((prev) => prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]);
   }
 
   const navLinks = [
@@ -329,7 +325,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ABOUT TEASER ───────────────────────────── */}
+      {/* ── ABOUT TEASER (With SVG Logo Badge Overlay) ── */}
       <section style={{ background: "var(--bone)", color: "#111", padding: "80px clamp(24px,8vw,120px)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 48, alignItems: "center" }}>
         <div>
           <p className="eyebrow" style={{ color: "#777" }}>ABOUT ZOID / INTERNATIONAL AFRICAN</p>
@@ -342,15 +338,23 @@ export default function Home() {
           </Link>
         </div>
         <div style={{ position: "relative" }}>
-          <img src={STORY_IMG} alt="ZOID story" style={{ width: "100%", height: 400, objectFit: "cover" }} />
-          {/* Animated overlay label */}
+          <img src={STORY_IMG} alt="ZOID story" style={{ width: "100%", height: 420, objectFit: "cover" }} />
+          {/* REPLACED TEXT WITH SVG LOGO BADGE */}
           <div style={{
             position: "absolute", bottom: 20, left: 20,
-            background: "var(--pink)", color: "#fff",
-            padding: "10px 14px", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.4,
-            fontWeight: 700,
+            background: "rgba(12, 12, 12, 0.88)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(231,25,75,0.6)",
+            borderRadius: 6,
+            padding: "14px 20px",
+            display: "flex", alignItems: "center", gap: 12,
+            boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
           }}>
-            ARCHIVE-LED<br />SINCE LAGOS
+            <img src={MARK} alt="ZOID Logo" style={{ height: 26, width: "auto" }} />
+            <div>
+              <span style={{ color: "#fff", fontFamily: "Anton", fontSize: 18, letterSpacing: "0.14em", display: "block", lineHeight: 1 }}>ZOID</span>
+              <span style={{ color: "var(--pink)", fontSize: 8, letterSpacing: "0.18em", fontWeight: 700, textTransform: "uppercase" }}>LAGOS ARCHIVE</span>
+            </div>
           </div>
         </div>
       </section>
@@ -394,22 +398,77 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SHOP CTA — branding, no product grid ────── */}
-      <section style={{ padding: "80px clamp(24px,8vw,120px)", background: "#111", textAlign: "center" }}>
-        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 16 }}>THE COLLECTION IS LIVE</p>
-        <h2 style={{ fontFamily: "Anton", fontSize: "clamp(40px,6vw,80px)", margin: "0 0 20px", textTransform: "uppercase", color: "#fff" }}>
-          READY FOR<br /><span style={{ color: "var(--pink)" }}>THE EDIT?</span>
-        </h2>
-        <p style={{ color: "#aaa", maxWidth: 500, margin: "0 auto 32px", fontSize: 14, lineHeight: 1.7 }}>
-          Explore our complete archive: retro club jerseys, national team kits, limited releases, and performance gym gear. 2-week delivery guarantee.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link className="pink-button" href="/collection" style={{ fontSize: 13, padding: "0 36px", minHeight: 52 }}>
-            ENTER SHOP CATALOGUE <ArrowDownRight size={18} />
-          </Link>
-          <Link className="ghost-button" href="/about" style={{ fontSize: 13, padding: "0 36px", minHeight: 52 }}>
-            OUR STORY
-          </Link>
+      {/* ── HIGH-IMPACT HIGH-EDITORIAL BRAND CTA BANNER ────── */}
+      <section style={{
+        padding: "100px clamp(24px,8vw,120px)",
+        background: "linear-gradient(180deg, #0d0d0d 0%, #160a0d 100%)",
+        borderTop: "1px solid #221217",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        {/* Subtle background glow effect */}
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "60vw", height: "300px",
+          background: "rgba(231, 25, 75, 0.12)",
+          filter: "blur(120px)", borderRadius: "50%",
+          pointerEvents: "none"
+        }} />
+
+        <div style={{
+          maxWidth: 960, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 2
+        }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 14px", background: "rgba(231, 25, 75, 0.12)",
+            border: "1px solid rgba(231, 25, 75, 0.35)", borderRadius: 30,
+            color: "var(--pink)", fontSize: 10, letterSpacing: "0.18em", fontWeight: 700,
+            marginBottom: 24, textTransform: "uppercase"
+          }}>
+            <Sparkles size={13} /> CURATED ARCHIVE & BRAND CULTURE
+          </div>
+
+          <h2 style={{
+            fontFamily: "Anton", fontSize: "clamp(48px, 7vw, 96px)",
+            margin: "0 0 24px", textTransform: "uppercase", color: "#fff",
+            lineHeight: 0.9, letterSpacing: "-0.02em"
+          }}>
+            YOUR RISE HAS NO CEILING.<br />
+            <span style={{ color: "var(--pink)" }}>WORN WITH INTENT.</span>
+          </h2>
+
+          <p style={{
+            color: "#b0a8a0", maxWidth: 620, margin: "0 auto 40px",
+            fontSize: "clamp(14px, 1.8vw, 17px)", lineHeight: 1.7
+          }}>
+            Step into the complete ZOID edit. Rare retro cuts, national team grails, and high-performance gym gear — backed by our 2-week delivery promise from Lagos.
+          </p>
+
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link
+              className="pink-button"
+              href="/collection"
+              style={{
+                fontSize: 12, padding: "0 40px", minHeight: 56,
+                boxShadow: "0 8px 30px rgba(231, 25, 75, 0.4)",
+                fontWeight: 700, letterSpacing: "0.16em"
+              }}
+            >
+              EXPLORE SHOP EDIT <ArrowDownRight size={18} />
+            </Link>
+            <Link
+              className="ghost-button"
+              href="/archives"
+              style={{
+                fontSize: 12, padding: "0 36px", minHeight: 56,
+                fontWeight: 700, letterSpacing: "0.16em",
+                borderColor: "rgba(255,255,255,0.3)"
+              }}
+            >
+              ZOID ARCHIVES <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 
