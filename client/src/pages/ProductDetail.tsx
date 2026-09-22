@@ -20,6 +20,15 @@ export default function ProductDetail() {
     document.body.scrollTop = 0;
   }, [params?.slug]);
 
+  // Fallback asynchronous scroll reset to handle async layout shifts / image loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [params?.slug]);
+
   useZoidMotion(pageRef);
   const product = productBySlug(params?.slug) ?? products[0];
   const { addToBag, count, bag } = useShop();
@@ -119,7 +128,11 @@ export default function ProductDetail() {
         {/* Image panel */}
         <div className="detail-gallery">
           <div className="detail-gallery-stage">
-            <img src={product.image} alt={product.name} />
+            <img
+              src={product.image}
+              alt={product.name}
+              onLoad={() => window.scrollTo(0, 0)}
+            />
           </div>
         </div>
 

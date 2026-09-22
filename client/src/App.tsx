@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -17,13 +17,27 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 
+// Disable browser auto scroll restoration so route transitions always start at top (0, 0)
+if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
 function ScrollToTop() {
   const [location] = useLocation();
+
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [location]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [location]);
+
   return null;
 }
 
