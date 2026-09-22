@@ -1,5 +1,5 @@
 /* ZOID Concrete Ritual: product pages behave like archive dossiers—specific, tactile, and practical. */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useZoidMotion } from "@/hooks/useZoidMotion";
 import { AlertTriangle, ArrowDownRight, ArrowLeft, ArrowUp, Check, ChevronRight, Menu, Minus, Plus, Ruler, ShoppingBag, X } from "lucide-react";
 import { Link, useLocation, useRoute } from "wouter";
@@ -12,6 +12,14 @@ export default function ProductDetail() {
   const [, params] = useRoute("/product/:slug");
   const [, navigate] = useLocation();
   const pageRef = useRef<HTMLElement | null>(null);
+
+  // Synchronous scroll reset BEFORE motion hooks or render
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [params?.slug]);
+
   useZoidMotion(pageRef);
   const product = productBySlug(params?.slug) ?? products[0];
   const { addToBag, count, bag } = useShop();
@@ -25,20 +33,14 @@ export default function ProductDetail() {
   const activeStock = product.stock[size] ?? 0;
   const lowStock = activeStock > 0 && activeStock <= 3;
 
-  // Immediate scroll reset on mount or product switch — use instant behavior to avoid scroll-down bug
+  // Reset local product selection state on slug change
   useEffect(() => {
-    // Use a small timeout to ensure React has finished rendering before scroll
-    const timer = requestAnimationFrame(() => {
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
     setSize(product.sizes[0]);
     setQuantity(1);
     setAdded(false);
-    return () => cancelAnimationFrame(timer);
   }, [product.slug]);
 
-  // Scroll tracking
+  // Scroll tracking for header style and back-to-top button
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -65,7 +67,7 @@ export default function ProductDetail() {
     .reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <main className="zoid-shell detail-page" ref={pageRef} style={{ overscrollBehavior: "none" }}>
+    <main className="zoid-shell detail-page" ref={pageRef}>
       {/* Navbar */}
       <header className={scrolled ? "topbar topbar-scrolled" : "topbar"}>
         <Link className="brand" href="/">
@@ -119,7 +121,6 @@ export default function ProductDetail() {
           <div className="detail-gallery-stage">
             <img src={product.image} alt={product.name} />
           </div>
-          {/* No 'ZOID ARCHIVE' overlay text — removed per task */}
         </div>
 
         {/* Info panel */}
