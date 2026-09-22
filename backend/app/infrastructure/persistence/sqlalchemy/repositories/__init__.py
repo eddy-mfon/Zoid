@@ -1,5 +1,10 @@
-"""Concrete SQLAlchemy repository implementations.
+"""SQLAlchemy repository implementations (infrastructure layer)."""
 
-Each repository implements a domain repository interface and is attached to the
-Unit of Work as its domain is introduced in later phases.
-"""
+from app.infrastructure.persistence.sqlalchemy.repositories.credential import (
+    SqlCredentialsRepository,
+)
+from app.infrastructure.persistence.sqlalchemy.repositories.user import (
+    SqlUserRepository,
+)
+
+__all__ = ["SqlCredentialsRepository", "SqlUserRepository"]

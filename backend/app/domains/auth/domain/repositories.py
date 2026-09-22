@@ -1,31 +1,19 @@
 """Persistence contracts for the authentication domain.
 
-These abstract repositories are the boundary between the auth use-cases and
-whatever storage is configured. Concrete SQLAlchemy implementations arrive with
-the user-persistence phase; the domain depends only on these contracts.
+`AbstractUserRepository` is re-exported from the users domain (one shared user
+aggregate). `AbstractCredentialsRepository` is authentication-specific.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from app.domains.auth.domain.entities import Credentials, User
+from app.domains.auth.domain.entities import Credentials
+from app.domains.users.domain.repositories import (  # re-export: shared contract
+    AbstractUserRepository,
+)
 
-
-class AbstractUserRepository(ABC):
-    """Read/write `User` records."""
-
-    @abstractmethod
-    async def add(self, user: User) -> User:
-        """Persist a new user and return it with its generated id."""
-
-    @abstractmethod
-    async def get_by_id(self, user_id: int) -> User | None:
-        """Return the user with ``user_id`` or ``None``."""
-
-    @abstractmethod
-    async def get_by_email(self, email: str) -> User | None:
-        """Return the user with ``email`` (normalised) or ``None``."""
+__all__ = ["AbstractUserRepository", "AbstractCredentialsRepository"]
 
 
 class AbstractCredentialsRepository(ABC):

@@ -57,6 +57,12 @@ ignore = ["B008"]  # FastAPI Depends() in argument defaults is idiomatic
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 
+[tool.ruff.lint.per-file-ignores]
+# Alembic autogenerates migration modules; their template style (import
+# ordering, `typing.Sequence`, long `sa.Column(...)` lines) is machine output,
+# not hand-authored domain code.
+"migrations/versions/*.py" = ["E501", "I001", "UP035", "UP037"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

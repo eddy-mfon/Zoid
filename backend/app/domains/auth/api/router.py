@@ -21,6 +21,7 @@ from app.domains.auth.application.service import (
     SignUpCommand,
 )
 from app.domains.auth.domain.entities import User
+from app.infrastructure.container import get_auth_service
 from app.security.authentication.dependencies import (
     get_current_user_id,
     get_session_service,
@@ -28,18 +29,6 @@ from app.security.authentication.dependencies import (
 from app.security.authentication.service import SessionService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-async def get_auth_service() -> AuthService:
-    """Provide the auth service wired to persistence.
-
-    Concrete user/credential repositories land with the user-persistence phase
-    (Phase 05); until then this boundary is explicit rather than silently
-    returning a half-wired service.
-    """
-    raise NotImplementedError(
-        "Auth repositories are wired in the user-persistence phase (Phase 05)."
-    )
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

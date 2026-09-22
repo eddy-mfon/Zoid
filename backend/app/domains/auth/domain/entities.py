@@ -1,25 +1,17 @@
 """Auth domain entities.
 
-Plain, framework-free objects. Persistence and HTTP representations map to and
-from these; the domain itself imports neither.
+`Credentials` is an authentication-owned concept (a stored password). The
+`User` aggregate itself is owned by the users domain and re-exported here so
+auth code can reference the shared type from its own domain namespace.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass
 
+from app.domains.users.domain.entities import User  # re-export: shared aggregate
 
-@dataclass
-class User:
-    """An authenticated principal."""
-
-    id: int
-    email: str
-    name: str
-    phone: str | None = None
-    role: str = "customer"
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+__all__ = ["User", "Credentials"]
 
 
 @dataclass

@@ -14,14 +14,25 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.domains.auth.domain.repositories import AbstractCredentialsRepository
+from app.domains.users.domain.repositories import AbstractUserRepository
+from app.infrastructure.persistence.sqlalchemy.repositories import (
+    SqlCredentialsRepository,
+    SqlUserRepository,
+)
+
 
 class AbstractUnitOfWork:
     """Contract for a transactional unit of work.
 
-    A framework-free marker that application services depend on. Concrete
-    repositories will be declared as attributes as domains land in later
-    phases (users, products, cart, orders, payments).
+    A framework-free marker that application services depend on. Repositories
+    are declared here and instantiated by the concrete implementation as
+    domains land (more are added in later phases: products, cart, orders,
+    payments).
     """
+
+    users: AbstractUserRepository
+    credentials: AbstractCredentialsRepository
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -33,6 +44,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session = self._sessionmaker()
         # Begin an explicit transaction so commit/rollback are well defined.
         await self.session.begin()
+        self.users = SqlUserRepository(self.session)
+        self.credentials = SqlCredentialsRepository(self.session)
         return self
 
     async def __aexit__(

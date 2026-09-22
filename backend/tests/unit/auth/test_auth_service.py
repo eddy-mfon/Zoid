@@ -42,6 +42,22 @@ class InMemoryUserRepository(AbstractUserRepository):
     async def get_by_email(self, email: str) -> User | None:
         return next((u for u in self._by_id.values() if u.email == email), None)
 
+    async def update_profile(
+        self,
+        user_id: int,
+        *,
+        name: str | None = None,
+        phone: str | None = None,
+    ) -> User | None:
+        user = self._by_id.get(user_id)
+        if user is None:
+            return None
+        if name is not None:
+            user.name = name
+        if phone is not None:
+            user.phone = phone
+        return user
+
 
 class InMemoryCredentialsRepository(AbstractCredentialsRepository):
     def __init__(self) -> None:
