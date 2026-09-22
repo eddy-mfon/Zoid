@@ -10,9 +10,12 @@ import Collection from "./pages/Collection";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import { ShopProvider } from "./contexts/ShopContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import AuthModal from "./components/AuthModal";
 import Archives from "./pages/Archives";
 import About from "./pages/About";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -36,6 +39,7 @@ function Router() {
         <Route path={"/archives"} component={Archives} />
         <Route path={"/about"} component={About} />
         <Route path={"/admin"} component={Admin} />
+        <Route path={"/profile"} component={Profile} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -50,9 +54,12 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <ShopProvider>
-            <Router />
-          </ShopProvider>
+          <AuthProvider>
+            <ShopProvider>
+              <AuthModal />
+              <Router />
+            </ShopProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

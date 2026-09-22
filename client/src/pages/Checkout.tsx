@@ -1,8 +1,9 @@
 /* ZOID Concrete Ritual: checkout is the quiet handoff—focused, legible, and still rooted in the field archive. */
-import { useState } from "react";
-import { ArrowDownRight, ArrowLeft, Check, LockKeyhole, ShoppingBag, Ticket, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowDownRight, ArrowLeft, Check, LockKeyhole, LogIn, ShoppingBag, Ticket, Trash2, UserCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { formatNaira, useShop } from "@/contexts/ShopContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { nanoid } from "nanoid";
 
 const MARK = "/zoid-logo.svg";
@@ -14,10 +15,31 @@ function generateOrderNumber() {
 export default function Checkout() {
   const [, navigate] = useLocation();
   const { bag, count, total, removeFromBag, clearBag } = useShop();
+  const { user, isLoggedIn, openAuthModal, addOrder } = useAuth();
   const [submitted, setSubmitted] = useState(false);
-  const [orderNumber] = useState(generateOrderNumber);
+  const [orderNumber, setOrderNumber] = useState(generateOrderNumber);
   const [orderDate] = useState(() => new Date().toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" }));
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", state: "", notes: "" });
+
+  const [form, setForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: "",
+    state: "Lagos State",
+    notes: "",
+  });
+
+  // Pre-fill user details if logged in
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || user.name,
+        email: prev.email || user.email,
+        phone: prev.phone || user.phone,
+      }));
+    }
+  }, [user]);
 
   function update(field: keyof typeof form, value: string) {
     setForm((state) => ({ ...state, [field]: value }));
@@ -25,6 +47,23 @@ export default function Checkout() {
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (bag.length === 0) return;
+
+    // Save order to AuthContext profile if logged in or active
+    const savedOrder = addOrder({
+      items: bag.map((item) => ({
+        slug: item.slug,
+        name: item.name,
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image,
+      })),
+      total,
+      deliveryAddress: `${form.address}, ${form.state}`,
+    });
+
+    setOrderNumber(savedOrder.id);
     setSubmitted(true);
     clearBag();
   }
@@ -39,7 +78,7 @@ export default function Checkout() {
             <div className="success-mark"><Check size={28} /></div>
             <div>
               <p className="eyebrow" style={{ color: "#777", margin: 0 }}>ORDER CONFIRMED</p>
-              <p style={{ color: "#333", fontSize: 13, margin: "4px 0 0" }}>You'll receive a confirmation email shortly.</p>
+              <p style={{ color: "#333", fontSize: 13, margin: "4px 0 0" }}>Confirmation email sent to <strong>{form.email}</strong>.</p>
             </div>
           </div>
 
@@ -76,14 +115,15 @@ export default function Checkout() {
               <p style={{ margin: "0 0 4px", fontWeight: 600, fontSize: 14 }}>{form.name}</p>
               <p style={{ margin: "0 0 2px", fontSize: 12, color: "#666" }}>{form.email}</p>
               <p style={{ margin: "0 0 2px", fontSize: 12, color: "#666" }}>{form.phone}</p>
-              <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{form.address}{form.state ? `, ${form.state}` : ""}</p>
+              <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{form.address}, {form.state}</p>
             </div>
 
-            {/* Order items — snapshot at time of order */}
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e8e3dc" }}>
-              <p style={{ fontSize: 9, letterSpacing: "0.16em", color: "#999", marginBottom: 14 }}>ORDER ITEMS</p>
-              {/* We show the bag snapshot — already cleared, so we keep a copy */}
-              <p style={{ color: "#555", fontSize: 12 }}>Your selected items have been reserved. Our team will confirm your order within 24 hours.</p>
+            {/* Profile sync note */}
+            <div style={{ padding: "16px 24px", background: "rgba(231,25,75,0.06)", borderBottom: "1px solid #e8e3dc", display: "flex", alignItems: "center", gap: 10 }}>
+              <UserCheck size={18} color="var(--pink)" />
+              <p style={{ margin: 0, fontSize: 11, color: "#333" }}>
+                This order has been saved to your account. You can view its delivery status anytime on your <Link href="/profile" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "underline" }}>Profile Page</Link>.
+              </p>
             </div>
 
             {/* Delivery info */}
@@ -111,14 +151,12 @@ export default function Checkout() {
               <p style={{ margin: 0, fontSize: 9, letterSpacing: "0.12em", color: "#999" }}>TOTAL CHARGED</p>
               <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 700, color: "var(--pink)" }}>{formatNaira(total || 0)}</p>
             </div>
-            <Link className="pink-button" href="/collection" style={{ fontSize: 11 }}>
-              Continue Shopping <ArrowDownRight size={15} />
-            </Link>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link className="pink-button" href="/profile" style={{ fontSize: 11 }}>
+                View My Profile <ArrowDownRight size={15} />
+              </Link>
+            </div>
           </div>
-
-          <p style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 24, lineHeight: 1.6 }}>
-            Built on grit · Worn with intent<br />ZOID STUDIOS / LAGOS 2026
-          </p>
         </div>
       </main>
     );
@@ -146,6 +184,43 @@ export default function Checkout() {
         <div className="checkout-grid">
           {/* Form */}
           <form className="checkout-form" onSubmit={submit}>
+            {/* Account Status Banner */}
+            {isLoggedIn ? (
+              <div style={{
+                background: "rgba(41,163,106,0.1)", border: "1px solid rgba(41,163,106,0.3)",
+                padding: "12px 16px", borderRadius: 4, marginBottom: 24,
+                display: "flex", alignItems: "center", justifyContent: "space-between"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <UserCheck size={16} color="#29a36a" />
+                  <span style={{ fontSize: 11, color: "#fff", fontWeight: 600 }}>Logged in as {user?.name}</span>
+                </div>
+                <span style={{ fontSize: 9, color: "#29a36a", letterSpacing: "0.12em", fontWeight: 700 }}>DETAILS AUTO-FILLED</span>
+              </div>
+            ) : (
+              <div style={{
+                background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)",
+                padding: "14px 16px", borderRadius: 4, marginBottom: 24,
+                display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10
+              }}>
+                <span style={{ fontSize: 11, color: "#e8e2da" }}>
+                  Have an account? Log in to auto-fill details & track your orders.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  style={{
+                    background: "var(--pink)", color: "#fff", border: "none",
+                    padding: "5px 12px", borderRadius: 3, fontSize: 10,
+                    fontWeight: 700, letterSpacing: "0.12em", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 4
+                  }}
+                >
+                  <LogIn size={12} /> Log In / Sign Up
+                </button>
+              </div>
+            )}
+
             <div className="form-section">
               <p className="eyebrow">01 / YOUR DETAILS</p>
               <label>
@@ -215,8 +290,8 @@ export default function Checkout() {
               padding: "16px 18px", background: "#f9f7f4", border: "1px solid #e2ddd7", borderRadius: 4, marginBottom: 20,
             }}>
               <p style={{ margin: 0, fontSize: 11, color: "#6c665f", lineHeight: 1.6 }}>
-                <strong style={{ color: "#333" }}>Payment on delivery</strong><br />
-                Our team will contact you to confirm payment details. We accept bank transfer and cash on delivery.
+                <strong style={{ color: "#333" }}>Payment on delivery & Bank Transfer</strong><br />
+                Our team will contact you to confirm payment details upon receiving your order.
               </p>
             </div>
 
