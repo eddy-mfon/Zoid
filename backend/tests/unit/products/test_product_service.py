@@ -50,6 +50,11 @@ class InMemoryProductRepository(AbstractProductRepository):
     async def count_active(self) -> int:
         return sum(1 for p in self._by_id.values() if p.is_active)
 
+    async def save(self, product: Product) -> Product | None:
+        # Products are held by reference, so editing one edits the store; only a
+        # product that is really in it can come back out.
+        return self._by_id.get(product.id)
+
     async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
         for product in self._by_id.values():
             for variant in product.variants:

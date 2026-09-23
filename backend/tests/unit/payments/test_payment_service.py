@@ -107,6 +107,12 @@ class InMemoryOrderRepository(AbstractOrderRepository):
     async def list_by_user_id(self, user_id: int) -> list[Order]:  # pragma: no cover
         return [o for o in self._store.values() if o.user_id == user_id]
 
+    async def list_all(self, *, limit: int, offset: int) -> list[Order]:  # pragma: no cover
+        return list(self._store.values())[offset : offset + limit]
+
+    async def count_all(self, *, status: OrderStatus | None = None) -> int:  # pragma: no cover
+        return sum(1 for o in self._store.values() if status is None or o.status is status)
+
     async def save(self, order: Order) -> Order:
         # A single aggregate held by reference: the stored object is the saved one.
         self._store[order.id] = order

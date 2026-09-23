@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.domains.admin.api.router import router as admin_router
 from app.domains.auth.api.router import router as auth_router
 from app.domains.cart.api.router import router as cart_router
 from app.domains.orders.api.router import router as orders_router
@@ -24,5 +25,8 @@ api_router.include_router(products_router)
 api_router.include_router(wishlist_router)
 api_router.include_router(orders_router)
 api_router.include_router(payments_router)
+# Last: the admin surface is not a step in any customer flow, and its own
+# guard covers every route under /admin regardless of where it is mounted.
+api_router.include_router(admin_router)
 
 __all__ = ["api_router"]

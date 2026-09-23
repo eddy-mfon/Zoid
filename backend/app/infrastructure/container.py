@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import Depends
 
 from app.config import get_settings
+from app.domains.admin.application.service import AdminService
 from app.domains.auth.application.service import AuthService
 from app.domains.cart.application.service import CartService
 from app.domains.orders.application.service import OrderService
@@ -145,3 +146,15 @@ async def get_payment_service(
             owner_email=config.store_owner_email,
         ),
     )
+
+
+async def get_admin_service(
+    uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+) -> AdminService:
+    """The shop-side orchestrator: the same repositories, behind the admin guard.
+
+    Nothing is wired specially for an administrator beyond which use-cases are
+    reachable. The product/order/user seats are the ones every customer-facing
+    service already gets, so an admin edit runs through the same rules.
+    """
+    return AdminService(products=uow.products, orders=uow.orders, users=uow.users)

@@ -6,7 +6,7 @@ The role is normalised through the `roles` lookup table.
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.users.domain.entities import User
@@ -37,6 +37,15 @@ class SqlUserRepository(AbstractUserRepository):
             await self._session.execute(select(UserRow).where(UserRow.email == email))
         ).scalar_one_or_none()
         return self._to_domain(row) if row is not None else None
+
+    async def list_all(self, *, limit: int, offset: int) -> list[User]:
+        stmt = select(UserRow).order_by(UserRow.id).limit(limit).offset(offset)
+        rows = (await self._session.execute(stmt)).scalars().all()
+        return [self._to_domain(row) for row in rows]
+
+    async def count_all(self) -> int:
+        stmt = select(func.count()).select_from(UserRow)
+        return (await self._session.execute(stmt)).scalar_one()
 
     async def update_profile(
         self,

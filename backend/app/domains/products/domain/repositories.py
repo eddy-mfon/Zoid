@@ -31,6 +31,17 @@ class AbstractProductRepository(ABC):
         """Total number of active products."""
 
     @abstractmethod
+    async def save(self, product: Product) -> Product | None:
+        """Persist changes made to a loaded product; ``None`` if it is gone.
+
+        The admin surface edits a product through its entity, so this is the door
+        those edits leave through. It writes the product's own fields and the
+        ``quantity`` of each existing variant's inventory, matched by variant id.
+        It never creates or removes variants or images, and never writes a
+        reservation (those belong to the checkout path in :meth:`reserve_stock`).
+        """
+
+    @abstractmethod
     async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
         """Reserve ``quantity`` units of a variant.
 

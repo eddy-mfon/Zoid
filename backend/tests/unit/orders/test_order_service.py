@@ -82,6 +82,12 @@ class InMemoryOrderRepository(AbstractOrderRepository):
     async def list_by_user_id(self, user_id: int) -> list[Order]:
         return [o for o in self._store.values() if o.user_id == user_id]
 
+    async def list_all(self, *, limit: int, offset: int) -> list[Order]:  # pragma: no cover
+        return list(self._store.values())[offset : offset + limit]
+
+    async def count_all(self, *, status: OrderStatus | None = None) -> int:  # pragma: no cover
+        return sum(1 for o in self._store.values() if status is None or o.status is status)
+
     async def save(self, order: Order) -> Order:  # pragma: no cover - unused here
         # The orders domain never rewrites an order; confirming a payment does.
         self._store[order.id] = order
@@ -105,6 +111,9 @@ class InMemoryProductRepository(AbstractProductRepository):
         raise NotImplementedError
 
     async def count_active(self) -> int:  # pragma: no cover
+        raise NotImplementedError
+
+    async def save(self, product: Product) -> Product | None:  # pragma: no cover
         raise NotImplementedError
 
     async def reserve_stock(self, variant_id: int, quantity: int) -> bool:

@@ -28,6 +28,18 @@ class AbstractUserRepository(ABC):
         """Return the user with ``email`` (normalised) or ``None``."""
 
     @abstractmethod
+    async def list_all(self, *, limit: int, offset: int) -> list[User]:
+        """Return a page of every registered user, earliest first.
+
+        The shop's own customer list (an admin capability); the caller's identity
+        never comes from here — self-service reads go through ``get_by_id``.
+        """
+
+    @abstractmethod
+    async def count_all(self) -> int:
+        """How many users the store has."""
+
+    @abstractmethod
     async def update_profile(
         self,
         user_id: int,

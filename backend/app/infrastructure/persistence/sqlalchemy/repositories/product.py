@@ -96,6 +96,34 @@ class SqlProductRepository(AbstractProductRepository):
         stmt = select(func.count()).select_from(ProductRow).where(ProductRow.is_active.is_(True))
         return (await self._session.execute(stmt)).scalar_one()
 
+    async def save(self, product: Product) -> Product | None:
+        row = await self._session.get(ProductRow, product.id)
+        if row is None:
+            return None
+        row.name = product.name
+        row.price = product.price
+        row.currency = product.currency
+        row.tone = product.tone
+        row.style = product.style
+        row.color = product.color
+        row.fit = product.fit
+        row.fit_note = product.fit_note
+        row.details = product.details
+        row.delivery = product.delivery
+        row.is_bestseller = product.is_bestseller
+        row.is_special = product.is_special
+        row.is_active = product.is_active
+        # Only the counts an admin restock moved are written back: reservations
+        # are the checkout path's, and the variant list itself is immutable here.
+        quantities = {variant.id: variant.inventory.quantity for variant in product.variants}
+        for variant in row.variants:
+            quantity = quantities.get(variant.id)
+            if quantity is not None and variant.inventory is not None:
+                variant.inventory.quantity = quantity
+        await self._session.flush()
+        await self._session.refresh(row)
+        return self._to_domain(row)
+
     async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
         variant = await self._session.get(ProductVariantRow, variant_id)
         if variant is None or variant.inventory is None:

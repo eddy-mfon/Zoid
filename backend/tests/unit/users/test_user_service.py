@@ -34,6 +34,12 @@ class InMemoryUserRepository(AbstractUserRepository):
     async def get_by_email(self, email: str) -> User | None:
         return next((u for u in self._by_id.values() if u.email == email), None)
 
+    async def list_all(self, *, limit: int, offset: int) -> list[User]:
+        return list(self._by_id.values())[offset : offset + limit]
+
+    async def count_all(self) -> int:
+        return len(self._by_id)
+
     async def update_profile(
         self,
         user_id: int,

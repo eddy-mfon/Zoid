@@ -7,7 +7,7 @@ the order row from the domain's computed properties.
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -58,6 +58,24 @@ class SqlOrderRepository(AbstractOrderRepository):
             )
         ).scalars().all()
         return [self._to_domain(row) for row in rows]
+
+    async def list_all(self, *, limit: int, offset: int) -> list[Order]:
+        rows = (
+            await self._session.execute(
+                select(OrderRow)
+                .options(selectinload(OrderRow.items))
+                .order_by(OrderRow.id.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+        ).scalars().all()
+        return [self._to_domain(row) for row in rows]
+
+    async def count_all(self, *, status: OrderStatus | None = None) -> int:
+        stmt = select(func.count()).select_from(OrderRow)
+        if status is not None:
+            stmt = stmt.where(OrderRow.status == status.value)
+        return (await self._session.execute(stmt)).scalar_one()
 
     async def save(self, order: Order) -> Order:
         """Persist a status change on a loaded order.
