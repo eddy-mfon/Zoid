@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     stripe_secret_key: str = Field(default="", repr=False)
     stripe_webhook_secret: str = Field(default="", repr=False)
     payment_currency: str = "NGN"
+    # Where a hosted checkout sends the browser back to. Every supported provider
+    # insists on a return URL when a payment session is opened.
+    payment_return_url: str = "http://localhost:5173/checkout"
 
     # --- Email ---
     resend_api_key: str = Field(default="", repr=False)

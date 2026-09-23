@@ -42,6 +42,7 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
     SqlAlchemyUnitOfWork,
 )
+from app.integrations.payments import build_payment_gateway
 from app.security.authentication.session import session_strategy_from_settings
 
 _settings = get_settings()
@@ -211,15 +212,38 @@ async def test_customers_cannot_refund(
     assert response.status_code == 403, response.text
 
 
-async def test_a_provider_without_an_adapter_fails_loudly(client: TestClient) -> None:
-    """While the configured provider has no adapter, nothing is charged silently."""
+async def test_a_provider_without_credentials_refuses_to_charge_anything(
+    client: TestClient,
+) -> None:
+    """Selection is the factory's, persistence is the database's.
+
+    Only the secret key is pinned -- so the endpoint proves that an
+    under-configured provider fails loudly (501) instead of quietly doing
+    something else, and that no payment attempt can leave the process.
+    """
     session, _ = _register_and_login(client)
     order_id = await _placed_order(client, session)
+    keyless = get_settings().model_copy(
+        update={"payment_provider": "paystack", "paystack_secret_key": ""}
+    )
 
-    response = _initiate(client, session, order_id)
+    async def overridden(
+        uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+    ) -> PaymentService:
+        return PaymentService(
+            transactions=uow.transactions,
+            orders=uow.orders,
+            gateway=build_payment_gateway(keyless),
+        )
+
+    client.app.dependency_overrides[get_payment_service] = overridden
+    try:
+        response = _initiate(client, session, order_id)
+    finally:
+        client.app.dependency_overrides.pop(get_payment_service, None)
 
     assert response.status_code == 501, response.text
-    assert "no adapter" in response.json()["detail"]
+    assert "not configured" in response.json()["detail"]
 
 
 async def test_initiate_verify_and_refund_flow(
