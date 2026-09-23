@@ -2661,3 +2661,74 @@ use pyproject.toml and uv.lock
 
 should be built inside the .venv
 use .\.venv\Scripts\Activate.ps1 to activate it
+
+---
+
+# Appendix A — Implementation record (as-built)
+
+This appendix documents the system **as it was actually built**, phase by phase
+under a strict one-gated-phase-at-a-time workflow (implement → run that phase's
+gate verbatim → PASS → report → commit `phase-NN` → stop). It complements the
+prescriptive design above, which remains the authoritative specification.
+
+## What was delivered
+
+Every module in the target structure exists and is exercised by the suite
+(637 tests, ~97% coverage as of the closing audit):
+
+- **Domains** — `auth`, `users`, `products`, `categories`(read), `cart`,
+  `wishlist`, `orders`, `payments`, `admin`, each split into `domain` /
+  `application` / `api` /
+  `infrastructure` layers.
+- **Security** — JWT-cookie sessions, Argon2 password hashing (pwdlib),
+  role/permission RBAC, and a `protection` layer (CORS, security headers,
+  request-validation handling, a pluggable rate limiter).
+- **Infrastructure** — a SQLAlchemy 2.0 async persistence layer behind
+  repository interfaces, a unit of work, and a single **composition root**
+  (`app/infrastructure/container.py`) that is the only place providers and
+  repositories are selected and wired.
+- **Integrations** — provider adapters behind contracts for payments
+  (Paystack + Stripe), email (Resend), and storage (Cloudinary + S3), each
+  chosen by configuration (`PAYMENT_PROVIDER`, `EMAIL_PROVIDER`,
+  `STORAGE_PROVIDER`) so business logic never names a provider.
+
+The Phase 18 compliance audit codified the dependency-direction rules as AST
+guard tests in `tests/unit/test_architecture.py`: no domain/application/router
+couple imports SQLAlchemy or FastAPI, provider SDKs stay inside
+`app/integrations/*/`, and the domain layer reaches only the shared kernel and
+sibling domain contracts.
+
+## Errors and lessons encountered during implementation
+
+Recorded so the same traps are not re-discovered:
+
+- **One event loop for the whole test session.** The FastAPI test client is
+  session-scoped and drives a lazily-created global async engine. Opening that
+  engine on a second event loop (a per-test `TestClient` context) deadlocks or
+  errors, so a single shared `client` fixture is used and API tests seed through
+  repositories on short-lived engines they dispose themselves.
+- **A startup/shutdown lifespan must not dispose the shared engine mid-suite.**
+  Once `main.py` grew a lifespan that builds the session factory on boot and
+  disposes it on shutdown, boot/health checks had to construct
+  `TestClient(create_app())` *without* entering the context manager, or the
+  session-scoped engine would be torn down under later tests.
+- **The dev database accumulates rows across runs.** List endpoints that order
+  oldest-first (products, customers) cannot be asserted by "it is on page one";
+  membership tests page through the full result set. Newest-first lists (admin
+  orders) are safe on the first page.
+- **Webhook idempotency is an ordering property.** A provider event must be
+  recorded under its provider event-id *before* any state changes, so a
+  redelivery is recognised as seen and does nothing twice — one payment, one
+  paid order, one email. Amounts that contradict the local order are recorded
+  and *disputed*, not trusted.
+- **Confirm-a-payment and notify-the-store are separate concerns.** Email is
+  triggered on the single transition to PAID and is allowed to fail without
+  un-paying an order.
+- **f-strings that build literal OpenAPI paths** must escape the braces
+  (`{{product_id}}`), or the template variable is evaluated as Python.
+- **Case-insensitive filesystems** cannot hold both `architecture.md` and
+  `ARCHITECTURE.md`; the spec file is renamed (via git) to the uppercase
+  deliverable name the roadmap and this document's own tree call for.
+- **Rate limiting is implemented but not yet attached to routes** — the
+  `rate_limit` dependency factory exists and is exported; no endpoint consumes
+  it yet (Not Specified which routes must be limited).
