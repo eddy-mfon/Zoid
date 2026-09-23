@@ -69,9 +69,20 @@ class Settings(BaseSettings):
     store_owner_email: str = ""
 
     # --- Storage ---
-    cloudinary_url: str = Field(default="", repr=False)
+    # A Cloudinary account is three coordinates. The SDK also understands a
+    # single CLOUDINARY_URL environment variable and reads that for itself, so
+    # there is no setting to duplicate here.
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = Field(default="", repr=False)
+    cloudinary_api_secret: str = Field(default="", repr=False)
+    # Anything that speaks the S3 API can be used; a blank endpoint means real
+    # Amazon S3. Credentials are optional because a bucket may be reachable
+    # through a role the process already holds.
+    s3_endpoint_url: str = ""
     s3_bucket: str = ""
     s3_region: str = ""
+    s3_access_key_id: str = Field(default="", repr=False)
+    s3_secret_access_key: str = Field(default="", repr=False)
 
     # --- Rate limiting / Redis ---
     redis_url: str = "redis://localhost:6379/0"
