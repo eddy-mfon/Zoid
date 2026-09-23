@@ -70,12 +70,20 @@ async def _seed(product: Product) -> Product:
 async def test_list_products_includes_seeded(client: TestClient) -> None:
     product = await _seed(_make_product())
 
-    response = client.get(f"{API}/products")
+    # Page through every result: the shared dev database accumulates rows across
+    # runs, so the freshly seeded product is not guaranteed to sit on page 1.
+    slugs: set[str] = set()
+    page = 1
+    while True:
+        response = client.get(f"{API}/products", params={"page": page, "page_size": 100})
+        assert response.status_code == 200, response.text
+        body = response.json()
+        slugs |= {item["slug"] for item in body["items"]}
+        if page >= body["total_pages"]:
+            break
+        page += 1
 
-    assert response.status_code == 200, response.text
-    body = response.json()
     assert body["total"] >= 1
-    slugs = {item["slug"] for item in body["items"]}
     assert product.slug in slugs
 
 

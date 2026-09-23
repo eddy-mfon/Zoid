@@ -5,6 +5,8 @@ Alembic autogeneration. Add new models as their domains land.
 """
 
 from app.infrastructure.persistence.sqlalchemy.models.address import AddressRow
+from app.infrastructure.persistence.sqlalchemy.models.cart import CartRow
+from app.infrastructure.persistence.sqlalchemy.models.cart_item import CartItemRow
 from app.infrastructure.persistence.sqlalchemy.models.category import CategoryRow
 from app.infrastructure.persistence.sqlalchemy.models.credential import CredentialRow
 from app.infrastructure.persistence.sqlalchemy.models.inventory import InventoryRow
@@ -22,6 +24,8 @@ from app.infrastructure.persistence.sqlalchemy.session import Base
 __all__ = [
     "Base",
     "AddressRow",
+    "CartRow",
+    "CartItemRow",
     "CategoryRow",
     "CredentialRow",
     "InventoryRow",
