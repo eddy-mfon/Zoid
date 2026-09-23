@@ -21,12 +21,14 @@ from app.domains.products.domain.repositories import (
     AbstractProductRepository,
 )
 from app.domains.users.domain.repositories import AbstractUserRepository
+from app.domains.wishlist.domain.repositories import AbstractWishlistRepository
 from app.infrastructure.persistence.sqlalchemy.repositories import (
     SqlCartRepository,
     SqlCategoryRepository,
     SqlCredentialsRepository,
     SqlProductRepository,
     SqlUserRepository,
+    SqlWishlistRepository,
 )
 
 
@@ -44,6 +46,7 @@ class AbstractUnitOfWork:
     products: AbstractProductRepository
     categories: AbstractCategoryRepository
     carts: AbstractCartRepository
+    wishlists: AbstractWishlistRepository
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -60,6 +63,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.products = SqlProductRepository(self.session)
         self.categories = SqlCategoryRepository(self.session)
         self.carts = SqlCartRepository(self.session)
+        self.wishlists = SqlWishlistRepository(self.session)
         return self
 
     async def __aexit__(

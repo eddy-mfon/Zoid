@@ -12,11 +12,13 @@ from app.domains.auth.api.router import router as auth_router
 from app.domains.cart.api.router import router as cart_router
 from app.domains.products.api.router import router as products_router
 from app.domains.users.api.router import router as users_router
+from app.domains.wishlist.api.router import router as wishlist_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
 api_router.include_router(cart_router)
 api_router.include_router(users_router)
 api_router.include_router(products_router)
+api_router.include_router(wishlist_router)
 
 __all__ = ["api_router"]

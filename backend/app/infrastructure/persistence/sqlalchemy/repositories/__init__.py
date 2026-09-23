@@ -15,6 +15,9 @@ from app.infrastructure.persistence.sqlalchemy.repositories.product import (
 from app.infrastructure.persistence.sqlalchemy.repositories.user import (
     SqlUserRepository,
 )
+from app.infrastructure.persistence.sqlalchemy.repositories.wishlist import (
+    SqlWishlistRepository,
+)
 
 __all__ = [
     "SqlCartRepository",
@@ -22,4 +25,5 @@ __all__ = [
     "SqlCredentialsRepository",
     "SqlProductRepository",
     "SqlUserRepository",
+    "SqlWishlistRepository",
 ]

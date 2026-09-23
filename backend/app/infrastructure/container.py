@@ -15,6 +15,7 @@ from app.domains.auth.application.service import AuthService
 from app.domains.cart.application.service import CartService
 from app.domains.products.application.service import ProductService
 from app.domains.users.application.service import UserService
+from app.domains.wishlist.application.service import WishlistService
 from app.infrastructure.persistence.sqlalchemy.session import get_sessionmaker
 from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
@@ -91,3 +92,10 @@ async def get_cart_service(
 ) -> CartService:
     """The guest/authenticated cart use-case orchestrator."""
     return CartService(carts=uow.carts, products=uow.products)
+
+
+async def get_wishlist_service(
+    uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+) -> WishlistService:
+    """The per-user wishlist use-case orchestrator."""
+    return WishlistService(wishlists=uow.wishlists, products=uow.products)
