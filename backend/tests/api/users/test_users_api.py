@@ -7,25 +7,16 @@ async engine lives on one event loop for the whole module.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from uuid import uuid4
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
-from app.main import app
 
 _settings = get_settings()
 API = _settings.api_v1_prefix
 COOKIE = _settings.cookie_name
 PASSWORD = "Sup3rSecret!"
-
-
-@pytest.fixture(scope="module")
-def client() -> Iterator[TestClient]:
-    with TestClient(app) as test_client:
-        yield test_client
 
 
 def _register_and_login(client: TestClient) -> tuple[str, str]:

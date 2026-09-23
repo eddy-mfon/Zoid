@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import Depends
 
 from app.domains.auth.application.service import AuthService
+from app.domains.products.application.service import ProductService
 from app.domains.users.application.service import UserService
 from app.infrastructure.persistence.sqlalchemy.session import get_sessionmaker
 from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
@@ -75,3 +76,10 @@ async def get_user_service(
 ) -> UserService:
     """The self-service profile use-case orchestrator."""
     return UserService(uow.users)
+
+
+async def get_product_service(
+    uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+) -> ProductService:
+    """The public catalog use-case orchestrator."""
+    return ProductService(products=uow.products, categories=uow.categories)

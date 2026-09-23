@@ -15,9 +15,15 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domains.auth.domain.repositories import AbstractCredentialsRepository
+from app.domains.products.domain.repositories import (
+    AbstractCategoryRepository,
+    AbstractProductRepository,
+)
 from app.domains.users.domain.repositories import AbstractUserRepository
 from app.infrastructure.persistence.sqlalchemy.repositories import (
+    SqlCategoryRepository,
     SqlCredentialsRepository,
+    SqlProductRepository,
     SqlUserRepository,
 )
 
@@ -33,6 +39,8 @@ class AbstractUnitOfWork:
 
     users: AbstractUserRepository
     credentials: AbstractCredentialsRepository
+    products: AbstractProductRepository
+    categories: AbstractCategoryRepository
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -46,6 +54,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         await self.session.begin()
         self.users = SqlUserRepository(self.session)
         self.credentials = SqlCredentialsRepository(self.session)
+        self.products = SqlProductRepository(self.session)
+        self.categories = SqlCategoryRepository(self.session)
         return self
 
     async def __aexit__(
