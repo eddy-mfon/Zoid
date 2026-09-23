@@ -13,7 +13,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.domains.orders.domain.enums import OrderStatus
-from app.shared.exceptions import ValidationError
+from app.shared.exceptions import ConflictError, ValidationError
 
 #: Sentinel id for lines that have not been persisted yet.
 NEW_ITEM_ID = 0
@@ -85,6 +85,22 @@ class Order:
 
     def find_item(self, item_id: int) -> OrderItem | None:
         return next((item for item in self.items if item.id == item_id), None)
+
+    def mark_paid(self) -> bool:
+        """Record a confirmed payment. Returns True when this changed the order.
+
+        Only a payment the payments domain has confirmed may move an order out of
+        ``PENDING_PAYMENT``, and repeating the news is a no-op: the second
+        confirmation (a webhook after a verification, say) changes nothing.
+        """
+        if self.status is OrderStatus.PAID:
+            return False
+        if not self.is_pending_payment:
+            raise ConflictError(
+                f"An order that is {self.status.value} cannot be paid"
+            )
+        self.status = OrderStatus.PAID
+        return True
 
     def validate(self) -> None:
         if not self.reference:

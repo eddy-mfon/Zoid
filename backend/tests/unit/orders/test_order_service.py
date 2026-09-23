@@ -82,6 +82,11 @@ class InMemoryOrderRepository(AbstractOrderRepository):
     async def list_by_user_id(self, user_id: int) -> list[Order]:
         return [o for o in self._store.values() if o.user_id == user_id]
 
+    async def save(self, order: Order) -> Order:  # pragma: no cover - unused here
+        # The orders domain never rewrites an order; confirming a payment does.
+        self._store[order.id] = order
+        return order
+
 
 class InMemoryProductRepository(AbstractProductRepository):
     def __init__(self, products: list[Product]) -> None:

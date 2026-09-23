@@ -15,8 +15,12 @@ from app.domains.orders.domain.entities import Order, OrderItem
 from app.domains.orders.domain.enums import OrderStatus
 from app.domains.orders.domain.repositories import AbstractOrderRepository
 from app.domains.payments.application.service import PaymentService
-from app.domains.payments.domain.entities import Transaction
-from app.domains.payments.domain.enums import PaymentAction, PaymentStatus
+from app.domains.payments.domain.entities import Refund, Transaction, WebhookEvent
+from app.domains.payments.domain.enums import (
+    PaymentAction,
+    PaymentStatus,
+    RefundStatus,
+)
 from app.domains.payments.domain.gateway import (
     AbstractPaymentGateway,
     PaymentInitiation,
@@ -25,7 +29,11 @@ from app.domains.payments.domain.gateway import (
     RefundRequest,
     RefundResult,
 )
-from app.domains.payments.domain.repositories import AbstractTransactionRepository
+from app.domains.payments.domain.repositories import (
+    AbstractRefundRepository,
+    AbstractTransactionRepository,
+    AbstractWebhookEventRepository,
+)
 from app.shared.exceptions import ConflictError, NotFoundError
 
 USER_ID = 7
@@ -97,6 +105,11 @@ class InMemoryOrderRepository(AbstractOrderRepository):
     async def list_by_user_id(self, user_id: int) -> list[Order]:  # pragma: no cover
         return [o for o in self._store.values() if o.user_id == user_id]
 
+    async def save(self, order: Order) -> Order:
+        # A single aggregate held by reference: the stored object is the saved one.
+        self._store[order.id] = order
+        return order
+
 
 class InMemoryTransactionRepository(AbstractTransactionRepository):
     def __init__(self) -> None:
@@ -125,6 +138,67 @@ class InMemoryTransactionRepository(AbstractTransactionRepository):
         # A single-row aggregate: the stored object is the persisted one.
         self._store[transaction.id] = transaction
         return transaction
+
+
+class InMemoryRefundRepository(AbstractRefundRepository):
+    def __init__(self) -> None:
+        self._store: dict[int, Refund] = {}
+        self._next = 900
+
+    async def add(self, refund: Refund) -> Refund:
+        refund.id = self._next
+        self._next += 1
+        self._store[refund.id] = refund
+        return refund
+
+    async def get_by_reference(self, reference: str) -> Refund | None:
+        return next((r for r in self._store.values() if r.reference == reference), None)
+
+    async def list_by_transaction_id(self, transaction_id: int) -> list[Refund]:
+        return [r for r in self._store.values() if r.transaction_id == transaction_id]
+
+    async def total_refunded(self, transaction_id: int) -> Decimal:
+        return sum(
+            (
+                r.amount
+                for r in self._store.values()
+                if r.transaction_id == transaction_id and r.is_settled
+            ),
+            Decimal("0.00"),
+        )
+
+
+class InMemoryWebhookEventRepository(AbstractWebhookEventRepository):
+    """Mimics the database's uniqueness on (provider, event_id)."""
+
+    def __init__(self) -> None:
+        self._store: dict[int, WebhookEvent] = {}
+        self._next = 700
+
+    async def add(self, event: WebhookEvent) -> WebhookEvent:
+        dupe = await self.get_by_provider_and_event_id(event.provider, event.event_id)
+        if dupe is not None:
+            raise AssertionError(f"event {event.event_id} recorded twice")
+        event.id = self._next
+        self._next += 1
+        self._store[event.id] = event
+        return event
+
+    async def get_by_provider_and_event_id(
+        self, provider: str, event_id: str
+    ) -> WebhookEvent | None:
+        return next(
+            (
+                e
+                for e in self._store.values()
+                if e.provider == provider and e.event_id == event_id
+            ),
+            None,
+        )
+
+    async def save(self, event: WebhookEvent) -> WebhookEvent:
+        self._store[event.id] = event
+        return event
 
 
 def _order(
@@ -160,6 +234,7 @@ def _service(
     order: Order | None = None,
     gateway: FakeGateway | None = None,
     orders: AbstractOrderRepository | None = None,
+    refunds: AbstractRefundRepository | None = None,
     provider: str | None = None,
 ) -> tuple[PaymentService, InMemoryTransactionRepository, FakeGateway]:
     order = order if order is not None else _order()
@@ -168,6 +243,8 @@ def _service(
     service = PaymentService(
         transactions=transactions,
         orders=orders or InMemoryOrderRepository(order),
+        refunds=refunds or InMemoryRefundRepository(),
+        webhook_events=InMemoryWebhookEventRepository(),
         gateway=gateway,
         provider=provider,
     )
@@ -258,6 +335,8 @@ async def test_failed_initiation_is_recorded_and_retried_with_a_new_attempt() ->
     retry_service = PaymentService(
         transactions=transactions,
         orders=InMemoryOrderRepository(_order()),
+        refunds=InMemoryRefundRepository(),
+        webhook_events=InMemoryWebhookEventRepository(),
         gateway=FakeGateway(),
     )
     retried, _ = await retry_service.initiate(user_id=USER_ID, order_id=10)
@@ -291,6 +370,53 @@ async def test_verification_settles_the_transaction() -> None:
     assert result.success is True
     assert settled.status is PaymentStatus.PAID
     assert gateway.verified == [transaction.reference]
+
+
+async def test_a_confirmed_payment_settles_the_order_it_paid_for() -> None:
+    order = _order()
+    service, _, _ = _service(order=order)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert order.status is OrderStatus.PAID
+
+
+async def test_a_declined_payment_leaves_the_order_awaiting_payment() -> None:
+    order = _order()
+    gateway = FakeGateway(
+        verification=PaymentVerification(
+            success=True, status=PaymentStatus.FAILED, message="Insufficient funds"
+        )
+    )
+    service, _, _ = _service(order=order, gateway=gateway)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    # A failed attempt is not a failed order: the customer may try again.
+    assert order.status is OrderStatus.PENDING_PAYMENT
+
+
+async def test_a_provider_confirming_a_different_amount_is_believed_by_nobody() -> None:
+    order = _order()
+    gateway = FakeGateway(
+        verification=PaymentVerification(
+            success=True,
+            status=PaymentStatus.PAID,
+            transaction_reference="PAY-1",
+            amount=Decimal("1.00"),
+        )
+    )
+    service, transactions, _ = _service(order=order, gateway=gateway)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    with pytest.raises(ConflictError):
+        await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert transaction.status is PaymentStatus.PENDING
+    assert order.status is OrderStatus.PENDING_PAYMENT
+    assert transactions._store[transaction.id].status is PaymentStatus.PENDING
 
 
 async def test_replaying_a_settled_verification_changes_nothing() -> None:
@@ -368,8 +494,21 @@ async def test_refund_settles_back_to_the_customer() -> None:
     assert settled.status is PaymentStatus.REFUNDED
 
 
-async def test_refund_amount_and_reason_are_passed_through() -> None:
+async def test_a_second_full_refund_is_refused() -> None:
     service, _, gateway = _service()
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+    await service.refund(reference=transaction.reference)
+
+    with pytest.raises(ConflictError):
+        await service.refund(reference=transaction.reference)
+
+    assert len(gateway.refunds) == 1
+
+
+async def test_refund_amount_and_reason_are_passed_through() -> None:
+    ledger = InMemoryRefundRepository()
+    service, _, gateway = _service(refunds=ledger)
     transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
     await service.verify(user_id=USER_ID, reference=transaction.reference)
 
@@ -380,9 +519,64 @@ async def test_refund_amount_and_reason_are_passed_through() -> None:
     request = gateway.refunds[0]
     assert request.amount == Decimal("1000.00")
     assert request.reason == "One jersey"
-    # Refund ledgering (partial amounts, multiple refunds per payment) arrives
-    # with the refund records; the payment record itself moves to refunded.
+    # Only part of the money went back, so the payment is still mostly paid --
+    # the refund itself is what the ledger remembers.
+    assert settled.status is PaymentStatus.PAID
+    (entry,) = await ledger.list_by_transaction_id(transaction.id)
+    assert entry.amount == Decimal("1000.00")
+    assert entry.reason == "One jersey"
+    assert entry.status is RefundStatus.SUCCEEDED
+    assert entry.reference.startswith("RFD-")
+
+
+async def test_a_full_refund_asks_the_provider_for_its_whole_balance() -> None:
+    service, _, gateway = _service()
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    settled, _ = await service.refund(reference=transaction.reference)
+
+    # No figure is sent: Stripe/Paystack refund what they hold, so a rounding
+    # difference cannot make a "full" refund come up short.
+    assert gateway.refunds[0].amount is None
     assert settled.status is PaymentStatus.REFUNDED
+
+
+async def test_successive_refunds_cannot_outrun_the_payment() -> None:
+    ledger = InMemoryRefundRepository()
+    service, _, gateway = _service(refunds=ledger)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    half = AMOUNT / 2
+    await service.refund(reference=transaction.reference, amount=half)
+
+    # The second refund can reach what is left, and not a kobo more.
+    with pytest.raises(ConflictError):
+        await service.refund(reference=transaction.reference, amount=half + Decimal("1.00"))
+    assert len(gateway.refunds) == 1
+
+    settled, _ = await service.refund(
+        reference=transaction.reference, amount=half, reason="The other jersey"
+    )
+    assert settled.status is PaymentStatus.REFUNDED
+    assert len(await ledger.list_by_transaction_id(transaction.id)) == 2
+
+
+async def test_an_uncharged_refund_is_not_written_into_the_ledger() -> None:
+    gateway = FakeGateway(
+        refund=RefundResult(
+            success=False, status=PaymentStatus.PAID, message="Card network refused"
+        )
+    )
+    ledger = InMemoryRefundRepository()
+    service, _, _ = _service(gateway=gateway, refunds=ledger)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    await service.refund(reference=transaction.reference)
+
+    assert await ledger.list_by_transaction_id(transaction.id) == []
 
 
 async def test_failed_refund_leaves_the_payment_untouched() -> None:

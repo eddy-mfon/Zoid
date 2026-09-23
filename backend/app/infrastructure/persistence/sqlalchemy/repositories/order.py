@@ -59,6 +59,20 @@ class SqlOrderRepository(AbstractOrderRepository):
         ).scalars().all()
         return [self._to_domain(row) for row in rows]
 
+    async def save(self, order: Order) -> Order:
+        """Persist a status change on a loaded order.
+
+        Ordered lines are an immutable checkout snapshot, so the only thing that
+        ever differs between a loaded order and its row is the header state.
+        """
+        row = await self._load(order.id)
+        if row is None:  # pragma: no cover - defensive
+            raise LookupError(f"Order {order.id} no longer exists")
+        row.status = order.status.value
+        row.notes = order.notes
+        await self._session.flush()
+        return self._to_domain(await self._load(row.id))
+
     async def _load(self, order_id: int) -> OrderRow | None:
         return (
             await self._session.execute(

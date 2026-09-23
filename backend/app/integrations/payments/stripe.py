@@ -12,8 +12,9 @@ Notes on two details that are easy to get wrong:
   the payment by the metadata we attach at creation time. A refund needs the
   payment intent for the same reason.
 
-Webhook signature verification arrives with the confirmation workflow -- in this
-same file, because a Stripe signature is a Stripe detail.
+* Webhook signatures are checked by Stripe's own verification code, which is the
+  only implementation that knows Stripe's signing scheme, timestamp tolerance and
+  revocation rules.
 """
 
 from __future__ import annotations
@@ -25,7 +26,11 @@ from typing import Any
 
 import stripe
 
-from app.domains.payments.domain.enums import PaymentAction, PaymentStatus
+from app.domains.payments.domain.enums import (
+    PaymentAction,
+    PaymentStatus,
+    WebhookKind,
+)
 from app.domains.payments.domain.gateway import (
     AbstractPaymentGateway,
     PaymentInitiation,
@@ -34,7 +39,18 @@ from app.domains.payments.domain.gateway import (
     RefundRequest,
     RefundResult,
 )
-from app.shared.exceptions import ProviderNotConfiguredError
+from app.domains.payments.domain.webhooks import (
+    AbstractWebhookAdapter,
+    WebhookNotification,
+)
+from app.shared.exceptions import (
+    ProviderNotConfiguredError,
+    SignatureVerificationError,
+    ValidationError,
+)
+
+#: The header Stripe signs its notifications into.
+SIGNATURE_HEADER = "stripe-signature"
 
 #: The metadata key our internal reference is carried under. Stripe does not
 #: accept a merchant reference of its own on a Checkout Session.
@@ -59,6 +75,21 @@ _INTENT_STATUSES = {
     "canceled": PaymentStatus.FAILED,
 }
 
+#: Stripe's event types, translated into what this shop does about them. A
+#: Checkout Session completing is the same news as a payment intent succeeding,
+#: and both mean the same thing to us as Paystack's ``charge.success``.
+_EVENT_KINDS = {
+    "checkout.session.completed": WebhookKind.PAYMENT_PAID,
+    "payment_intent.succeeded": WebhookKind.PAYMENT_PAID,
+    "charge.succeeded": WebhookKind.PAYMENT_PAID,
+    "checkout.session.expired": WebhookKind.PAYMENT_FAILED,
+    "payment_intent.payment_failed": WebhookKind.PAYMENT_FAILED,
+    "charge.failed": WebhookKind.PAYMENT_FAILED,
+    "charge.dispute.created": WebhookKind.PAYMENT_FAILED,
+    "charge.refunded": WebhookKind.REFUND_SETTLED,
+    "refund.created": WebhookKind.REFUND_SETTLED,
+}
+
 
 def _to_minor_units(amount: Decimal, currency: str) -> int:
     multiplier = Decimal(1) if currency.lower() in _ZERO_DECIMAL_CURRENCIES else Decimal(100)
@@ -72,8 +103,8 @@ def _from_minor_units(amount: Any, currency: str) -> Decimal | None:
     return (Decimal(amount) / multiplier).quantize(Decimal("0.01"))
 
 
-class StripePaymentGateway(AbstractPaymentGateway):
-    """The payment contract, spoken to Stripe."""
+class StripePaymentGateway(AbstractPaymentGateway, AbstractWebhookAdapter):
+    """The payment contract, spoken to Stripe -- in both directions."""
 
     provider = "stripe"
 
@@ -82,10 +113,12 @@ class StripePaymentGateway(AbstractPaymentGateway):
         *,
         secret_key: str,
         return_url: str = "",
+        webhook_secret: str = "",
         client: Any | None = None,
     ) -> None:
         self._secret_key = secret_key
         self._return_url = return_url.rstrip("/")
+        self._webhook_secret = webhook_secret
         # Injectable so the adapter can be tested without a network or an SDK
         # version dependency; production builds it from the secret key.
         self._client = client
@@ -230,6 +263,54 @@ class StripePaymentGateway(AbstractPaymentGateway):
             amount=amount if amount is not None else request.amount,
         )
 
+    # --- webhook intake ------------------------------------------------------
+
+    def parse_notification(
+        self, *, payload: bytes, headers: Mapping[str, str]
+    ) -> WebhookNotification:
+        """Verify Stripe's signature, then normalise the event.
+
+        Verification is Stripe's own code, handed the raw body: Stripe signs the
+        bytes it sent, so anything that re-serialises the JSON on the way invalidates
+        an honest notification. Without the signing secret there is no way to tell a
+        real event from a forged one, so the adapter refuses instead of guessing.
+        """
+        if not self._webhook_secret:
+            raise ProviderNotConfiguredError(
+                "Stripe notifications cannot be verified without "
+                "STRIPE_WEBHOOK_SECRET."
+            )
+        claimed = str(headers.get(SIGNATURE_HEADER) or "")
+        if not claimed:
+            raise SignatureVerificationError("Stripe signature verification failed.")
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, claimed, self._webhook_secret
+            )
+        except stripe.SignatureVerificationError as exc:
+            raise SignatureVerificationError(
+                "Stripe signature verification failed."
+            ) from exc
+        except (ValueError, TypeError) as exc:
+            # Authenticated, but not something this shop can read.
+            raise ValidationError("Stripe sent an event this store cannot read") from exc
+
+        event_id = str(_read(event, "id") or "").strip()
+        if not event_id:
+            raise ValidationError("Stripe sent an event with no id to identify it by")
+        name = str(_read(event, "type") or "").strip().lower()
+        obj = _read(event, "data.object")
+        currency = str(_read(obj, "currency") or "")
+        return WebhookNotification(
+            provider=self.provider,
+            event_id=event_id,
+            kind=_EVENT_KINDS.get(name, WebhookKind.IGNORED),
+            reference=_reference_from(obj),
+            provider_reference=_as_text(_read(obj, "id")),
+            amount=_from_minor_units(_reported_amount(obj), currency),
+            message=_failure_message(obj) or _as_text(_read(obj, "failure_message")),
+        )
+
     async def _find_intent(self, reference: str) -> Any | None:
         """The payment intent behind one of our references, if there is one."""
         page = await self._request(
@@ -281,6 +362,53 @@ class StripePaymentGateway(AbstractPaymentGateway):
 
 def _as_text(value: Any) -> str | None:
     return str(value) if value is not None else None
+
+
+def _read(source: Any, path: str) -> Any:
+    """Follow a dotted path through whatever Stripe returned.
+
+    Stripe hands back objects that answer to attribute access and raise
+    ``AttributeError`` for absent keys, while the tests (and Stripe's own
+    nested ``metadata``) hand back plain dicts. One reader that treats "absent"
+    as ``None`` keeps that difference out of every caller.
+    """
+    current = source
+    for part in path.split("."):
+        value = getattr(current, part, None)
+        if value is None and isinstance(current, Mapping):
+            value = current.get(part)
+        if value is None:
+            return None
+        current = value
+    return current
+
+
+def _reported_amount(obj: Any) -> Any:
+    """What Stripe says moved, under whichever name this event carries it.
+
+    A Checkout Session totals ``amount_total``, a settled intent reports
+    ``amount_received``, a charge or refund just has ``amount``.
+    """
+    for key in ("amount_total", "amount_received", "amount", "amount_refunded"):
+        value = _read(obj, key)
+        if value is not None:
+            return value
+    return None
+
+
+def _reference_from(obj: Any) -> str | None:
+    """Our reference, from wherever this event kind keeps it.
+
+    ``client_reference_id`` is what a Checkout Session carries; a payment intent
+    or charge has only the metadata attached at creation time, and a refund
+    created in Stripe's dashboard carries neither, in which case the event is not
+    about a payment this shop can identify.
+    """
+    for path in ("client_reference_id", "metadata.reference", "metadata.payment_reference"):
+        value = _read(obj, path)
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 
 def _failure_message(intent: Any) -> str | None:

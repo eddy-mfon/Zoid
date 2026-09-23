@@ -21,3 +21,7 @@ class AbstractOrderRepository(ABC):
     @abstractmethod
     async def list_by_user_id(self, user_id: int) -> list[Order]:
         """Return a user's orders, newest first."""
+
+    @abstractmethod
+    async def save(self, order: Order) -> Order:
+        """Persist changes made to a loaded order (status, notes)."""

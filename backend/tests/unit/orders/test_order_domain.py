@@ -8,7 +8,7 @@ import pytest
 
 from app.domains.orders.domain.entities import Order, OrderItem
 from app.domains.orders.domain.enums import OrderStatus
-from app.shared.exceptions import ValidationError
+from app.shared.exceptions import ConflictError, ValidationError
 
 
 def _item(*, quantity: int = 1, price: str = "58500.00", size: str = "M") -> OrderItem:
@@ -101,3 +101,39 @@ def test_find_item_by_id() -> None:
 
     assert order.find_item(42) is item
     assert order.find_item(999) is None
+
+
+# --- the payment confirmation, from the order's side --------------------------
+
+
+def test_a_confirmed_payment_moves_the_order_once() -> None:
+    order = _order()
+
+    assert order.mark_paid() is True
+    assert order.status is OrderStatus.PAID
+
+
+def test_hearing_the_same_news_twice_changes_nothing() -> None:
+    """A webhook arriving after a verification must not re-pay anything."""
+    order = _order()
+    order.mark_paid()
+
+    assert order.mark_paid() is False
+    assert order.status is OrderStatus.PAID
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        OrderStatus.PROCESSING,
+        OrderStatus.SHIPPED,
+        OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED,
+    ],
+)
+def test_an_order_beyond_payment_is_not_re_paid(status: OrderStatus) -> None:
+    """Payment is settled before an order ships; a late 'paid' is a contradiction."""
+    order = _order(status=status)
+
+    with pytest.raises(ConflictError):
+        order.mark_paid()

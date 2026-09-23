@@ -17,17 +17,28 @@ from app import __file__ as app_file
 from app.config import Settings, get_settings
 from app.domains.orders.domain.entities import Order, OrderItem
 from app.domains.payments.application.service import PaymentService
-from app.domains.payments.domain.gateway import AbstractPaymentGateway
+from app.domains.payments.domain.gateway import (
+    AbstractPaymentGateway,
+    PaymentInitiation,
+    PaymentRequest,
+    PaymentVerification,
+    RefundRequest,
+    RefundResult,
+)
+from app.domains.payments.domain.webhooks import AbstractWebhookAdapter
 from app.integrations.payments import (
     PaystackPaymentGateway,
     StripePaymentGateway,
     build_payment_gateway,
+    build_webhook_adapter,
     supported_providers,
 )
 from app.shared.exceptions import ProviderNotConfiguredError
 from tests.unit.payments.test_payment_service import (
     InMemoryOrderRepository,
+    InMemoryRefundRepository,
     InMemoryTransactionRepository,
+    InMemoryWebhookEventRepository,
 )
 
 
@@ -43,6 +54,8 @@ def _settings(provider: str) -> Settings:
             "payment_provider": provider,
             "paystack_secret_key": "",
             "stripe_secret_key": "",
+            "paystack_webhook_secret": "",
+            "stripe_webhook_secret": "",
         }
     )
 
@@ -123,6 +136,44 @@ def test_the_factory_offers_only_the_contract() -> None:
         assert isinstance(build_payment_gateway(_settings(name)), AbstractPaymentGateway)
 
 
+# --- the inbound half ---------------------------------------------------------
+
+
+def test_every_selected_adapter_also_reads_its_provider_notifications() -> None:
+    """Whichever provider is configured, its webhooks are understood.
+
+    If an adapter ever ships without webhook intake, composition hands over
+    ``None`` rather than a half-capable object -- this test is the tripwire that
+    says whether that is about to happen.
+    """
+    for name in supported_providers():
+        gateway = build_payment_gateway(_settings(name))
+        assert isinstance(build_webhook_adapter(gateway), AbstractWebhookAdapter)
+
+
+def test_the_webhook_adapter_is_the_same_conversation_as_the_gateway() -> None:
+    """One provider, one adapter: the object answering us is the one talking back."""
+    for name in supported_providers():
+        gateway = build_payment_gateway(_settings(name))
+        assert build_webhook_adapter(gateway) is gateway
+
+
+def test_a_gateway_that_cannot_receive_notifications_is_reported_as_such() -> None:
+    class DeafGateway(AbstractPaymentGateway):
+        provider = "deaf"
+
+        async def create_payment(self, request: PaymentRequest) -> PaymentInitiation:
+            raise NotImplementedError
+
+        async def verify_payment(self, reference: str) -> PaymentVerification:
+            raise NotImplementedError
+
+        async def refund_payment(self, request: RefundRequest) -> RefundResult:
+            raise NotImplementedError
+
+    assert build_webhook_adapter(DeafGateway()) is None
+
+
 # --- the PASS condition -------------------------------------------------------
 
 
@@ -139,6 +190,8 @@ async def test_the_same_service_drives_whichever_adapter_is_selected(
     service = PaymentService(
         transactions=InMemoryTransactionRepository(),
         orders=InMemoryOrderRepository(_order()),
+        refunds=InMemoryRefundRepository(),
+        webhook_events=InMemoryWebhookEventRepository(),
         gateway=build_payment_gateway(_settings(provider)),
     )
 

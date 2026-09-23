@@ -3,6 +3,9 @@
 Initiation and verification are customer operations on their own orders; refunds
 are an order-management permission. No endpoint here knows which provider is
 configured -- the response shape is the normalized contract in all cases.
+
+The webhook endpoint is the exception to that auth pattern, because a provider
+cannot hold a customer session; it is authenticated by signature instead.
 """
 
 from __future__ import annotations
@@ -10,16 +13,18 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.domains.payments.api.schemas import (
     InitiatePaymentRequest,
     PaymentResponse,
     RefundPaymentRequest,
     VerifyPaymentRequest,
+    WebhookResponse,
     serialize_initiation,
     serialize_refund,
     serialize_verification,
+    serialize_webhook,
 )
 from app.domains.payments.application.service import PaymentService
 from app.infrastructure.container import get_payment_service
@@ -71,3 +76,25 @@ async def refund_payment(
         reference=body.reference, amount=amount, reason=body.reason
     )
     return serialize_refund(transaction, refund)
+
+
+@router.post("/webhooks/{provider}", response_model=WebhookResponse)
+async def payment_webhook(
+    provider: str,
+    request: Request,
+    service: Annotated[PaymentService, Depends(get_payment_service)],
+) -> WebhookResponse:
+    """Receive a provider notification about a payment.
+
+    There is no session here to depend on, so the raw body is passed to the
+    adapter that knows how to authenticate it: an unsigned or badly signed
+    notification is refused before anything reads what it claims. A genuine one
+    is answered the same way whether it changed anything or was a redelivery,
+    because a provider that sees a retry-worthy failure will keep retrying news
+    we have already acted on.
+    """
+    payload = await request.body()
+    _, outcome = await service.handle_webhook(
+        provider=provider, payload=payload, headers=request.headers
+    )
+    return serialize_webhook(outcome)

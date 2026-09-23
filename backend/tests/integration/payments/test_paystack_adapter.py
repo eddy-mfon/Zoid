@@ -8,6 +8,8 @@ normalised results.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 from collections.abc import Iterator
 from decimal import Decimal
@@ -16,16 +18,22 @@ from typing import Any
 import httpx
 import pytest
 
-from app.domains.payments.domain.enums import PaymentAction, PaymentStatus
+from app.domains.payments.domain.enums import PaymentAction, PaymentStatus, WebhookKind
 from app.domains.payments.domain.gateway import (
     AbstractPaymentGateway,
     PaymentRequest,
     RefundRequest,
 )
+from app.domains.payments.domain.webhooks import AbstractWebhookAdapter
 from app.integrations.payments.paystack import PaystackPaymentGateway
-from app.shared.exceptions import ProviderNotConfiguredError
+from app.shared.exceptions import (
+    ProviderNotConfiguredError,
+    SignatureVerificationError,
+    ValidationError,
+)
 
 SECRET = "sk_test_paystack"
+WEBHOOK_SECRET = "whsec_test_paystack"
 CALLBACK = "http://localhost:5173/checkout"
 INTERNAL_REFERENCE = "PAY-INTERNAL1"
 
@@ -101,6 +109,41 @@ def _gateway(recorder: PaystackRecorder, *, secret_key: str = SECRET) -> Paystac
         callback_url=CALLBACK,
         transport=recorder.transport,
     )
+
+
+def _notifier(*, webhook_secret: str = WEBHOOK_SECRET) -> PaystackPaymentGateway:
+    """An adapter for the inbound direction: it needs no transport, it talks to
+    nobody, it only decides whether a payload is authentically Paystack's."""
+    return PaystackPaymentGateway(
+        secret_key=SECRET,
+        callback_url=CALLBACK,
+        webhook_secret=webhook_secret,
+    )
+
+
+def _event(**overrides: Any) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "event": "charge.success",
+        "data": {
+            "id": 500,
+            "status": "success",
+            "reference": INTERNAL_REFERENCE,
+            "amount": 4200000,
+            "currency": "NGN",
+            "gateway_reference": "PS-GW-999",
+        },
+    }
+    body.update(overrides)
+    return body
+
+
+def _notify(
+    body: dict[str, Any] | bytes, *, secret: str = WEBHOOK_SECRET
+) -> tuple[bytes, dict[str, str]]:
+    """Play Paystack: sign the exact bytes a notification would be sent as."""
+    payload = body if isinstance(body, bytes) else json.dumps(body).encode()
+    signature = hmac.new(secret.encode(), payload, hashlib.sha512).hexdigest()
+    return payload, {"paystack-signature": signature}
 
 
 # --- the contract -------------------------------------------------------------
@@ -318,6 +361,189 @@ async def test_a_refused_refund_leaves_the_payment_paid(reply: tuple[int, Any]) 
     assert result.success is False
     assert result.status is PaymentStatus.PAID
     assert result.message
+
+
+# --- webhook intake -----------------------------------------------------------
+
+
+def test_the_same_adapter_reads_paystacks_notifications() -> None:
+    """One class owns both directions, so a webhook can never be handled by an
+    implementation that has not been given a signature scheme."""
+    assert isinstance(_notifier(), AbstractWebhookAdapter)
+
+
+def test_a_signed_event_becomes_business_vocabulary() -> None:
+    payload, headers = _notify(_event())
+
+    notification = _notifier().parse_notification(payload=payload, headers=headers)
+
+    assert notification.provider == "paystack"
+    assert notification.kind is WebhookKind.PAYMENT_PAID
+    assert notification.reference == INTERNAL_REFERENCE  # our reference back again
+    assert notification.event_id == "charge.success:500"
+    assert notification.amount == Decimal("42000.00")  # out of kobo
+    assert notification.currency == "NGN"
+    assert notification.provider_reference == "PS-GW-999"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"event": "charge.success", "data": {"id": 500}},
+        {
+            "event": {"id": 12, "description": "charge.success"},
+            "data": {"id": 500},
+        },
+    ],
+    ids=("event-as-a-name", "event-as-an-object"),
+)
+def test_both_ways_paystack_spells_an_event_are_read_the_same_way(body: dict) -> None:
+    payload, headers = _notify(body)
+
+    notification = _notifier().parse_notification(payload=payload, headers=headers)
+
+    assert notification.kind is WebhookKind.PAYMENT_PAID
+    assert notification.event_id  # redeliveries must be recognisable
+
+
+def test_the_same_event_twice_carries_the_same_id() -> None:
+    """The idempotency key has to be stable across a redelivery, or it is nothing."""
+    payload, headers = _notify(_event())
+    gateway = _notifier()
+
+    first = gateway.parse_notification(payload=payload, headers=headers)
+    second = gateway.parse_notification(payload=payload, headers=headers)
+
+    assert first == second
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("charge.success", WebhookKind.PAYMENT_PAID),
+        ("payment.success", WebhookKind.PAYMENT_PAID),
+        ("charge.failed", WebhookKind.PAYMENT_FAILED),
+        ("payment.failed", WebhookKind.PAYMENT_FAILED),
+        ("charge.reversed", WebhookKind.PAYMENT_FAILED),
+        ("refund.successful", WebhookKind.REFUND_SETTLED),
+        ("refund.failed", WebhookKind.IGNORED),
+        ("subscription.create", WebhookKind.IGNORED),  # unlisted is recorded, not acted on
+        ("SOME BRAND NEW EVENT", WebhookKind.IGNORED),
+    ],
+)
+def test_paystacks_event_names_are_translated(name: str, expected: WebhookKind) -> None:
+    payload, headers = _notify(_event(event=name))
+
+    assert _notifier().parse_notification(payload=payload, headers=headers).kind is expected
+
+
+def test_a_failure_event_carries_paystacks_reason() -> None:
+    event = _event(
+        event="charge.failed",
+        data={
+            "id": 501,
+            "status": "failed",
+            "reference": INTERNAL_REFERENCE,
+            "failure_reason": "insufficient funds",
+        },
+    )
+    payload, headers = _notify(event)
+
+    notification = _notifier().parse_notification(payload=payload, headers=headers)
+
+    assert notification.message == "insufficient funds"
+    assert notification.amount is None
+
+
+def test_a_refund_event_reads_the_reference_one_level_down() -> None:
+    """A refund event describes a refund, and hangs the transaction inside it."""
+    event = _event(
+        event="refund.successful",
+        data={
+            "id": 900,
+            "transaction": {"id": 500, "reference": INTERNAL_REFERENCE},
+        },
+    )
+    payload, headers = _notify(event)
+
+    notification = _notifier().parse_notification(payload=payload, headers=headers)
+
+    assert notification.kind is WebhookKind.REFUND_SETTLED
+    assert notification.reference == INTERNAL_REFERENCE
+
+
+def test_the_signature_is_over_the_bytes_sent_not_a_re_encoded_copy() -> None:
+    """Keys in Paystack's order, spacing of Paystack's choosing: still authentic.
+
+    Anything that parsed the body and re-serialised it on the way to verification
+    would break this notification, and an honest event would be rejected.
+    """
+    raw = (
+        b'{"data":  {"id":500,"reference":"PAY-INTERNAL1","amount":4200000,'
+        b'"currency":"NGN","status":"success"},  "event":"charge.success"}'
+    )
+    payload, headers = _notify(raw)
+
+    notification = _notifier().parse_notification(payload=payload, headers=headers)
+
+    assert notification.reference == INTERNAL_REFERENCE
+    assert notification.amount == Decimal("42000.00")
+
+
+@pytest.mark.parametrize(
+    "tampered",
+    [
+        pytest.param("different_secret", id="signed-by-somebody-else"),
+        pytest.param("missing", id="no-signature-header"),
+        pytest.param("empty", id="empty-signature-header"),
+    ],
+)
+def test_a_payload_that_is_not_authentically_paystacks_is_not_read(tampered: str) -> None:
+    body = _event()
+    payload, _ = _notify(body)
+    headers = {
+        "different_secret": _notify(body, secret="whsec_something_else")[1],
+        "missing": {},
+        "empty": {"paystack-signature": ""},
+    }[tampered]
+
+    with pytest.raises(SignatureVerificationError):
+        _notifier().parse_notification(payload=payload, headers=headers)
+
+
+def test_a_signed_event_for_a_changed_body_is_refused() -> None:
+    """A valid signature over one body must not carry a different body."""
+    _, headers = _notify(_event())
+    forged = json.dumps(_event(data={"id": 500, "amount": 100})).encode()
+
+    with pytest.raises(SignatureVerificationError):
+        _notifier().parse_notification(payload=forged, headers=headers)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(b"not json at all", id="unreadable"),
+        pytest.param(b"[]", id="not-an-object"),
+        pytest.param({"data": {"id": 500}}, id="no-event-name"),
+        pytest.param({"event": "charge.success", "data": {}}, id="no-event-id"),
+    ],
+)
+def test_authentic_nonsense_is_a_bad_request_not_a_crash(body: bytes | dict) -> None:
+    """Verified as sent by Paystack, and still something this shop cannot act on."""
+    payload, headers = _notify(body)
+
+    with pytest.raises(ValidationError):
+        _notifier().parse_notification(payload=payload, headers=headers)
+
+
+def test_notifications_cannot_be_read_without_a_signing_secret() -> None:
+    """No secret means no way to tell a real event from a forged one, so the
+    adapter refuses rather than defaulting to belief."""
+    payload, headers = _notify(_event())
+
+    with pytest.raises(ProviderNotConfiguredError):
+        _notifier(webhook_secret="").parse_notification(payload=payload, headers=headers)
 
 
 # --- configuration -----------------------------------------------------------

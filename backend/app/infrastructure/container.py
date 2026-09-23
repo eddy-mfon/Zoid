@@ -24,7 +24,10 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
     SqlAlchemyUnitOfWork,
 )
-from app.integrations.payments import build_payment_gateway
+from app.integrations.payments import (
+    build_payment_gateway,
+    build_webhook_adapter,
+)
 from app.security.authentication.dependencies import (
     get_session_service,
     get_session_strategy,
@@ -115,11 +118,19 @@ async def get_order_service(
 async def get_payment_service(
     uow: AbstractUnitOfWork = Depends(get_unit_of_work),
 ) -> PaymentService:
-    """The payment use-case orchestrator, bound to the configured gateway."""
+    """The payment use-case orchestrator, bound to the configured gateway.
+
+    One adapter usually fills both seats: it answers our questions about a
+    payment and reads the notifications the provider sends unasked. Which of
+    those the configured provider can do is decided here, once, by the factory.
+    """
     gateway = build_payment_gateway(get_settings())
     return PaymentService(
         transactions=uow.transactions,
         orders=uow.orders,
+        refunds=uow.refunds,
+        webhook_events=uow.webhook_events,
         # The adapter names itself; configuration is what decided which one.
         gateway=gateway,
+        webhook=build_webhook_adapter(gateway),
     )

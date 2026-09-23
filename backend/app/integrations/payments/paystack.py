@@ -2,30 +2,38 @@
 
 Everything that is Paystack-specific lives here and nowhere else: the REST
 endpoints, the kobo-denominated amounts, the ``{"status", "message", "data"}``
-envelope, and Paystack's own error text. The application sees only the payment
-contract, so a Paystack redirect is indistinguishable from any other.
+envelope, Paystack's error text, and the shape of a Paystack webhook signature.
+The application sees only the payment contract, so a Paystack redirect is
+indistinguishable from any other.
 
-Two choices worth stating:
+Three choices worth stating:
 
 * One short-lived ``httpx.AsyncClient`` per call. Payment traffic is sparse, the
   overhead is negligible, and no connection state outlives the request.
 * Unreachable is not the same as declined. A transport problem is reported as
   ``success=False`` with a ``PENDING`` status so the attempt stays open, while an
   explicit "no" from Paystack is reported as ``FAILED``.
-
-Webhook signature verification arrives with the confirmation workflow -- in this
-same file, because a Paystack signature is a Paystack detail.
+* A notification whose signature does not match the body is refused here, before
+  anyone downstream can read what it claims. An unverifiable payload is not
+  evidence, and no amount of application logic can retrofit that.
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 import httpx
 
-from app.domains.payments.domain.enums import PaymentAction, PaymentStatus
+from app.domains.payments.domain.enums import (
+    PaymentAction,
+    PaymentStatus,
+    WebhookKind,
+)
 from app.domains.payments.domain.gateway import (
     AbstractPaymentGateway,
     PaymentInitiation,
@@ -34,7 +42,15 @@ from app.domains.payments.domain.gateway import (
     RefundRequest,
     RefundResult,
 )
-from app.shared.exceptions import ProviderNotConfiguredError
+from app.domains.payments.domain.webhooks import (
+    AbstractWebhookAdapter,
+    WebhookNotification,
+)
+from app.shared.exceptions import (
+    ProviderNotConfiguredError,
+    SignatureVerificationError,
+    ValidationError,
+)
 
 DEFAULT_BASE_URL = "https://api.paystack.co"
 #: Paystack answers "success" for a settled transaction.
@@ -43,7 +59,21 @@ _VERIFICATION_STATUSES = {
     "failed": PaymentStatus.FAILED,
     "pending": PaymentStatus.PENDING,
 }
+#: The header Paystack signs its notifications into.
+SIGNATURE_HEADER = "paystack-signature"
 _TIMEOUT_SECONDS = 15.0
+
+#: Paystack's event names, translated into what this shop does about them.
+#: Anything not listed is still recorded; it simply asks for no action.
+_EVENT_KINDS = {
+    "charge.success": WebhookKind.PAYMENT_PAID,
+    "payment.success": WebhookKind.PAYMENT_PAID,
+    "charge.failed": WebhookKind.PAYMENT_FAILED,
+    "payment.failed": WebhookKind.PAYMENT_FAILED,
+    "charge.reversed": WebhookKind.PAYMENT_FAILED,
+    "refund.successful": WebhookKind.REFUND_SETTLED,
+    "refund.failed": WebhookKind.IGNORED,
+}
 
 
 def _to_smallest_unit(amount: Decimal) -> int:
@@ -57,8 +87,8 @@ def _from_smallest_unit(value: Any) -> Decimal | None:
     return (Decimal(value) / 100).quantize(Decimal("0.01"))
 
 
-class PaystackPaymentGateway(AbstractPaymentGateway):
-    """The payment contract, spoken to Paystack."""
+class PaystackPaymentGateway(AbstractPaymentGateway, AbstractWebhookAdapter):
+    """The payment contract, spoken to Paystack -- in both directions."""
 
     provider = "paystack"
 
@@ -67,11 +97,13 @@ class PaystackPaymentGateway(AbstractPaymentGateway):
         *,
         secret_key: str,
         callback_url: str = "",
+        webhook_secret: str = "",
         base_url: str = DEFAULT_BASE_URL,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._secret_key = secret_key
         self._callback_url = callback_url
+        self._webhook_secret = webhook_secret
         self._base_url = base_url
         self._transport = transport
 
@@ -201,6 +233,44 @@ class PaystackPaymentGateway(AbstractPaymentGateway):
             message=_message(body),
         )
 
+    # --- webhook intake ------------------------------------------------------
+
+    def parse_notification(
+        self, *, payload: bytes, headers: Mapping[str, str]
+    ) -> WebhookNotification:
+        """Verify Paystack's signature over the raw body, then read the event.
+
+        The signature is the hex HMAC-SHA512 of the exact bytes Paystack sent,
+        which is why the raw body is authenticated rather than a re-serialised
+        copy of it: reordered keys or lost whitespace would break an otherwise
+        honest notification.
+        """
+        if not self._webhook_secret:
+            raise ProviderNotConfiguredError(
+                "Paystack notifications cannot be verified without "
+                "PAYSTACK_WEBHOOK_SECRET."
+            )
+        claimed = str(headers.get(SIGNATURE_HEADER) or "")
+        digest = hmac.new(
+            self._webhook_secret.encode(), payload, hashlib.sha512
+        ).hexdigest()
+        if not claimed or not hmac.compare_digest(claimed, digest):
+            raise SignatureVerificationError("Paystack signature verification failed.")
+
+        body = _read_json(payload)
+        name, event_id = _event_fields(body)
+        data = _data(body)
+        return WebhookNotification(
+            provider=self.provider,
+            event_id=event_id,
+            kind=_EVENT_KINDS.get(name, WebhookKind.IGNORED),
+            reference=_reference_from(data),
+            provider_reference=_text_or_none(data.get("gateway_reference")),
+            amount=_from_smallest_unit(data.get("amount")),
+            currency=_text_or_none(data.get("currency")),
+            message=_text_or_none(data.get("failure_reason")) or _message(body),
+        )
+
     async def _call(
         self, method: str, path: str, payload: Mapping[str, Any] | None = None
     ) -> tuple[int, dict[str, Any]]:
@@ -244,3 +314,66 @@ def _message(body: Mapping[str, Any]) -> str | None:
 
 def _as_text(value: Any) -> str | None:
     return str(value) if value is not None else None
+
+
+def _text_or_none(value: Any) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
+def _read_json(payload: bytes) -> Mapping[str, Any]:
+    """Parse an already-authenticated body. Unreadable is not unauthentic."""
+    try:
+        body = json.loads(payload)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValidationError(
+            "Paystack sent a notification this store cannot read"
+        ) from exc
+    if not isinstance(body, Mapping):
+        raise ValidationError("Paystack sent a notification that is not an object")
+    return body
+
+
+def _event_fields(body: Mapping[str, Any]) -> tuple[str, str]:
+    """Paystack's name and id for one notification.
+
+    Newer integrations are sent ``{"event": "charge.success", "data": {...}}``;
+    older ones nest the event as an object with its own ``id`` and
+    ``description``. Both spellings are accepted. Without a name there is nothing
+    to interpret, and where no event id is sent the id of the object being
+    described stands in: an idempotency key only has to survive a redelivery
+    unchanged, not mean anything to anybody else.
+    """
+    event = body.get("event")
+    raw_data = body.get("data")
+    data = raw_data if isinstance(raw_data, Mapping) else {}
+    if isinstance(event, Mapping):
+        name = str(event.get("description") or "").strip().lower()
+        event_id = str(event.get("id") or "").strip()
+    else:
+        name = str(event or "").strip().lower()
+        event_id = ""
+    if not name:
+        raise ValidationError("Paystack notification carries no event to interpret")
+    if not event_id:
+        described = data.get("id")
+        if described is None:
+            raise ValidationError("Paystack notification carries no event id to record")
+        event_id = f"{name}:{described}"
+    return name, event_id
+
+
+def _reference_from(data: Mapping[str, Any]) -> str | None:
+    """Our own reference, wherever Paystack chose to put it.
+
+    Transaction events carry it on ``data``; a refund event nests the transaction
+    one level down, so both are checked before concluding it is not about us.
+    """
+    nested = data.get("transaction")
+    sources: list[Mapping[str, Any]] = [data]
+    if isinstance(nested, Mapping):
+        sources.append(nested)
+    for source in sources:
+        reference = source.get("reference")
+        if isinstance(reference, str) and reference:
+            return reference
+    return None

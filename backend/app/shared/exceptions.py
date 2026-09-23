@@ -60,6 +60,18 @@ class ProviderNotConfiguredError(AppError):
     default_message = "Provider is not configured."
 
 
+class SignatureVerificationError(AppError):
+    """An inbound provider request did not carry a valid provider signature.
+
+    The response is deliberately indistinguishable from a plain bad request: a
+    rejected webhook must not reveal what a correct payload would have looked
+    like.
+    """
+
+    status_code = HTTPStatus.BAD_REQUEST
+    default_message = "Provider signature verification failed."
+
+
 def status_for(error: AppError) -> int:
     """Resolve the HTTP status code for a given application error."""
     return int(error.status_code)

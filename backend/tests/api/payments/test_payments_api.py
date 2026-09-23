@@ -3,17 +3,28 @@
 Persistence, ownership and permission are exercised for real; the provider is a
 scripted double injected through the dependency container -- the same seam a
 Paystack or Stripe adapter will slot into, which is the point of the contract.
+
+The webhook half of this file uses the *real* Paystack adapter instead of a
+double, because what is being proved is that a signed notification from a
+provider with no session, no user and no permissions can settle an order -- and
+that a second copy of the same notification cannot settle it again.
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 from collections.abc import Iterator
 from decimal import Decimal
+from itertools import count
 from uuid import uuid4
 
+import httpx
 import pytest
 from fastapi import Depends
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.config import get_settings
 from app.domains.payments.application.service import PaymentService
@@ -34,6 +45,7 @@ from app.domains.products.domain.entities import (
     ProductVariant,
 )
 from app.infrastructure.container import get_payment_service, get_unit_of_work
+from app.infrastructure.persistence.sqlalchemy.models import TransactionRow, WebhookEventRow
 from app.infrastructure.persistence.sqlalchemy.session import (
     build_sessionmaker,
     create_engine_from_url,
@@ -42,7 +54,8 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
     SqlAlchemyUnitOfWork,
 )
-from app.integrations.payments import build_payment_gateway
+from app.integrations.payments import build_payment_gateway, build_webhook_adapter
+from app.integrations.payments.paystack import PaystackPaymentGateway
 from app.security.authentication.session import session_strategy_from_settings
 
 _settings = get_settings()
@@ -50,6 +63,8 @@ API = _settings.api_v1_prefix
 COOKIE = _settings.cookie_name
 PASSWORD = "Sup3rSecret!"
 PRICE = Decimal("42000.00")
+PRICE_KOBO = 4200000
+WEBHOOK_SECRET = "whsec_test_at_the_endpoint"
 
 CHECKOUT = {
     "contact_name": "Ada Zoid",
@@ -113,6 +128,8 @@ def gateway(client: TestClient) -> Iterator[ScriptedGateway]:
         return PaymentService(
             transactions=uow.transactions,
             orders=uow.orders,
+            refunds=uow.refunds,
+            webhook_events=uow.webhook_events,
             gateway=scripted,
             provider=scripted.provider,
         )
@@ -233,6 +250,8 @@ async def test_a_provider_without_credentials_refuses_to_charge_anything(
         return PaymentService(
             transactions=uow.transactions,
             orders=uow.orders,
+            refunds=uow.refunds,
+            webhook_events=uow.webhook_events,
             gateway=build_payment_gateway(keyless),
         )
 
@@ -321,3 +340,342 @@ async def test_payment_requests_are_validated(
             f"{API}/payments/verify", cookies={COOKIE: session}, json={"reference": "x"}
         )
     ).status_code == 422
+
+
+# --- provider notifications at the endpoint -----------------------------------
+
+#: A fresh starting id for each process. Receipts are committed to a database
+#: that outlives the run, so event ids restarted from one would be answered
+#: "duplicate" by the next run -- correctly, which is precisely the behaviour the
+#: redelivery test exists to establish.
+_event_numbers = count(uuid4().int % 1_000_000_000_000)
+
+
+def _paystack_answer(request: httpx.Request) -> httpx.Response:
+    """The two Paystack calls a checkout makes, answered from a script.
+
+    The access code is derived from our reference because a payment attempt's
+    provider reference has to be unique -- a script that reused one would be
+    reporting a clash as though it were the application's bug.
+    """
+    if request.url.path.startswith("/transaction/verify"):
+        reference = request.url.path.rsplit("/", 1)[-1]
+        return httpx.Response(
+            200,
+            json={
+                "status": True,
+                "message": "Transaction verified successfully",
+                "data": {
+                    "status": "success",
+                    "reference": reference,
+                    "gateway_reference": f"GW-{reference}",
+                    "amount": PRICE_KOBO,
+                    "currency": "NGN",
+                },
+            },
+        )
+    reference = json.loads(request.content)["reference"]
+    return httpx.Response(
+        200,
+        json={
+            "status": True,
+            "message": "Authorization URL created",
+            "data": {
+                "authorization_url": f"https://checkout.paystack.com/{reference}",
+                "access_code": f"ac-{reference}",
+                "reference": reference,
+            },
+        },
+    )
+
+
+@pytest.fixture
+def paystack(client: TestClient) -> Iterator[str]:
+    """The real adapter, wired the way the container wires it, transport and all.
+
+    Only the signing secret is chosen by the test: it is what lets these tests
+    send a notification that Paystack itself would have signed.
+    """
+    gateway = PaystackPaymentGateway(
+        secret_key="sk_test_at_the_endpoint",
+        callback_url="http://localhost:5173/checkout",
+        webhook_secret=WEBHOOK_SECRET,
+        transport=httpx.MockTransport(_paystack_answer),
+    )
+
+    async def overridden(
+        uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+    ) -> PaymentService:
+        return PaymentService(
+            transactions=uow.transactions,
+            orders=uow.orders,
+            refunds=uow.refunds,
+            webhook_events=uow.webhook_events,
+            gateway=gateway,
+            webhook=build_webhook_adapter(gateway),
+        )
+
+    client.app.dependency_overrides[get_payment_service] = overridden
+    yield WEBHOOK_SECRET
+    client.app.dependency_overrides.pop(get_payment_service, None)
+
+
+def _notification(
+    *,
+    secret: str,
+    reference: str | None,
+    name: str = "charge.success",
+    amount: int = PRICE_KOBO,
+) -> tuple[bytes, dict[str, str], str]:
+    """A Paystack event, signed as Paystack signs it, with its ledger identity.
+
+    Every event gets a fresh id. An id reused between tests would be taken for a
+    redelivery by the next one -- true of Paystack too, which is what the
+    duplicate test below is here to establish.
+    """
+    number = next(_event_numbers)
+    data: dict[str, object] = {
+        "id": number,
+        "status": "success" if name.endswith("success") else "failed",
+        "amount": amount,
+        "currency": "NGN",
+        "gateway_reference": f"PS-API-{number}",
+    }
+    if reference is not None:
+        data["reference"] = reference
+    payload = json.dumps({"event": name, "data": data}).encode()
+    digest = hmac.new(secret.encode(), payload, hashlib.sha512).hexdigest()
+    return payload, {"paystack-signature": digest}, f"{name}:{number}"
+
+
+def _deliver(
+    client: TestClient,
+    payload: bytes,
+    headers: dict[str, str],
+    *,
+    provider: str = "paystack",
+) -> httpx.Response:
+    """Hand a notification to the endpoint. No cookies: a provider has none."""
+    return client.post(
+        f"{API}/payments/webhooks/{provider}", content=payload, headers=headers
+    )
+
+
+async def _receipts(event_id: str) -> list[tuple[str, bool]]:
+    """What the ledger kept for one provider event.
+
+    Read through a second unit of work, because the HTTP session is closed by
+    then: only what was committed is real.
+    """
+    engine = create_engine_from_url()
+    try:
+        async with SqlAlchemyUnitOfWork(build_sessionmaker(engine)) as uow:
+            rows = (
+                await uow.session.execute(
+                    select(WebhookEventRow.provider, WebhookEventRow.processed).where(
+                        WebhookEventRow.event_id == event_id
+                    )
+                )
+            ).all()
+            return [(str(row[0]), bool(row[1])) for row in rows]
+    finally:
+        await engine.dispose()
+
+
+async def _payment_statuses(reference: str) -> list[str]:
+    """Every attempt recorded against one payment reference, in the database."""
+    engine = create_engine_from_url()
+    try:
+        async with SqlAlchemyUnitOfWork(build_sessionmaker(engine)) as uow:
+            found = (
+                await uow.session.execute(
+                    select(TransactionRow.status).where(
+                        TransactionRow.reference == reference
+                    )
+                )
+            ).scalars().all()
+            return list(found)
+    finally:
+        await engine.dispose()
+
+
+def _order_status(client: TestClient, session: str, order_id: int) -> str:
+    response = client.get(f"{API}/orders/{order_id}", cookies={COOKIE: session})
+    assert response.status_code == 200, response.text
+    return str(response.json()["status"])
+
+
+async def _paying_customer(client: TestClient) -> tuple[str, int, str]:
+    """A customer with an order and an open payment attempt."""
+    session, _ = _register_and_login(client)
+    order_id = await _placed_order(client, session)
+    payment_id = _initiate(client, session, order_id).json()["payment_id"]
+    return session, order_id, payment_id
+
+
+async def test_a_signed_notification_settles_the_order_it_names(
+    client: TestClient, paystack: str
+) -> None:
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, event_id = _notification(secret=paystack, reference=payment_id)
+
+    response = _deliver(client, payload, headers)
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {"received": True, "outcome": "applied"}
+    assert _order_status(client, session, order_id) == "PAID"
+    assert await _payment_statuses(payment_id) == ["paid"]
+    assert await _receipts(event_id) == [("paystack", True)]
+
+
+@pytest.mark.parametrize(
+    "spoofed", ["wrong_secret", "no_signature"], ids=("forged", "unsigned")
+)
+async def test_a_notification_that_is_not_authentically_paystacks_is_refused_before_it_is_read(
+    client: TestClient, paystack: str, spoofed: str
+) -> None:
+    """400 rather than 401: nobody at a webhook endpoint holds a customer session,
+    and the signature is what stands in for one."""
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, event_id = _notification(secret=paystack, reference=payment_id)
+    if spoofed == "wrong_secret":
+        payload, headers, event_id = _notification(
+            secret="whsec_not_paystack", reference=payment_id
+        )
+    else:
+        headers = {}
+
+    response = _deliver(client, payload, headers)
+
+    assert response.status_code == 400, response.text
+    assert _order_status(client, session, order_id) == "PENDING_PAYMENT"
+    # An unverifiable payload is not evidence: it is not even recorded as arrived.
+    assert await _receipts(event_id) == []
+
+
+async def test_a_redelivered_notification_is_answered_and_changes_nothing(
+    client: TestClient, paystack: str
+) -> None:
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, event_id = _notification(secret=paystack, reference=payment_id)
+
+    first = _deliver(client, payload, headers)
+    second = _deliver(client, payload, headers)
+    third = _deliver(client, payload, headers)
+
+    assert first.json()["outcome"] == "applied"
+    assert second.status_code == 200, second.text
+    assert second.json()["outcome"] == "duplicate"
+    assert third.json()["outcome"] == "duplicate"
+    # One receipt, one payment, one paid order -- nothing was done twice.
+    assert await _receipts(event_id) == [("paystack", True)]
+    assert await _payment_statuses(payment_id) == ["paid"]
+    assert _order_status(client, session, order_id) == "PAID"
+
+
+async def test_a_second_event_bringing_the_same_news_moves_nothing(
+    client: TestClient, paystack: str
+) -> None:
+    """Two different events saying the payment is paid: the ledger already agrees."""
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, _ = _notification(secret=paystack, reference=payment_id)
+    _deliver(client, payload, headers)
+
+    again, headers, event_id = _notification(
+        secret=paystack, reference=payment_id, name="payment.success"
+    )
+    response = _deliver(client, again, headers)
+
+    assert response.json()["outcome"] == "applied"
+    assert await _receipts(event_id) == [("paystack", True)]
+    assert await _payment_statuses(payment_id) == ["paid"]
+    assert _order_status(client, session, order_id) == "PAID"
+
+
+async def test_a_notification_from_a_provider_that_is_not_configured_is_not_ours_to_read(
+    client: TestClient, paystack: str
+) -> None:
+    """Paystack's own signature does not buy it Stripe's endpoint."""
+    _, _, payment_id = await _paying_customer(client)
+    payload, headers, event_id = _notification(secret=paystack, reference=payment_id)
+
+    response = _deliver(client, payload, headers, provider="stripe")
+
+    assert response.status_code == 404, response.text
+    assert await _receipts(event_id) == []
+
+
+async def test_a_notification_about_someone_elses_payment_is_recorded_and_harmless(
+    client: TestClient, paystack: str
+) -> None:
+    session, order_id, _ = await _paying_customer(client)
+    payload, headers, event_id = _notification(
+        secret=paystack, reference="PAY-NOTMINE0000"
+    )
+
+    response = _deliver(client, payload, headers)
+
+    assert response.json()["outcome"] == "unmatched"
+    assert _order_status(client, session, order_id) == "PENDING_PAYMENT"
+    # Kept, so the provider stops sending it again; unprocessed, because it is
+    # not about anything this shop can act on.
+    assert await _receipts(event_id) == [("paystack", False)]
+
+
+async def test_a_notification_confirming_a_different_amount_is_not_believed(
+    client: TestClient, paystack: str
+) -> None:
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, event_id = _notification(
+        secret=paystack, reference=payment_id, amount=100
+    )
+
+    response = _deliver(client, payload, headers)
+
+    # Signed by Paystack and still refused: what the order was charged for is a
+    # question this store answers from its own ledger.
+    assert response.json()["outcome"] == "disputed"
+    assert _order_status(client, session, order_id) == "PENDING_PAYMENT"
+    assert await _payment_statuses(payment_id) == ["pending"]
+    assert await _receipts(event_id) == [("paystack", False)]
+
+
+async def test_a_failed_payment_notification_leaves_the_order_payable_again(
+    client: TestClient, paystack: str
+) -> None:
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, _ = _notification(
+        secret=paystack, reference=payment_id, name="charge.failed"
+    )
+
+    response = _deliver(client, payload, headers)
+
+    assert response.json()["outcome"] == "applied"
+    assert await _payment_statuses(payment_id) == ["failed"]
+    # The customer is not locked out of an order that was never charged.
+    assert _order_status(client, session, order_id) == "PENDING_PAYMENT"
+    reopened = _initiate(client, session, order_id)
+    assert reopened.status_code == 200, reopened.text
+    assert reopened.json()["status"] == "pending"
+
+
+async def test_a_webhook_and_a_verification_give_the_same_answer(
+    client: TestClient, paystack: str
+) -> None:
+    """The customer's question and the provider's announcement settle one order
+    once, whichever arrives first."""
+    session, order_id, payment_id = await _paying_customer(client)
+    payload, headers, _ = _notification(secret=paystack, reference=payment_id)
+
+    delivered = _deliver(client, payload, headers)
+    verified = client.post(
+        f"{API}/payments/verify",
+        cookies={COOKIE: session},
+        json={"reference": payment_id},
+    )
+
+    assert delivered.json()["outcome"] == "applied"
+    assert verified.status_code == 200, verified.text
+    assert verified.json()["status"] == "paid"
+    assert _order_status(client, session, order_id) == "PAID"
+    assert await _payment_statuses(payment_id) == ["paid"]

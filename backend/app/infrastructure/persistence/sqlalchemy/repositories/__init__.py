@@ -15,11 +15,17 @@ from app.infrastructure.persistence.sqlalchemy.repositories.order import (
 from app.infrastructure.persistence.sqlalchemy.repositories.product import (
     SqlProductRepository,
 )
+from app.infrastructure.persistence.sqlalchemy.repositories.refund import (
+    SqlRefundRepository,
+)
 from app.infrastructure.persistence.sqlalchemy.repositories.transaction import (
     SqlTransactionRepository,
 )
 from app.infrastructure.persistence.sqlalchemy.repositories.user import (
     SqlUserRepository,
+)
+from app.infrastructure.persistence.sqlalchemy.repositories.webhook_event import (
+    SqlWebhookEventRepository,
 )
 from app.infrastructure.persistence.sqlalchemy.repositories.wishlist import (
     SqlWishlistRepository,
@@ -31,7 +37,9 @@ __all__ = [
     "SqlCredentialsRepository",
     "SqlOrderRepository",
     "SqlProductRepository",
+    "SqlRefundRepository",
     "SqlTransactionRepository",
     "SqlUserRepository",
+    "SqlWebhookEventRepository",
     "SqlWishlistRepository",
 ]

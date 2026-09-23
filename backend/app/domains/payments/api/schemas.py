@@ -10,6 +10,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from app.domains.payments.domain.entities import Transaction
+from app.domains.payments.domain.enums import WebhookOutcome
 from app.domains.payments.domain.gateway import (
     PaymentInitiation,
     PaymentVerification,
@@ -46,6 +47,18 @@ class PaymentResponse(BaseModel):
     order_id: int
     next_action: NextActionResponse | None = None
     message: str | None = None
+
+
+class WebhookResponse(BaseModel):
+    """A receipt for a provider notification.
+
+    Deliberately thin. The purpose of the answer is that the provider stops
+    retrying, not that it learns how this shop's ledger is arranged; the outcome
+    says what *we* did with the event, in our own vocabulary.
+    """
+
+    received: bool = True
+    outcome: str
 
 
 def _next_action(
@@ -101,3 +114,7 @@ def serialize_refund(transaction: Transaction, refund: RefundResult) -> PaymentR
         order_id=transaction.order_id,
         message=refund.message,
     )
+
+
+def serialize_webhook(outcome: WebhookOutcome) -> WebhookResponse:
+    return WebhookResponse(outcome=outcome.value)

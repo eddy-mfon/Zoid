@@ -17,7 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.domains.auth.domain.repositories import AbstractCredentialsRepository
 from app.domains.cart.domain.repositories import AbstractCartRepository
 from app.domains.orders.domain.repositories import AbstractOrderRepository
-from app.domains.payments.domain.repositories import AbstractTransactionRepository
+from app.domains.payments.domain.repositories import (
+    AbstractRefundRepository,
+    AbstractTransactionRepository,
+    AbstractWebhookEventRepository,
+)
 from app.domains.products.domain.repositories import (
     AbstractCategoryRepository,
     AbstractProductRepository,
@@ -30,8 +34,10 @@ from app.infrastructure.persistence.sqlalchemy.repositories import (
     SqlCredentialsRepository,
     SqlOrderRepository,
     SqlProductRepository,
+    SqlRefundRepository,
     SqlTransactionRepository,
     SqlUserRepository,
+    SqlWebhookEventRepository,
     SqlWishlistRepository,
 )
 
@@ -53,6 +59,8 @@ class AbstractUnitOfWork:
     wishlists: AbstractWishlistRepository
     orders: AbstractOrderRepository
     transactions: AbstractTransactionRepository
+    refunds: AbstractRefundRepository
+    webhook_events: AbstractWebhookEventRepository
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -72,6 +80,8 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.wishlists = SqlWishlistRepository(self.session)
         self.orders = SqlOrderRepository(self.session)
         self.transactions = SqlTransactionRepository(self.session)
+        self.refunds = SqlRefundRepository(self.session)
+        self.webhook_events = SqlWebhookEventRepository(self.session)
         return self
 
     async def __aexit__(
