@@ -53,6 +53,13 @@ class RateLimitError(AppError):
     default_message = "Too many requests."
 
 
+class ProviderNotConfiguredError(AppError):
+    """A pluggable capability has no adapter selected for its provider."""
+
+    status_code = HTTPStatus.NOT_IMPLEMENTED
+    default_message = "Provider is not configured."
+
+
 def status_for(error: AppError) -> int:
     """Resolve the HTTP status code for a given application error."""
     return int(error.status_code)

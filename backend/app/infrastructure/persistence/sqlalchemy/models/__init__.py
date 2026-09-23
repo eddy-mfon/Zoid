@@ -20,6 +20,7 @@ from app.infrastructure.persistence.sqlalchemy.models.product_variant import (
     ProductVariantRow,
 )
 from app.infrastructure.persistence.sqlalchemy.models.role import RoleRow
+from app.infrastructure.persistence.sqlalchemy.models.transaction import TransactionRow
 from app.infrastructure.persistence.sqlalchemy.models.user import UserRow
 from app.infrastructure.persistence.sqlalchemy.models.wishlist import WishlistRow
 from app.infrastructure.persistence.sqlalchemy.models.wishlist_item import (
@@ -41,6 +42,7 @@ __all__ = [
     "ProductRow",
     "ProductVariantRow",
     "RoleRow",
+    "TransactionRow",
     "UserRow",
     "WishlistRow",
     "WishlistItemRow",

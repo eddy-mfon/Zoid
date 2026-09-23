@@ -11,12 +11,16 @@ from collections.abc import AsyncIterator
 
 from fastapi import Depends
 
+from app.config import get_settings
 from app.domains.auth.application.service import AuthService
 from app.domains.cart.application.service import CartService
 from app.domains.orders.application.service import OrderService
+from app.domains.payments.application.service import PaymentService
+from app.domains.payments.domain.gateway import AbstractPaymentGateway
 from app.domains.products.application.service import ProductService
 from app.domains.users.application.service import UserService
 from app.domains.wishlist.application.service import WishlistService
+from app.infrastructure.payments.unconfigured import UnconfiguredPaymentGateway
 from app.infrastructure.persistence.sqlalchemy.session import get_sessionmaker
 from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
@@ -107,3 +111,25 @@ async def get_order_service(
 ) -> OrderService:
     """The checkout/order use-case orchestrator (cart -> validated order)."""
     return OrderService(orders=uow.orders, carts=uow.carts, products=uow.products)
+
+
+def build_payment_gateway() -> AbstractPaymentGateway:
+    """The gateway for ``PAYMENT_PROVIDER``.
+
+    Provider selection is configuration-driven; concrete adapters are wired here
+    once they exist. Until then the null gateway fails every attempt loudly
+    instead of guessing a provider.
+    """
+    return UnconfiguredPaymentGateway(get_settings().payment_provider)
+
+
+async def get_payment_service(
+    uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+) -> PaymentService:
+    """The payment use-case orchestrator, bound to the configured gateway."""
+    return PaymentService(
+        transactions=uow.transactions,
+        orders=uow.orders,
+        gateway=build_payment_gateway(),
+        provider=get_settings().payment_provider,
+    )

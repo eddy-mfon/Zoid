@@ -1,0 +1,1 @@
+"""Payment gateway wiring (concrete adapters are selected by configuration)."""
