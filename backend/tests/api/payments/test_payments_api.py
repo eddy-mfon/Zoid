@@ -7,7 +7,8 @@ Paystack or Stripe adapter will slot into, which is the point of the contract.
 The webhook half of this file uses the *real* Paystack adapter instead of a
 double, because what is being proved is that a signed notification from a
 provider with no session, no user and no permissions can settle an order -- and
-that a second copy of the same notification cannot settle it again.
+that a second copy of the same notification cannot settle it again. Email at that
+level is always a double: no test here needs a real message to leave the process.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.config import get_settings
+from app.domains.payments.application.notifications import PaidOrderNotifier
 from app.domains.payments.application.service import PaymentService
 from app.domains.payments.domain.enums import PaymentAction, PaymentStatus
 from app.domains.payments.domain.gateway import (
@@ -54,9 +56,16 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
     SqlAlchemyUnitOfWork,
 )
+from app.integrations.email.sender import (
+    AbstractEmailSender,
+    EmailDelivery,
+    EmailMessage,
+)
 from app.integrations.payments import build_payment_gateway, build_webhook_adapter
 from app.integrations.payments.paystack import PaystackPaymentGateway
 from app.security.authentication.session import session_strategy_from_settings
+from app.shared.exceptions import ProviderNotConfiguredError
+from tests.unit.payments.test_order_notification import RecordingSender
 
 _settings = get_settings()
 API = _settings.api_v1_prefix
@@ -65,6 +74,9 @@ PASSWORD = "Sup3rSecret!"
 PRICE = Decimal("42000.00")
 PRICE_KOBO = 4200000
 WEBHOOK_SECRET = "whsec_test_at_the_endpoint"
+#: Whichever e-mail the store has told us to notify. The provider behind it is
+#: always a double in these tests.
+OWNER_EMAIL = "owner@zoid.example"
 
 CHECKOUT = {
     "contact_name": "Ada Zoid",
@@ -389,19 +401,23 @@ def _paystack_answer(request: httpx.Request) -> httpx.Response:
     )
 
 
-@pytest.fixture
-def paystack(client: TestClient) -> Iterator[str]:
-    """The real adapter, wired the way the container wires it, transport and all.
-
-    Only the signing secret is chosen by the test: it is what lets these tests
-    send a notification that Paystack itself would have signed.
-    """
-    gateway = PaystackPaymentGateway(
+def _paystack_gateway() -> PaystackPaymentGateway:
+    """The real adapter, transport and all, as the container would build it."""
+    return PaystackPaymentGateway(
         secret_key="sk_test_at_the_endpoint",
         callback_url="http://localhost:5173/checkout",
         webhook_secret=WEBHOOK_SECRET,
         transport=httpx.MockTransport(_paystack_answer),
     )
+
+
+def _wire(
+    client: TestClient,
+    *,
+    gateway: PaystackPaymentGateway,
+    notifier: PaidOrderNotifier | None = None,
+) -> None:
+    """Point the payment endpoints at this adapter, with this newsdesk."""
 
     async def overridden(
         uow: AbstractUnitOfWork = Depends(get_unit_of_work),
@@ -413,9 +429,20 @@ def paystack(client: TestClient) -> Iterator[str]:
             webhook_events=uow.webhook_events,
             gateway=gateway,
             webhook=build_webhook_adapter(gateway),
+            notifier=notifier,
         )
 
     client.app.dependency_overrides[get_payment_service] = overridden
+
+
+@pytest.fixture
+def paystack(client: TestClient) -> Iterator[str]:
+    """The real adapter, wired the way the container wires it, transport and all.
+
+    Only the signing secret is chosen by the test: it is what lets these tests
+    send a notification that Paystack itself would have signed.
+    """
+    _wire(client, gateway=_paystack_gateway())
     yield WEBHOOK_SECRET
     client.app.dependency_overrides.pop(get_payment_service, None)
 
@@ -679,3 +706,77 @@ async def test_a_webhook_and_a_verification_give_the_same_answer(
     assert verified.json()["status"] == "paid"
     assert _order_status(client, session, order_id) == "PAID"
     assert await _payment_statuses(payment_id) == ["paid"]
+
+
+# --- what a confirmed payment tells the store ---------------------------------
+
+
+class UndeliverableSender(AbstractEmailSender):
+    """An email provider that fails, however well the payment went."""
+
+    provider = "undeliverable"
+
+    def __init__(self) -> None:
+        self.attempts = 0
+
+    async def send(self, message: EmailMessage) -> EmailDelivery:
+        self.attempts += 1
+        raise ProviderNotConfiguredError("RESEND_API_KEY is not configured")
+
+
+async def test_a_paid_order_is_announced_through_the_email_capability(
+    client: TestClient,
+) -> None:
+    """The seam as built: a payment ending in a send, with no provider in sight.
+
+    The sender is a double for the contract, so this passes with no Resend, no
+    credentials and no network: what is proved is that confirming a payment
+    reaches the email capability at all, and with the order in hand.
+    """
+    emails = RecordingSender()
+    # Wired before the payment is started: from here on, this is the only
+    # provider and the only newsdesk the endpoints have.
+    _wire(
+        client,
+        gateway=_paystack_gateway(),
+        notifier=PaidOrderNotifier(sender=emails, owner_email=OWNER_EMAIL),
+    )
+    try:
+        session, order_id, payment_id = await _paying_customer(client)
+        payload, headers, _ = _notification(secret=WEBHOOK_SECRET, reference=payment_id)
+        delivered = _deliver(client, payload, headers)
+    finally:
+        client.app.dependency_overrides.pop(get_payment_service, None)
+
+    assert delivered.json()["outcome"] == "applied"
+    assert _order_status(client, session, order_id) == "PAID"
+    assert [message.to for message in emails.calls] == [OWNER_EMAIL]
+    body = emails.calls[0].text_body
+    assert payment_id in body and "Ada Zoid" in body and "42,000.00 NGN" in body
+
+
+async def test_an_email_that_cannot_be_sent_does_not_unpay_an_order(
+    client: TestClient,
+) -> None:
+    """Notification is allowed to fail. A confirmed payment is not allowed to."""
+    sender = UndeliverableSender()
+    _wire(
+        client,
+        gateway=_paystack_gateway(),
+        notifier=PaidOrderNotifier(sender=sender, owner_email=OWNER_EMAIL),
+    )
+    try:
+        session, order_id, payment_id = await _paying_customer(client)
+        payload, headers, event_id = _notification(
+            secret=WEBHOOK_SECRET, reference=payment_id
+        )
+        response = _deliver(client, payload, headers)
+    finally:
+        client.app.dependency_overrides.pop(get_payment_service, None)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["outcome"] == "applied"
+    assert sender.attempts == 1
+    assert _order_status(client, session, order_id) == "PAID"
+    assert await _payment_statuses(payment_id) == ["paid"]
+    assert await _receipts(event_id) == [("paystack", True)]

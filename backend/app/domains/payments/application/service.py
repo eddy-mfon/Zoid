@@ -13,6 +13,10 @@ paid by the same rules, and so a redelivered webhook cannot pay for an order
 twice. Every provider notification is recorded before it is acted on, because
 the record of what we have already seen is what makes the second arrival a
 no-op.
+
+Telling the store about money that has arrived is a notification, not part of
+settlement: this service asks a notifier to do it, on the one transition where
+an order becomes paid, and never learns which email provider hears about it.
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ from uuid import uuid4
 
 from app.domains.orders.domain.entities import Order
 from app.domains.orders.domain.repositories import AbstractOrderRepository
+from app.domains.payments.application.notifications import PaidOrderNotifier
 from app.domains.payments.domain.entities import (
     Refund,
     Transaction,
@@ -86,6 +91,7 @@ class PaymentService:
         webhook_events: AbstractWebhookEventRepository,
         gateway: AbstractPaymentGateway,
         webhook: AbstractWebhookAdapter | None = None,
+        notifier: PaidOrderNotifier | None = None,
         provider: str | None = None,
     ) -> None:
         self._transactions = transactions
@@ -96,6 +102,9 @@ class PaymentService:
         # Composition decides whether the configured provider can also talk to us
         # (an adapter implements both contracts); the service is simply told.
         self._webhook = webhook
+        # The same for the store's own newsdesk: absent means a deployment that
+        # has not configured notifications, not a payment nobody should hear about.
+        self._notifier = notifier
         # Configuration names the provider; the gateway contract stays anonymous.
         self._provider = provider or gateway.provider
 
@@ -290,7 +299,21 @@ class PaymentService:
         await self._transactions.save(transaction)
         if status is PaymentStatus.PAID and order.mark_paid():
             await self._orders.save(order)
+            # The transition is the trigger: announcing a payment here means one
+            # email per paid order, however many times the provider repeats it.
+            await self._notify_paid(order, transaction)
         return changed
+
+    async def _notify_paid(self, order: Order, transaction: Transaction) -> None:
+        """Tell the store about a payment that has just become confirmed.
+
+        The notifier is given the order and the payment and decides what to say
+        and who to say it to; this service holds no email knowledge of its own and
+        cannot be failed by an email that does not go out.
+        """
+        if self._notifier is None:
+            return
+        await self._notifier.notify_paid(order=order, transaction=transaction)
 
     @staticmethod
     def _require_matching_amount(

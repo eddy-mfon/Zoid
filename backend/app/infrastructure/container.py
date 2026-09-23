@@ -15,6 +15,7 @@ from app.config import get_settings
 from app.domains.auth.application.service import AuthService
 from app.domains.cart.application.service import CartService
 from app.domains.orders.application.service import OrderService
+from app.domains.payments.application.notifications import PaidOrderNotifier
 from app.domains.payments.application.service import PaymentService
 from app.domains.products.application.service import ProductService
 from app.domains.users.application.service import UserService
@@ -24,6 +25,7 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import (
     AbstractUnitOfWork,
     SqlAlchemyUnitOfWork,
 )
+from app.integrations.email import build_email_sender
 from app.integrations.payments import (
     build_payment_gateway,
     build_webhook_adapter,
@@ -123,8 +125,13 @@ async def get_payment_service(
     One adapter usually fills both seats: it answers our questions about a
     payment and reads the notifications the provider sends unasked. Which of
     those the configured provider can do is decided here, once, by the factory.
+
+    The store's own newsdesk is assembled from the same place: configuration says
+    which email provider hears about a paid order and who at the store is told,
+    and the payment service is handed the result without either detail.
     """
-    gateway = build_payment_gateway(get_settings())
+    config = get_settings()
+    gateway = build_payment_gateway(config)
     return PaymentService(
         transactions=uow.transactions,
         orders=uow.orders,
@@ -133,4 +140,8 @@ async def get_payment_service(
         # The adapter names itself; configuration is what decided which one.
         gateway=gateway,
         webhook=build_webhook_adapter(gateway),
+        notifier=PaidOrderNotifier(
+            sender=build_email_sender(config),
+            owner_email=config.store_owner_email,
+        ),
     )

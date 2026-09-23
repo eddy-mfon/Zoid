@@ -18,6 +18,7 @@ import pytest
 
 from app.domains.orders.domain.entities import Order, OrderItem
 from app.domains.orders.domain.enums import OrderStatus
+from app.domains.payments.application.notifications import PaidOrderNotifier
 from app.domains.payments.application.service import PaymentService
 from app.domains.payments.domain.entities import Transaction, WebhookEvent
 from app.domains.payments.domain.enums import PaymentStatus, WebhookKind
@@ -30,6 +31,7 @@ from app.shared.exceptions import (
     ProviderNotConfiguredError,
     SignatureVerificationError,
 )
+from tests.unit.payments.test_order_notification import OWNER, RecordingSender
 from tests.unit.payments.test_payment_service import (
     AMOUNT,
     USER_ID,
@@ -93,6 +95,7 @@ class Harness:
     transactions: InMemoryTransactionRepository
     events: InMemoryWebhookEventRepository
     webhook: FakeWebhook
+    emails: RecordingSender
 
     async def receive(
         self,
@@ -136,6 +139,7 @@ async def _harness(
     orders = InMemoryOrderRepository(order)
     events = InMemoryWebhookEventRepository()
     webhook = FakeWebhook()
+    emails = RecordingSender()
     service = PaymentService(
         transactions=transactions,
         orders=orders,
@@ -143,6 +147,7 @@ async def _harness(
         webhook_events=events,
         gateway=FakeGateway(),
         webhook=webhook,
+        notifier=PaidOrderNotifier(sender=emails, owner_email=OWNER),
     )
     transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
     # The event is about this payment unless the test names another one.
@@ -156,6 +161,7 @@ async def _harness(
         transactions=transactions,
         events=events,
         webhook=webhook,
+        emails=emails,
     )
 
 
@@ -366,3 +372,50 @@ async def test_a_webhook_confirms_what_the_customer_was_told_by_verification() -
     assert outcome.value == "applied"
     assert harness.transaction.status is PaymentStatus.PAID
     assert harness.order.status is OrderStatus.PAID
+
+# --- what a notification tells the store --------------------------------------
+
+
+async def test_an_event_that_pays_an_order_announces_it_once() -> None:
+    harness = await _harness()
+
+    await harness.receive()
+
+    assert [message.to for message in harness.emails.calls] == [OWNER]
+    assert harness.transaction.reference in harness.emails.calls[0].text_body
+
+
+async def test_a_redelivered_event_announces_nothing_again() -> None:
+    """A repeated event has no business effect at all -- including an email."""
+    harness = await _harness()
+
+    await harness.receive()
+    await harness.receive()
+
+    assert len(harness.emails.calls) == 1
+
+
+async def test_a_second_event_bringing_the_same_news_is_not_second_news() -> None:
+    """Announcing hangs off the transition, not off a message id.
+
+    Two different events saying the order is paid tell the store once: an order
+    becomes paid exactly once, and that is the only moment there is news to give.
+    """
+    harness = await _harness()
+    await harness.receive()
+    harness.webhook.notification = _notification(
+        reference=harness.transaction.reference, event_id="evt-2"
+    )
+
+    _, outcome = await harness.receive()
+
+    assert outcome.value == "applied"
+    assert len(harness.emails.calls) == 1
+
+
+async def test_an_event_that_paid_nothing_announces_nothing() -> None:
+    harness = await _harness(kind=WebhookKind.PAYMENT_FAILED)
+
+    await harness.receive()
+
+    assert harness.emails.calls == []

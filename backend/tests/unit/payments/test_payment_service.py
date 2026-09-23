@@ -14,6 +14,7 @@ import pytest
 from app.domains.orders.domain.entities import Order, OrderItem
 from app.domains.orders.domain.enums import OrderStatus
 from app.domains.orders.domain.repositories import AbstractOrderRepository
+from app.domains.payments.application.notifications import PaidOrderNotifier
 from app.domains.payments.application.service import PaymentService
 from app.domains.payments.domain.entities import Refund, Transaction, WebhookEvent
 from app.domains.payments.domain.enums import (
@@ -35,6 +36,7 @@ from app.domains.payments.domain.repositories import (
     AbstractWebhookEventRepository,
 )
 from app.shared.exceptions import ConflictError, NotFoundError
+from tests.unit.payments.test_order_notification import OWNER, RecordingSender
 
 USER_ID = 7
 OTHER_USER = 8
@@ -235,6 +237,7 @@ def _service(
     gateway: FakeGateway | None = None,
     orders: AbstractOrderRepository | None = None,
     refunds: AbstractRefundRepository | None = None,
+    notifier: PaidOrderNotifier | None = None,
     provider: str | None = None,
 ) -> tuple[PaymentService, InMemoryTransactionRepository, FakeGateway]:
     order = order if order is not None else _order()
@@ -246,9 +249,18 @@ def _service(
         refunds=refunds or InMemoryRefundRepository(),
         webhook_events=InMemoryWebhookEventRepository(),
         gateway=gateway,
+        notifier=notifier,
         provider=provider,
     )
     return service, transactions, gateway
+
+
+def _notifier(
+    *, owner_email: str = OWNER, sender: RecordingSender | None = None
+) -> tuple[PaidOrderNotifier, RecordingSender]:
+    """A wired-up notification capability, and the recorder to read afterwards."""
+    emails = sender or RecordingSender()
+    return PaidOrderNotifier(sender=emails, owner_email=owner_email), emails
 
 
 # --- initiation -------------------------------------------------------------
@@ -478,6 +490,73 @@ async def test_verification_of_an_unknown_reference_is_not_found() -> None:
 
     with pytest.raises(NotFoundError):
         await service.verify(user_id=USER_ID, reference="PAY-nope")
+
+
+# --- notification ------------------------------------------------------------
+
+
+async def test_a_payment_the_provider_confirmed_is_announced_once() -> None:
+    """The service tells the notifier that an order became paid. Nothing more."""
+    notifier, emails = _notifier()
+    service, _, _ = _service(notifier=notifier)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert [message.to for message in emails.calls] == [OWNER]
+    body = emails.calls[0].text_body
+    assert "ZD-ABC12345" in body and transaction.reference in body
+
+
+async def test_a_declined_payment_is_not_announced() -> None:
+    notifier, emails = _notifier()
+    gateway = FakeGateway(
+        verification=PaymentVerification(
+            success=True, status=PaymentStatus.FAILED, message="Card declined"
+        )
+    )
+    service, _, _ = _service(gateway=gateway, notifier=notifier)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert emails.calls == []
+
+
+async def test_an_answer_that_proved_nothing_sends_nobody_anywhere() -> None:
+    notifier, emails = _notifier()
+    gateway = FakeGateway(
+        verification=PaymentVerification(
+            success=False, status=PaymentStatus.PENDING, message="Provider timeout"
+        )
+    )
+    service, _, _ = _service(gateway=gateway, notifier=notifier)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert emails.calls == []
+
+
+async def test_hearing_the_same_news_twice_announces_it_once() -> None:
+    notifier, emails = _notifier()
+    service, _, _ = _service(notifier=notifier)
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+    await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert len(emails.calls) == 1
+
+
+async def test_a_store_with_no_notifier_still_settles_its_payments() -> None:
+    """Notifications are something a deployment may not have, not may not pay."""
+    service, _, _ = _service()
+    transaction, _ = await service.initiate(user_id=USER_ID, order_id=10)
+
+    settled, _ = await service.verify(user_id=USER_ID, reference=transaction.reference)
+
+    assert settled.status is PaymentStatus.PAID
 
 
 # --- refunds ---------------------------------------------------------------

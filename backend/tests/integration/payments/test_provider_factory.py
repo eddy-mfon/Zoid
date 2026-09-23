@@ -199,23 +199,35 @@ async def test_the_same_service_drives_whichever_adapter_is_selected(
         await service.initiate(user_id=7, order_id=10)
 
 
+#: Provider names, as the architecture's audit lists them. None of them may
+#: appear in an import made by business code.
+PROVIDER_NAMES = ("paystack", "stripe", "resend", "sendgrid", "cloudinary")
+
+#: The contract modules the architecture itself places under ``integrations``.
+#: The email interface lives there (architecture #30), so a domain may import
+#: exactly that file -- and nothing else in the package.
+CONTRACTS_IN_INTEGRATIONS = frozenset({"app.integrations.email.sender"})
+
+
 def test_no_business_module_names_a_provider_or_reaches_into_integrations() -> None:
     """Domains speak contracts; the wiring lives outside them.
 
-    A Paystack or Stripe import inside ``app/domains`` -- or a direct hop into
-    ``app.integrations`` -- would silently re-couple the business to one vendor.
+    A provider import inside ``app/domains`` -- or a hop into an adapter or into
+    the factory that selects one -- would silently re-couple the business to one
+    vendor.
     """
     domains = Path(app_file).parent / "domains"
     assert domains.is_dir()
 
     offenders: list[str] = []
     for module in sorted(domains.rglob("*.py")):
-        imported = _imported_modules(module)
-        for name in imported:
+        for name in _imported_modules(module):
             lowered = name.lower()
-            if "paystack" in lowered or "stripe" in lowered:
+            if any(provider in lowered for provider in PROVIDER_NAMES):
                 offenders.append(f"{module}: imports {name}")
-            if name.startswith("app.integrations"):
+            elif name.startswith("app.integrations") and (
+                name not in CONTRACTS_IN_INTEGRATIONS
+            ):
                 offenders.append(f"{module}: reaches into integrations")
 
     assert offenders == []
