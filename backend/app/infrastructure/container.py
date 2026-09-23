@@ -13,6 +13,7 @@ from fastapi import Depends
 
 from app.domains.auth.application.service import AuthService
 from app.domains.cart.application.service import CartService
+from app.domains.orders.application.service import OrderService
 from app.domains.products.application.service import ProductService
 from app.domains.users.application.service import UserService
 from app.domains.wishlist.application.service import WishlistService
@@ -99,3 +100,10 @@ async def get_wishlist_service(
 ) -> WishlistService:
     """The per-user wishlist use-case orchestrator."""
     return WishlistService(wishlists=uow.wishlists, products=uow.products)
+
+
+async def get_order_service(
+    uow: AbstractUnitOfWork = Depends(get_unit_of_work),
+) -> OrderService:
+    """The checkout/order use-case orchestrator (cart -> validated order)."""
+    return OrderService(orders=uow.orders, carts=uow.carts, products=uow.products)

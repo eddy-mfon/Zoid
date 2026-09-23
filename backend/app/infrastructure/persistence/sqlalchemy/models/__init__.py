@@ -10,6 +10,8 @@ from app.infrastructure.persistence.sqlalchemy.models.cart_item import CartItemR
 from app.infrastructure.persistence.sqlalchemy.models.category import CategoryRow
 from app.infrastructure.persistence.sqlalchemy.models.credential import CredentialRow
 from app.infrastructure.persistence.sqlalchemy.models.inventory import InventoryRow
+from app.infrastructure.persistence.sqlalchemy.models.order import OrderRow
+from app.infrastructure.persistence.sqlalchemy.models.order_item import OrderItemRow
 from app.infrastructure.persistence.sqlalchemy.models.product import ProductRow
 from app.infrastructure.persistence.sqlalchemy.models.product_image import (
     ProductImageRow,
@@ -33,6 +35,8 @@ __all__ = [
     "CategoryRow",
     "CredentialRow",
     "InventoryRow",
+    "OrderRow",
+    "OrderItemRow",
     "ProductImageRow",
     "ProductRow",
     "ProductVariantRow",

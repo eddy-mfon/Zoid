@@ -50,6 +50,16 @@ class InMemoryProductRepository(AbstractProductRepository):
     async def count_active(self) -> int:
         return sum(1 for p in self._by_id.values() if p.is_active)
 
+    async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
+        for product in self._by_id.values():
+            for variant in product.variants:
+                if variant.id == variant_id:
+                    if variant.inventory.available < quantity:
+                        return False
+                    variant.inventory.reserved += quantity
+                    return True
+        return False
+
 
 class InMemoryCategoryRepository(AbstractCategoryRepository):
     def __init__(self) -> None:

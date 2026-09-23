@@ -96,6 +96,17 @@ class SqlProductRepository(AbstractProductRepository):
         stmt = select(func.count()).select_from(ProductRow).where(ProductRow.is_active.is_(True))
         return (await self._session.execute(stmt)).scalar_one()
 
+    async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
+        variant = await self._session.get(ProductVariantRow, variant_id)
+        if variant is None or variant.inventory is None:
+            return False
+        inventory = variant.inventory
+        if inventory.quantity - inventory.reserved < quantity:
+            return False
+        inventory.reserved += quantity
+        await self._session.flush()
+        return True
+
     async def _get_or_create_category(self, category: Category) -> CategoryRow:
         row = (
             await self._session.execute(

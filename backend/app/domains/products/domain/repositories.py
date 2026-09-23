@@ -30,6 +30,14 @@ class AbstractProductRepository(ABC):
     async def count_active(self) -> int:
         """Total number of active products."""
 
+    @abstractmethod
+    async def reserve_stock(self, variant_id: int, quantity: int) -> bool:
+        """Reserve ``quantity`` units of a variant.
+
+        Returns ``False`` (and reserves nothing) when fewer units are available
+        than requested; otherwise increases the variant's reserved count.
+        """
+
 
 class AbstractCategoryRepository(ABC):
     """Read/write catalog categories."""

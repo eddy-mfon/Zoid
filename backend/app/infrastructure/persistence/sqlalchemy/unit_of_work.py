@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domains.auth.domain.repositories import AbstractCredentialsRepository
 from app.domains.cart.domain.repositories import AbstractCartRepository
+from app.domains.orders.domain.repositories import AbstractOrderRepository
 from app.domains.products.domain.repositories import (
     AbstractCategoryRepository,
     AbstractProductRepository,
@@ -26,6 +27,7 @@ from app.infrastructure.persistence.sqlalchemy.repositories import (
     SqlCartRepository,
     SqlCategoryRepository,
     SqlCredentialsRepository,
+    SqlOrderRepository,
     SqlProductRepository,
     SqlUserRepository,
     SqlWishlistRepository,
@@ -47,6 +49,7 @@ class AbstractUnitOfWork:
     categories: AbstractCategoryRepository
     carts: AbstractCartRepository
     wishlists: AbstractWishlistRepository
+    orders: AbstractOrderRepository
 
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -64,6 +67,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.categories = SqlCategoryRepository(self.session)
         self.carts = SqlCartRepository(self.session)
         self.wishlists = SqlWishlistRepository(self.session)
+        self.orders = SqlOrderRepository(self.session)
         return self
 
     async def __aexit__(

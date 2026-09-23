@@ -75,6 +75,9 @@ class InMemoryProductRepository(AbstractProductRepository):
     async def count_active(self) -> int:  # pragma: no cover
         raise NotImplementedError
 
+    async def reserve_stock(self, variant_id: int, quantity: int) -> bool:  # pragma: no cover
+        raise NotImplementedError
+
 
 def _product() -> Product:
     category = Category(id=1, name="Curated", slug="curated")
