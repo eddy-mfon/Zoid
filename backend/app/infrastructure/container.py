@@ -31,6 +31,8 @@ from app.integrations.payments import (
     build_payment_gateway,
     build_webhook_adapter,
 )
+from app.integrations.storage import build_file_storage
+from app.integrations.storage.contract import AbstractFileStorage
 from app.security.authentication.dependencies import (
     get_session_service,
     get_session_strategy,
@@ -53,6 +55,21 @@ def build_session_service() -> SessionService:
 def build_password_hasher() -> PasswordHasher:
     """The configured password hasher (Argon2 today)."""
     return get_password_hasher()
+
+
+def get_file_storage() -> AbstractFileStorage:
+    """The configured file store (Cloudinary or S3 today), as the contract.
+
+    Provider selection is configuration-driven and lives here, at the
+    composition root, exactly like the payment and email seats: a caller that
+    needs to keep a file is handed :class:`AbstractFileStorage` and never names
+    a provider. No endpoint consumes it yet -- product/image upload is Not
+    Specified in Architecture beyond the provider-isolation requirement -- but
+    wiring the seat here is what keeps that isolation honest: when an upload
+    path appears it will ``Depends`` on this, and nothing above the root will
+    have to learn which store was configured.
+    """
+    return build_file_storage(get_settings())
 
 
 def build_unit_of_work() -> SqlAlchemyUnitOfWork:
