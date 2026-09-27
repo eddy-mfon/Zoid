@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowLeft, ArrowDownRight, Plus, X, Heart, Send, Edit2, Trash2, MessageCircle, ChevronRight, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useShop } from "@/contexts/ShopContext";
+import Navbar from "@/components/Navbar";
 
 const MARK = "/zoid-logo.svg";
 
@@ -192,26 +193,10 @@ export default function Archives() {
   return (
     <main className="zoid-shell collection-page" style={{ background: "#0b0b0b", color: "#f4f0ea" }}>
       {/* Navbar */}
-      <header className="topbar">
-        <Link className="brand" href="/">
-          <img src={MARK} alt="ZOID" />
-          <span>ZOID</span>
-          <i />
-        </Link>
-        <div className="nav-frame">
-          <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
-            <Link href="/">Home</Link>
-            <Link href="/collection">Shop</Link>
-            <Link href="/about">About</Link>
-            <Link className="active" href="/archives">Archives</Link>
-          </nav>
-        </div>
-        <div className="top-actions action-rail">
-          <button className="mobile-toggle" aria-label="Toggle menu" onClick={() => setMobileMenu(!mobileMenu)}>
-            {mobileMenu ? <X size={20} /> : <ArrowDownRight size={20} />}
-          </button>
-        </div>
-      </header>
+      <Navbar
+        mobileMenu={mobileMenu}
+        setMobileMenu={setMobileMenu}
+      />
 
       {/* Intro Header */}
       <div className="collection-intro">

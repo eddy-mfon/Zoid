@@ -10,6 +10,7 @@ export interface OrderItem {
   quantity: number;
   price: string;
   image: string;
+  customization?: string;
 }
 
 export interface UserOrder {
@@ -19,6 +20,9 @@ export interface UserOrder {
   total: number;
   formattedTotal: string;
   deliveryAddress: string;
+  deliveryMethod?: string;
+  deliveryFee?: number;
+  isStudent?: boolean;
   status: "Processing" | "In Transit" | "Delivered";
 }
 
@@ -38,7 +42,14 @@ interface AuthContextValue {
   login: (email: string, password?: string) => boolean;
   signup: (name: string, email: string, phone: string, password?: string) => boolean;
   logout: () => void;
-  addOrder: (orderData: { items: OrderItem[]; total: number; deliveryAddress: string }) => UserOrder;
+  addOrder: (orderData: {
+    items: OrderItem[];
+    total: number;
+    deliveryAddress: string;
+    deliveryMethod?: string;
+    deliveryFee?: number;
+    isStudent?: boolean;
+  }) => UserOrder;
   toggleWishlist: (slug: string) => void;
   wishlist: string[];
   isAuthModalOpen: boolean;
@@ -51,43 +62,13 @@ const STORAGE_KEY = "zoid_user_session_v1";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// Demo initial user with 1 past order for rich initial UI
-const defaultDemoUser: UserProfile = {
-  id: "usr_demo_101",
-  name: "Tunde Ogundipe",
-  email: "tunde@zoid.co",
-  phone: "+234 802 345 6789",
-  createdAt: "2026-01-15",
-  wishlist: ["ac-milan-2526", "brazil-1998"],
-  orders: [
-    {
-      id: "ZD-78A4B9",
-      date: "2026-08-28",
-      items: [
-        {
-          slug: "barcelona-away",
-          name: "Barcelona / Away",
-          size: "L",
-          quantity: 1,
-          price: "₦62,000",
-          image: "/manus-storage/barcelona_9a244f02.jpg",
-        },
-      ],
-      total: 62000,
-      formattedTotal: "₦62,000",
-      deliveryAddress: "14 Admiralty Way, Lekki Phase 1, Lagos, Nigeria",
-      status: "In Transit",
-    },
-  ],
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : defaultDemoUser; // Default demo user for instant rich preview
+      return saved ? JSON.parse(saved) : null;
     } catch {
-      return defaultDemoUser;
+      return null;
     }
   });
 
@@ -122,14 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    // Check if matching demo user or create session
     if (user && user.email.toLowerCase() === email.toLowerCase()) {
       toast.success(`Welcome back, ${user.name}!`, { description: "Session active." });
       closeAuthModal();
       return true;
     }
 
-    // Create user profile for new login email
     const nameFromEmail = email.split("@")[0].replace(/[^a-zA-Z]/g, " ");
     const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
 
@@ -176,7 +155,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success("Logged out of ZOID account");
   }
 
-  function addOrder(orderData: { items: OrderItem[]; total: number; deliveryAddress: string }): UserOrder {
+  function addOrder(orderData: {
+    items: OrderItem[];
+    total: number;
+    deliveryAddress: string;
+    deliveryMethod?: string;
+    deliveryFee?: number;
+    isStudent?: boolean;
+  }): UserOrder {
     const newOrder: UserOrder = {
       id: `ZD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
       date: new Date().toISOString().split("T")[0],
@@ -184,6 +170,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       total: orderData.total,
       formattedTotal: formatNaira(orderData.total),
       deliveryAddress: orderData.deliveryAddress,
+      deliveryMethod: orderData.deliveryMethod,
+      deliveryFee: orderData.deliveryFee,
+      isStudent: orderData.isStudent,
       status: "Processing",
     };
 
@@ -196,8 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function toggleWishlist(slug: string) {
     if (!user) {
-      openAuthModal("login");
-      toast.info("Log in to save items to your wishlist");
+      toast.info("Sign in or create an account to save items to your wishlist");
       return;
     }
 

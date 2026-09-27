@@ -1,40 +1,87 @@
-/* ZOID Storefront — User Profile & Order History Page */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { products } from "@/lib/catalog";
 import { useShop } from "@/contexts/ShopContext";
+import Navbar from "@/components/Navbar";
 import {
-  ArrowLeft, Heart, LogOut, PackageCheck, ShoppingBag,
-  Ticket, User, ArrowDownRight, Check, ChevronRight, Menu, X
+  ArrowLeft,
+  Heart,
+  LogOut,
+  PackageCheck,
+  Ticket,
+  User,
+  ArrowDownRight,
+  LogIn,
+  UserPlus,
+  Truck,
+  GraduationCap
 } from "lucide-react";
-import { toast } from "sonner";
 
 const MARK = "/zoid-logo.svg";
 
 export default function Profile() {
   const [, navigate] = useLocation();
   const { user, isLoggedIn, logout, wishlist, toggleWishlist } = useAuth();
-  const { addToBag, count: cartCount } = useShop();
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState<"orders" | "wishlist">("orders");
+  const { addToBag } = useShop();
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialTab = queryParams.get("tab") === "wishlist" ? "wishlist" : "orders";
+  const [activeTab, setActiveTab] = useState<"orders" | "wishlist">(initialTab);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "wishlist") {
+      setActiveTab("wishlist");
+    }
+  }, []);
 
   if (!isLoggedIn || !user) {
     return (
-      <main className="zoid-shell collection-page" style={{ minHeight: "100vh", background: "#0b0b0b", color: "#fff", display: "grid", placeItems: "center" }}>
-        <div style={{ textAlign: "center", padding: "60px 24px", maxWidth: 440 }}>
-          <User size={48} color="var(--pink)" style={{ marginBottom: 16 }} />
-          <h1 style={{ fontFamily: "Anton", fontSize: 40, margin: "0 0 16px" }}>ACCOUNT LOGIN REQUIRED</h1>
-          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
-            Please log in or create an account to view your order history, delivery status, and saved wishlist.
-          </p>
-          <button
-            className="pink-button"
-            onClick={() => navigate("/")}
-            style={{ width: "100%", justifyContent: "center" }}
-          >
-            Return to Storefront <ArrowLeft size={16} />
-          </button>
+      <main className="zoid-shell collection-page" style={{ minHeight: "100vh", background: "#0b0b0b", color: "#fff" }}>
+        <Navbar />
+        <div style={{ display: "grid", placeItems: "center", minHeight: "calc(100vh - 80px)", padding: "100px 24px 60px" }}>
+          <div style={{ textAlign: "center", maxWidth: 460, background: "#141414", border: "1px solid #282828", borderRadius: 8, padding: "48px 32px" }}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: "rgba(231,25,75,0.12)",
+                border: "1px solid var(--pink)",
+                display: "grid",
+                placeItems: "center",
+                margin: "0 auto 20px",
+              }}
+            >
+              <User size={32} color="var(--pink)" />
+            </div>
+            <h1 style={{ fontFamily: "Anton", fontSize: 36, margin: "0 0 12px", letterSpacing: "0.05em" }}>
+              ACCOUNT LOGIN REQUIRED
+            </h1>
+            <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, marginBottom: 32 }}>
+              Sign in to your ZOID account or create a new profile to access your order history, delivery updates, and saved wishlist.
+            </p>
+            <div style={{ display: "grid", gap: 12 }}>
+              <Link
+                href="/login?redirect=/profile"
+                className="pink-button"
+                style={{ width: "100%", justifyContent: "center", display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                <LogIn size={15} /> Log In to Account
+              </Link>
+              <Link
+                href="/signup?redirect=/profile"
+                className="ghost-button"
+                style={{ width: "100%", justifyContent: "center", display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                <UserPlus size={15} /> Create New Account
+              </Link>
+              <Link href="/" style={{ marginTop: 8, color: "#666", fontSize: 12, textDecoration: "underline" }}>
+                Return to Storefront
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -46,29 +93,7 @@ export default function Profile() {
   return (
     <main className="zoid-shell collection-page" style={{ minHeight: "100vh", background: "#0b0b0b", color: "#f4f0ea" }}>
       {/* Navbar */}
-      <header className="topbar">
-        <Link className="brand" href="/">
-          <img src={MARK} alt="ZOID" />
-          <span>ZOID</span>
-          <i />
-        </Link>
-        <div className="nav-frame">
-          <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
-            <Link href="/">Home</Link>
-            <Link href="/collection">Shop</Link>
-            <Link href="/about">About</Link>
-            <Link href="/archives">Archives</Link>
-          </nav>
-        </div>
-        <div className="top-actions action-rail">
-          <Link href="/collection" className="bag-button">
-            <ShoppingBag size={15} /> {cartCount} Bag
-          </Link>
-          <button className="mobile-toggle" aria-label="Toggle menu" onClick={() => setMobileMenu(!mobileMenu)}>
-            {mobileMenu ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Header Banner */}
       <div className="collection-intro" style={{ background: "#141414", borderBottom: "1px solid #222", padding: "100px clamp(24px,6vw,96px) 50px" }}>
@@ -78,20 +103,39 @@ export default function Profile() {
           </Link>
           <p className="eyebrow" style={{ color: "var(--pink)" }}>COMMUNITY MEMBER / PROFILE</p>
           <h1 style={{ color: "#fff" }}>
-            MY<br /><span>ACCOUNT.</span>
+            MY
+            <br />
+            <span>ACCOUNT.</span>
           </h1>
         </div>
 
         {/* User Card */}
-        <div style={{
-          background: "#1c1c1c", border: "1px solid #333", borderRadius: 6,
-          padding: 24, minWidth: 280, display: "flex", flexDirection: "column", gap: 12
-        }}>
+        <div
+          style={{
+            background: "#1c1c1c",
+            border: "1px solid #333",
+            borderRadius: 6,
+            padding: 24,
+            minWidth: 280,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: "50%", background: "var(--pink)",
-              color: "#fff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: 18
-            }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "var(--pink)",
+                color: "#fff",
+                display: "grid",
+                placeItems: "center",
+                fontWeight: 700,
+                fontSize: 18,
+              }}
+            >
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -106,12 +150,26 @@ export default function Profile() {
           </div>
 
           <button
-            onClick={() => { logout(); navigate("/"); }}
+            onClick={() => {
+              logout();
+              navigate("/");
+            }}
             style={{
-              marginTop: 4, background: "rgba(231,25,75,0.1)", border: "1px solid rgba(231,25,75,0.3)",
-              color: "var(--pink)", padding: "8px 12px", borderRadius: 4, cursor: "pointer",
-              fontSize: 10, letterSpacing: "0.12em", fontWeight: 700, textTransform: "uppercase",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+              marginTop: 4,
+              background: "rgba(231,25,75,0.1)",
+              border: "1px solid rgba(231,25,75,0.3)",
+              color: "var(--pink)",
+              padding: "8px 12px",
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
             }}
           >
             <LogOut size={13} /> Sign Out
@@ -121,17 +179,24 @@ export default function Profile() {
 
       {/* Main Content Area */}
       <section style={{ padding: "40px clamp(24px, 6vw, 96px) 120px" }}>
-
         {/* Tab Navigation */}
         <div style={{ display: "flex", gap: 16, borderBottom: "1px solid #222", paddingBottom: 16, marginBottom: 36 }}>
           <button
             onClick={() => setActiveTab("orders")}
             style={{
-              padding: "10px 24px", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-              fontWeight: 700, borderRadius: 4, display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 24px",
+              fontSize: 11,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              borderRadius: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               background: activeTab === "orders" ? "var(--pink)" : "#161616",
               color: activeTab === "orders" ? "#fff" : "#888",
-              border: "none", cursor: "pointer"
+              border: "none",
+              cursor: "pointer",
             }}
           >
             <PackageCheck size={16} /> My Orders ({user.orders.length})
@@ -140,11 +205,19 @@ export default function Profile() {
           <button
             onClick={() => setActiveTab("wishlist")}
             style={{
-              padding: "10px 24px", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-              fontWeight: 700, borderRadius: 4, display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 24px",
+              fontSize: 11,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              borderRadius: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               background: activeTab === "wishlist" ? "var(--pink)" : "#161616",
               color: activeTab === "wishlist" ? "#fff" : "#888",
-              border: "none", cursor: "pointer"
+              border: "none",
+              cursor: "pointer",
             }}
           >
             <Heart size={16} /> Saved Wishlist ({wishlist.length})
@@ -159,11 +232,18 @@ export default function Profile() {
                 {user.orders.map((order) => (
                   <div key={order.id} style={{ background: "#141414", border: "1px solid #262626", borderRadius: 8, overflow: "hidden" }}>
                     {/* Order Header */}
-                    <div style={{
-                      background: "#1a1a1a", borderBottom: "1px solid #262626",
-                      padding: "18px 24px", display: "flex", justifyContent: "space-between",
-                      alignItems: "center", flexWrap: "wrap", gap: 12
-                    }}>
+                    <div
+                      style={{
+                        background: "#1a1a1a",
+                        borderBottom: "1px solid #262626",
+                        padding: "18px 24px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 12,
+                      }}
+                    >
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <Ticket size={20} color="var(--pink)" />
                         <div>
@@ -174,12 +254,17 @@ export default function Profile() {
 
                       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                         <span style={{ fontSize: 11, color: "#888" }}>Date: {order.date}</span>
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, padding: "4px 10px", borderRadius: 20,
-                          background: order.status === "Delivered" ? "rgba(41,163,106,0.15)" : "rgba(231,25,75,0.15)",
-                          color: order.status === "Delivered" ? "#29a36a" : "var(--pink)",
-                          letterSpacing: "0.1em"
-                        }}>
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            padding: "4px 10px",
+                            borderRadius: 20,
+                            background: order.status === "Delivered" ? "rgba(41,163,106,0.15)" : "rgba(231,25,75,0.15)",
+                            color: order.status === "Delivered" ? "#29a36a" : "var(--pink)",
+                            letterSpacing: "0.1em",
+                          }}
+                        >
                           {order.status.toUpperCase()} (2-WEEK DELIVERY)
                         </span>
                       </div>
@@ -190,11 +275,18 @@ export default function Profile() {
                       <p style={{ fontSize: 9, letterSpacing: "0.16em", color: "#666", marginBottom: 16 }}>ITEMS IN THIS ORDER</p>
                       <div style={{ display: "grid", gap: 16 }}>
                         {order.items.map((item, idx) => (
-                          <div key={idx} style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                            <img src={item.image} alt={item.name} style={{ width: 56, height: 68, objectFit: "cover", borderRadius: 4, background: "#0c0c0c" }} />
+                          <div key={idx} style={{ display: "flex", alignItems: "center", gap: 16, background: "#181818", padding: "10px 14px", borderRadius: 4 }}>
+                            <img src={item.image} alt={item.name} style={{ width: 52, height: 64, objectFit: "cover", borderRadius: 4, background: "#0c0c0c" }} />
                             <div style={{ flex: 1 }}>
                               <strong style={{ fontSize: 13, color: "#fff", display: "block", textTransform: "uppercase" }}>{item.name}</strong>
-                              <span style={{ fontSize: 11, color: "#888" }}>Size {item.size} · Quantity: {item.quantity}</span>
+                              <span style={{ fontSize: 11, color: "#888" }}>
+                                Size {item.size} · Quantity: {item.quantity}
+                              </span>
+                              {item.customization && (
+                                <div style={{ fontSize: 10, color: "var(--pink)", marginTop: 4 }}>
+                                  Customization: <strong>{item.customization}</strong>
+                                </div>
+                              )}
                             </div>
                             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--pink)" }}>{item.price}</span>
                           </div>
@@ -205,12 +297,19 @@ export default function Profile() {
                     {/* Order Summary Footer */}
                     <div style={{ padding: "16px 24px", background: "#0e0e0e", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                       <div>
-                        <span style={{ fontSize: 9, color: "#666", letterSpacing: "0.12em", display: "block" }}>DELIVERY DESTINATION</span>
+                        <span style={{ fontSize: 9, color: "#666", letterSpacing: "0.12em", display: "block" }}>
+                          {order.isStudent ? "CAMPUS DELIVERY DESTINATION" : "DELIVERY DESTINATION"}
+                        </span>
                         <span style={{ fontSize: 12, color: "#aaa" }}>{order.deliveryAddress}</span>
+                        {order.deliveryMethod && (
+                          <small style={{ display: "block", color: "#666", fontSize: 10, marginTop: 2 }}>
+                            Method: {order.deliveryMethod}
+                          </small>
+                        )}
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <span style={{ fontSize: 9, color: "#666", letterSpacing: "0.12em", display: "block" }}>TOTAL CHARGED</span>
-                        <strong style={{ fontSize: 16, color: "#fff" }}>{order.formattedTotal}</strong>
+                        <strong style={{ fontSize: 16, color: "var(--pink)" }}>{order.formattedTotal}</strong>
                       </div>
                     </div>
                   </div>
@@ -221,7 +320,7 @@ export default function Profile() {
                 <PackageCheck size={42} style={{ marginBottom: 12, color: "#444" }} />
                 <h3 style={{ fontFamily: "Anton", fontSize: 24, color: "#fff", margin: "0 0 8px" }}>NO ORDERS PLACED YET</h3>
                 <p style={{ fontSize: 13, color: "#666", maxWidth: 360, margin: "0 auto 24px" }}>
-                  Your order history will appear here as soon as you complete a purchase.
+                  Your order history and individual product receipts will appear here as soon as you complete a purchase.
                 </p>
                 <Link className="pink-button" href="/collection">
                   Explore Shop Catalogue <ArrowDownRight size={16} />
@@ -238,8 +337,8 @@ export default function Profile() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
                 {wishlistProducts.map((p) => (
                   <div key={p.slug} style={{ background: "#141414", border: "1px solid #242424", borderRadius: 6, overflow: "hidden" }}>
-                    <Link href={`/product/${p.slug}`}>
-                      <img src={p.image} alt={p.name} style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }} />
+                    <Link href={`/product/${p.slug}`} style={{ display: "block", height: 260, background: "#0e0e0e" }}>
+                      <img src={p.image} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 12, display: "block" }} />
                     </Link>
                     <div style={{ padding: 18 }}>
                       <span style={{ fontSize: 8, color: "var(--pink)", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
@@ -251,10 +350,7 @@ export default function Profile() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #222", paddingTop: 12 }}>
                         <strong style={{ fontSize: 14, color: "var(--pink)" }}>{p.price}</strong>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            className="pink-button small"
-                            onClick={() => addToBag(p, p.sizes[0])}
-                          >
+                          <button className="pink-button small" onClick={() => addToBag(p, p.sizes[0])}>
                             Add to Bag
                           </button>
                           <button
