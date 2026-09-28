@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -11,19 +11,33 @@ import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import { ShopProvider } from "./contexts/ShopContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import AuthModal from "./components/AuthModal";
 import Archives from "./pages/Archives";
 import About from "./pages/About";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
+import Auth from "./pages/Auth";
+
+// Disable browser auto scroll restoration so route transitions always start at top (0, 0)
+if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
 
 function ScrollToTop() {
   const [location] = useLocation();
+
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [location]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 10);
+    return () => clearTimeout(timer);
+  }, [location]);
+
   return null;
 }
 
@@ -40,6 +54,9 @@ function Router() {
         <Route path={"/about"} component={About} />
         <Route path={"/admin"} component={Admin} />
         <Route path={"/profile"} component={Profile} />
+        <Route path={"/login"} component={Auth} />
+        <Route path={"/signup"} component={Auth} />
+        <Route path={"/auth"} component={Auth} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -56,7 +73,6 @@ function App() {
           <Toaster />
           <AuthProvider>
             <ShopProvider>
-              <AuthModal />
               <Router />
             </ShopProvider>
           </AuthProvider>

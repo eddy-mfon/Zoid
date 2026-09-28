@@ -2,7 +2,6 @@
 import { useLayoutEffect, type RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { productBySlug } from "@/lib/catalog";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,9 +42,6 @@ export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: {
     const root = rootRef.current;
     if (!root) return;
 
-    // Reset scroll to top before measuring triggers
-    window.scrollTo(0, 0);
-
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -84,21 +80,6 @@ export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: {
           gsap.fromTo(chars, { y: 22, rotationX: -55, autoAlpha: 1 }, { y: 0, rotationX: 0, autoAlpha: 1, duration: .42, stagger: index === 0 ? .018 : .024, delay: index === 0 ? .18 : .12, ease: "back.out(1.45)", scrollTrigger: trigger });
         });
 
-        // Product Link Interceptor — reset scroll BEFORE route change
-        const productLinks = root.querySelectorAll<HTMLAnchorElement>('a[href^="/product/"]');
-        productLinks.forEach((link) => {
-          const onClick = (event: MouseEvent) => {
-            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            event.preventDefault();
-            const href = link.getAttribute("href");
-            if (!href) return;
-            window.scrollTo(0, 0);
-            window.history.pushState({}, "", href);
-            window.dispatchEvent(new PopStateEvent("popstate"));
-          };
-          link.addEventListener("click", onClick);
-        });
-
         const motionHeadings = root.querySelectorAll<HTMLElement>(".section-heading h2, .special-kits-head h2, .story-copy h2, .drop-banner h2, .archive-intro h2");
         motionHeadings.forEach((heading) => {
           gsap.fromTo(heading, { y: 30 }, { y: 0, duration: .5, ease: "power3.out", scrollTrigger: { trigger: heading, start: "top 95%", once: true } });
@@ -109,7 +90,7 @@ export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: {
           gsap.fromTo(copy, { y: 14 }, { y: 0, duration: .4, delay: .05, ease: "power3.out", scrollTrigger: { trigger: copy, start: "top 98%", once: true } });
         });
 
-        // Force ScrollTrigger refresh after setup
+        // Force ScrollTrigger refresh after layout setup
         setTimeout(() => ScrollTrigger.refresh(), 50);
 
         return () => ScrollTrigger.getAll().forEach((trigger) => trigger.kill());

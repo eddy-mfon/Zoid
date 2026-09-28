@@ -89,3 +89,271 @@ html{scroll-behavior:smooth}.topbar .action-rail{gap:14px!important}.topbar .act
 
 /* Forgiving search recovery and related picks. */
 .search-empty{display:grid;gap:10px;align-items:start}.search-empty>small{color:#776e66;font-size:11px;line-height:1.5}.suggested-picks{display:grid;gap:10px;margin-top:14px;padding-top:16px;border-top:1px solid #c9c1b8}.suggested-picks>span{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#847a71}.suggested-picks>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.suggested-picks a{display:grid;gap:6px;min-width:0;color:#151313}.suggested-picks img{width:100%;aspect-ratio:1/1.1;object-fit:cover;transition:transform .25s cubic-bezier(.23,1,.32,1),filter .25s ease}.suggested-picks a:hover img{transform:translateY(-4px) scale(1.04);filter:saturate(1.1)}.suggested-picks strong{font-size:9px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-width:500px){.suggested-picks>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ZOID UX Enhancements: Subtle placeholders & full-view jersey display */
+input::placeholder, textarea::placeholder {
+  color: #777169 !important;
+  opacity: 0.52 !important;
+  font-size: 0.88em !important;
+  letter-spacing: 0.02em !important;
+}
+
+.detail-gallery-stage {
+  height: clamp(430px, 68vh, 760px) !important;
+  background: #111 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.detail-gallery-stage img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  padding: 16px !important;
+  transition: transform .5s var(--ease), filter .5s var(--ease) !important;
+}
+
+/* ZOID Global Footer: pristine 3-tier architecture with zero overlap */
+.footer {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  background: #090909 !important;
+  border-top: 1px solid #1f1f1f !important;
+  padding: 44px clamp(24px, 6vw, 96px) 28px !important;
+  box-sizing: border-box !important;
+  gap: 0 !important;
+}
+
+.footer-topline {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding-bottom: 20px !important;
+  border-bottom: 1px solid #1f1f1f !important;
+  color: #777 !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+}
+
+.footer-topline span:last-child {
+  color: var(--pink) !important;
+  font-weight: 700 !important;
+}
+
+.footer-core {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 28px !important;
+  padding: 36px 0 !important;
+  width: 100% !important;
+  border-bottom: 1px solid #1f1f1f !important;
+}
+
+.footer-wordmark {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.22em !important;
+  text-decoration: none !important;
+}
+
+.footer-wordmark img {
+  height: 22px !important;
+  width: auto !important;
+}
+
+.footer-core > p {
+  margin: 0 !important;
+  color: #888 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  max-width: 340px !important;
+}
+
+.footer-cta {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 22px !important;
+  border: 1px solid var(--pink) !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  letter-spacing: 0.16em !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.footer-cta:hover {
+  background: var(--pink) !important;
+  color: #fff !important;
+}
+
+.footer-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  padding-top: 24px !important;
+  color: #666 !important;
+  font-size: 9px !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  width: 100% !important;
+}
+
+.footer-bottom b {
+  color: var(--pink) !important;
+}
+
+@media (max-width: 768px) {
+  .footer-core {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+  }
+  .footer-topline {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .footer-bottom {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}
+
+/* ZOID Sign Up: two-panel reference layout — responsive collapse */
+@keyframes spin { to { transform: rotate(360deg); } }
+.zoid-signup-split {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+@media (max-width: 768px) {
+  .zoid-signup-split {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr;
+  }
+  .zoid-signup-split > :first-child {
+    min-height: 260px !important;
+    justify-content: center !important;
+    padding: 32px 28px !important;
+  }
+  .zoid-signup-split > :first-child > div:last-child {
+    display: none;
+  }
+}
+
+/* ZOID Admin: spin animation for RefreshCw icon */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── ZOID SUBTLE STOREFRONT HOVER ANIMATIONS ────────────────────────────── */
+.collection-card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-bottom-color 0.25s ease, box-shadow 0.35s ease;
+  will-change: transform;
+}
+.collection-card:hover {
+  transform: translateY(-5px);
+  border-bottom-color: var(--pink) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+}
+.collection-image {
+  overflow: hidden;
+  border-radius: 4px;
+}
+.collection-image img {
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+  will-change: transform;
+}
+.collection-card:hover .collection-image img {
+  transform: scale(1.06) !important;
+  filter: saturate(1.08) contrast(1.04) !important;
+}
+.save-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+}
+.save-card:hover {
+  transform: scale(1.22);
+  color: var(--pink) !important;
+}
+.line-link {
+  transition: gap 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, transform 0.2s ease;
+}
+.line-link:hover {
+  gap: 12px;
+  color: var(--pink) !important;
+}
+.line-link:hover svg {
+  transform: translate(2px, 2px);
+  transition: transform 0.2s ease;
+}
+.pink-button {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.2s ease;
+}
+.pink-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 25, 75, 0.45);
+}
+.ghost-button {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.ghost-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.07);
+}
+.filter-trigger {
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.filter-trigger:hover {
+  border-color: rgba(231, 25, 75, 0.5) !important;
+  background: #1a1717 !important;
+}
+.rail-card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, color 0.2s ease;
+}
+.rail-card:hover {
+  transform: translateY(-4px);
+  color: #fff !important;
+  border-color: var(--pink) !important;
+}
+.brand img {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brand:hover img {
+  transform: scale(1.1) rotate(4deg);
+}
+.bag-button, .action-rail .bag-button {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, box-shadow 0.2s ease;
+}
+.bag-button:hover, .action-rail .bag-button:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 14px rgba(231, 25, 75, 0.3);
+}
+.action-rail .icon-button {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.action-rail .icon-button:hover {
+  transform: translateY(-1px);
+}
+.footer-cta {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), gap 0.25s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.footer-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 25, 75, 0.4);
+}
+

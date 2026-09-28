@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Shield, Sparkles, Target, Zap, Menu, X } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
+import Navbar from "@/components/Navbar";
 
 const MARK = "/zoid-logo.svg";
 const STORY_IMG = "/manus-storage/zoid-story_425b40db.jpg";
@@ -58,26 +59,11 @@ export default function About() {
   return (
     <main className="zoid-shell collection-page" style={{ background: "#0b0b0b", color: "#f4f0ea" }}>
       {/* ── NAVBAR ──────────────────────────────────── */}
-      <header className={scrolled ? "topbar topbar-scrolled" : "topbar"}>
-        <Link className="brand" href="/">
-          <img src={MARK} alt="ZOID" />
-          <span>ZOID</span>
-          <i />
-        </Link>
-        <div className="nav-frame">
-          <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}>
-            <Link href="/" onClick={() => setMobileMenu(false)}>Home</Link>
-            <Link href="/collection" onClick={() => setMobileMenu(false)}>Shop</Link>
-            <Link className="active" href="/about" onClick={() => setMobileMenu(false)}>About</Link>
-            <Link href="/archives" onClick={() => setMobileMenu(false)}>Archives</Link>
-          </nav>
-        </div>
-        <div className="top-actions action-rail">
-          <button className="mobile-toggle" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Toggle menu">
-            {mobileMenu ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </header>
+      <Navbar
+        scrolled={scrolled}
+        mobileMenu={mobileMenu}
+        setMobileMenu={setMobileMenu}
+      />
 
       {/* ── HERO BANNER (EDITORIAL WIREFRAME) ───────── */}
       <section style={{
