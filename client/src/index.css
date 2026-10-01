@@ -357,3 +357,77 @@ input::placeholder, textarea::placeholder {
   box-shadow: 0 6px 20px rgba(231, 25, 75, 0.4);
 }
 
+/* ── UI BUG FIX: Collection image clipping fix ── */
+.collection-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.collection-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+.collection-image {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 4/5 !important;
+  overflow: hidden !important;
+  border-radius: 4px !important;
+  background: #111 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+.collection-image img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+/* ── CHECKOUT: Sticky 'What's in your bag' sidebar ── */
+@media (min-width: 801px) {
+  .checkout-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr) !important;
+    gap: 48px !important;
+    align-items: start !important;
+  }
+  .checkout-summary {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 24px !important;
+    max-height: calc(100vh - 48px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    will-change: auto !important;
+    transform: none !important;
+  }
+}
+
+/* ── SMOOTH ACCORDION TRANSITIONS ── */
+@keyframes smoothAccordionIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accordion-smooth-enter {
+  animation: smoothAccordionIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+

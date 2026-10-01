@@ -1,5 +1,5 @@
 /* ZOID About Page — Brand Philosophy, Vision, Mission & Dossier */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Shield, Sparkles, Target, Zap, Menu, X } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
@@ -47,10 +47,33 @@ export default function About() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeTab, setActiveTab] = useState<"vision" | "mission">("vision");
 
+  // Refs for vision & mission section detection
+  const visionRef = useRef<HTMLDivElement>(null);
+  const missionRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 30);
       setShowScrollTop(window.scrollY > 400);
+
+      // Determine which card is more visible
+      if (visionRef.current && missionRef.current) {
+        const visionRect = visionRef.current.getBoundingClientRect();
+        const missionRect = missionRef.current.getBoundingClientRect();
+        const midWindow = window.innerHeight / 2;
+
+        const visionDist = Math.abs(visionRect.top + visionRect.height / 2 - midWindow);
+        const missionDist = Math.abs(missionRect.top + missionRect.height / 2 - midWindow);
+
+        if (sectionRef.current) {
+          const sectionRect = sectionRef.current.getBoundingClientRect();
+          // Only switch tabs when the section is actually in view
+          if (sectionRect.top < window.innerHeight && sectionRect.bottom > 0) {
+            setActiveTab(missionDist < visionDist ? "mission" : "vision");
+          }
+        }
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -117,54 +140,34 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── VISION & MISSION DUAL WIREFRAME ────────── */}
-      <section style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#0d0d0d", borderBottom: "1px solid #1a1a1a" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 48 }}>
-          <div>
-            <p className="eyebrow" style={{ color: "var(--pink)" }}>STRATEGIC DIRECTION</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(38px, 6vw, 76px)", margin: "8px 0 0", textTransform: "uppercase", color: "#fff" }}>
-              OUR VISION & MISSION.
-            </h2>
-          </div>
-          {/* Toggle pill */}
-          <div style={{ display: "flex", background: "#181818", padding: 4, borderRadius: 4, border: "1px solid #282828" }}>
-            <button
-              onClick={() => setActiveTab("vision")}
-              style={{
-                padding: "8px 20px", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                fontWeight: 700, borderRadius: 3,
-                background: activeTab === "vision" ? "var(--pink)" : "transparent",
-                color: activeTab === "vision" ? "#fff" : "#888",
-                transition: "all 0.2s ease",
-              }}
-            >
-              VISION
-            </button>
-            <button
-              onClick={() => setActiveTab("mission")}
-              style={{
-                padding: "8px 20px", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-                fontWeight: 700, borderRadius: 3,
-                background: activeTab === "mission" ? "var(--pink)" : "transparent",
-                color: activeTab === "mission" ? "#fff" : "#888",
-                transition: "all 0.2s ease",
-              }}
-            >
-              MISSION
-            </button>
-          </div>
+      {/* ── VISION & MISSION DUAL WIREFRAME — scroll-driven ────────── */}
+      <section
+        ref={sectionRef}
+        style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#0d0d0d", borderBottom: "1px solid #1a1a1a" }}
+      >
+        <div style={{ marginBottom: 48 }}>
+          <p className="eyebrow" style={{ color: "var(--pink)" }}>STRATEGIC DIRECTION</p>
+          <h2 style={{ fontFamily: "Anton", fontSize: "clamp(38px, 6vw, 76px)", margin: "8px 0 0", textTransform: "uppercase", color: "#fff" }}>
+            OUR VISION & MISSION.
+          </h2>
+          <p style={{ marginTop: 12, fontSize: 12, color: "#555" }}>
+            Scroll down to see each card highlight as it comes into view.
+          </p>
         </div>
 
         {/* Dual Wireframe Cards Grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28 }}>
           {/* Vision Card */}
-          <div style={{
-            background: activeTab === "vision" ? "#161616" : "#121212",
-            border: activeTab === "vision" ? "1px solid var(--pink)" : "1px solid #222",
-            padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
-            transition: "all 0.3s ease",
-            boxShadow: activeTab === "vision" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
-          }}>
+          <div
+            ref={visionRef}
+            style={{
+              background: activeTab === "vision" ? "#161616" : "#121212",
+              border: activeTab === "vision" ? "1px solid var(--pink)" : "1px solid #222",
+              padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
+              transition: "all 0.5s ease",
+              boxShadow: activeTab === "vision" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(231,25,75,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Globe size={20} />
@@ -194,13 +197,16 @@ export default function About() {
           </div>
 
           {/* Mission Card */}
-          <div style={{
-            background: activeTab === "mission" ? "#161616" : "#121212",
-            border: activeTab === "mission" ? "1px solid var(--pink)" : "1px solid #222",
-            padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
-            transition: "all 0.3s ease",
-            boxShadow: activeTab === "mission" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
-          }}>
+          <div
+            ref={missionRef}
+            style={{
+              background: activeTab === "mission" ? "#161616" : "#121212",
+              border: activeTab === "mission" ? "1px solid var(--pink)" : "1px solid #222",
+              padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
+              transition: "all 0.5s ease",
+              boxShadow: activeTab === "mission" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(231,25,75,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Target size={20} />

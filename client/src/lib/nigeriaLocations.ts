@@ -549,9 +549,607 @@ export const NIGERIAN_CITIES_BY_STATE: Record<string, string[]> = {
     "Gashua",
     "Nguru",
   ],
-  "Zamfara State": [
-    "Gusau (GRA)",
-    "Talata Mafara",
-    "Kaura Namoda",
-  ],
 };
+
+/** Complete mapping of standard Nigerian Universities to their host state */
+export const NIGERIAN_UNIVERSITY_STATE_MAP: Record<string, string> = {
+  "Abubakar Tafawa Balewa University, Bauchi (ATBU)": "Bauchi State",
+  "Ahmadu Bello University, Zaria (ABU)": "Kaduna State",
+  "Air Force Institute of Technology, Kaduna (AFIT)": "Kaduna State",
+  "Alex Ekwueme Federal University, Ndufu-Alike (AE-FUNAI)": "Ebonyi State",
+  "Bayero University, Kano (BUK)": "Kano State",
+  "Federal University of Agriculture, Abeokuta (FUNAAB)": "Ogun State",
+  "Federal University of Petroleum Resources, Effurun (FUPRE)": "Delta State",
+  "Federal University of Technology, Akure (FUTA)": "Ondo State",
+  "Federal University of Technology, Minna (FUTMINNA)": "Niger State",
+  "Federal University of Technology, Owerri (FUTO)": "Imo State",
+  "Federal University, Birnin Kebbi (FUBK)": "Kebbi State",
+  "Federal University, Dutse (FUD)": "Jigawa State",
+  "Federal University, Dutsin-Ma (FUDMA)": "Katsina State",
+  "Federal University, Gashua (FUGA)": "Yobe State",
+  "Federal University, Gusau (FUGUS)": "Zamfara State",
+  "Federal University, Kashere (FUK)": "Gombe State",
+  "Federal University, Lafia (FULAFIA)": "Nasarawa State",
+  "Federal University, Lokoja (FULOKOJA)": "Kogi State",
+  "Federal University, Otuoke (FUOTUOKE)": "Bayelsa State",
+  "Federal University, Oye-Ekiti (FUOYE)": "Ekiti State",
+  "Federal University, Wukari (FUWUKARI)": "Taraba State",
+  "Joseph Sarwuan Tarka University, Makurdi (formerly FUAM)": "Benue State",
+  "Michael Okpara University of Agriculture, Umudike (MOUAU)": "Abia State",
+  "Modibbo Adama University, Yola (MAU)": "Adamawa State",
+  "National Open University of Nigeria (NOUN)": "FCT - Abuja",
+  "Nigeria Police Academy, Wudil (POLAC)": "Kano State",
+  "Nigerian Army University, Biu (NAUB)": "Borno State",
+  "Nigerian Defence Academy, Kaduna (NDA)": "Kaduna State",
+  "Nigerian Maritime University, Okerenkoko": "Delta State",
+  "Nnamdi Azikiwe University, Awka (UNIZIK)": "Anambra State",
+  "Obafemi Awolowo University, Ile-Ife (OAU)": "Osun State",
+  "University of Abuja, Gwagwalada (UNIABUJA)": "FCT - Abuja",
+  "University of Benin, Benin City (UNIBEN)": "Edo State",
+  "University of Calabar (UNICAL)": "Cross River State",
+  "University of Ibadan (UI)": "Oyo State",
+  "University of Ilorin (UNILORIN)": "Kwara State",
+  "University of Jos (UNIJOS)": "Plateau State",
+  "University of Lagos, Akoka (UNILAG)": "Lagos State",
+  "University of Maiduguri (UNIMAID)": "Borno State",
+  "University of Nigeria, Nsukka (UNN)": "Enugu State",
+  "University of Port Harcourt (UNIPORT)": "Rivers State",
+  "University of Uyo (UNIUYO)": "Akwa Ibom State",
+  "Usmanu Danfodiyo University, Sokoto (UDUS)": "Sokoto State",
+  "Abia State University, Uturu (ABSU)": "Abia State",
+  "Adamawa State University, Mubi (ADSU)": "Adamawa State",
+  "Adekunle Ajasin University, Akungba-Akoko (AAUA)": "Ondo State",
+  "Akwa Ibom State University, Ikot Akpaden (AKSU)": "Akwa Ibom State",
+  "Ambrose Alli University, Ekpoma (AAU)": "Edo State",
+  "Bauchi State University, Gadau (BASUG)": "Bauchi State",
+  "Bayelsa Medical University, Yenagoa (BMU)": "Bayelsa State",
+  "Benue State University, Makurdi (BSUM)": "Benue State",
+  "Borno State University, Maiduguri (BOSU)": "Borno State",
+  "Chukwuemeka Odumegwu Ojukwu University, Uli (COOU)": "Anambra State",
+  "Confluence University of Science and Technology, Osara (CUSTECH)": "Kogi State",
+  "Delta State University of Science and Technology, Ozoro (DSUST)": "Delta State",
+  "Delta State University, Abraka (DELSU)": "Delta State",
+  "Dennis Osadebay University, Anwai-Asaba": "Delta State",
+  "Ebonyi State University, Abakaliki (EBSU)": "Ebonyi State",
+  "Edo State University, Uzairue (EDSU)": "Edo State",
+  "Ekiti State University, Ado-Ekiti (EKSU)": "Ekiti State",
+  "Enugu State University of Science and Technology, Enugu (ESUT)": "Enugu State",
+  "Gombe State University, Gombe (GSU)": "Gombe State",
+  "Ibrahim Badamasi Babangida University, Lapai (IBBU)": "Niger State",
+  "Ignatius Ajuru University of Education, Port Harcourt (IAUE)": "Rivers State",
+  "Imo State University, Owerri (IMSU)": "Imo State",
+  "Kaduna State University, Kaduna (KASU)": "Kaduna State",
+  "Kano University of Science and Technology, Wudil (KUST)": "Kano State",
+  "Kebbi State University of Science and Technology, Aliero (KSUSTA)": "Kebbi State",
+  "Kingsley Ozumba Mbadiwe University, Ogboko (KOMU)": "Imo State",
+  "Kogi State University, Anyigba (Prince Abubakar Audu University)": "Kogi State",
+  "Kwara State University, Malete (KWASU)": "Kwara State",
+  "Lagos State University of Education, Ijanikin (LASUED)": "Lagos State",
+  "Lagos State University of Science and Technology, Ikorodu (LASUSTECH)": "Lagos State",
+  "Lagos State University, Ojo (LASU)": "Lagos State",
+  "Maitama Sule University, Kano (North-West University)": "Kano State",
+  "Nasarawa State University, Keffi (NSUK)": "Nasarawa State",
+  "Niger Delta University, Wilberforce Island (NDU)": "Bayelsa State",
+  "Olabisi Onabanjo University, Ago-Iwoye (OOU)": "Ogun State",
+  "Olusegun Agagu University of Science and Technology, Okitipupa (OAUSTECH)": "Ondo State",
+  "Osun State University, Osogbo (UNIOSUN)": "Osun State",
+  "Plateau State University, Bokkos (PLASU)": "Plateau State",
+  "Rivers State University, Port Harcourt (RSU)": "Rivers State",
+  "Sule Lamido University, Kafin Hausa (SLU)": "Jigawa State",
+  "Tai Solarin University of Education, Ijagun (TASUED)": "Ogun State",
+  "Taraba State University, Jalingo (TSU)": "Taraba State",
+  "Umaru Musa Yar'adua University, Katsina (UMYU)": "Katsina State",
+  "University of Africa, Toru-Orua": "Bayelsa State",
+  "University of Cross River State, Calabar (UNICROSS)": "Cross River State",
+  "University of Delta, Agbor": "Delta State",
+  "Yobe State University, Damaturu (YSU)": "Yobe State",
+  "Yusuf Maitama Sule University, Kano": "Kano State",
+  "Zamfara State University, Talata Mafara": "Zamfara State",
+  "Achievers University, Owo": "Ondo State",
+  "Adeleke University, Ede": "Osun State",
+  "Admiralty University of Nigeria, Ibusa": "Delta State",
+  "Afe Babalola University, Ado-Ekiti (ABUAD)": "Ekiti State",
+  "African University of Science and Technology, Abuja (AUST)": "FCT - Abuja",
+  "Ajayi Crowther University, Oyo": "Oyo State",
+  "Al-Hikmah University, Ilorin": "Kwara State",
+  "Al-Qalam University, Katsina": "Katsina State",
+  "Anchor University, Ayobo, Lagos": "Lagos State",
+  "Arthur Jarvis University, Akpabuyo": "Cross River State",
+  "Atiba University, Oyo": "Oyo State",
+  "Augustine University, Ilara, Epe": "Lagos State",
+  "Babcock University, Ilishan-Remo": "Ogun State",
+  "Baze University, Abuja": "FCT - Abuja",
+  "Bells University of Technology, Ota": "Ogun State",
+  "Benson Idahosa University, Benin City (BIU)": "Edo State",
+  "Bingham University, Karu": "Nasarawa State",
+  "Bowen University, Iwo": "Osun State",
+  "Caleb University, Imota, Lagos": "Lagos State",
+  "Caritas University, Amorji-Nike, Enugu": "Enugu State",
+  "Chrisland University, Owode, Abeokuta": "Ogun State",
+  "Christopher University, Mowe": "Ogun State",
+  "Clifford University, Ihie": "Abia State",
+  "Coal City University, Enugu": "Enugu State",
+  "Covenant University, Ota": "Ogun State",
+  "Crawford University, Igbesa": "Ogun State",
+  "Crescent University, Abeokuta": "Ogun State",
+  "Dominican University, Ibadan": "Oyo State",
+  "Edwin Clark University, Kiagbodo": "Delta State",
+  "Eko University of Medicine and Health Sciences, Ijanikin": "Lagos State",
+  "Elizade University, Ilara-Mokin": "Ondo State",
+  "Evangel University, Akaeze": "Ebonyi State",
+  "Fountain University, Osogbo": "Osun State",
+  "Godfrey Okoye University, Ugwuomu-Nike": "Enugu State",
+  "Greenfield University, Kaduna": "Kaduna State",
+  "Gregory University, Uturu": "Abia State",
+  "Hallmark University, Ijebu-Itele": "Ogun State",
+  "Hezekiah University, Umudi": "Imo State",
+  "Igbinedion University, Okada": "Edo State",
+  "Joseph Ayo Babalola University, Ikeji-Arakeji (JABU)": "Osun State",
+  "Kings University, Odeomu": "Osun State",
+  "KolaDaisi University, Ibadan": "Oyo State",
+  "Kwararafa University, Wukari": "Taraba State",
+  "Landmark University, Omu-Aran": "Kwara State",
+  "Lead City University, Ibadan": "Oyo State",
+  "Madonna University, Elele": "Rivers State",
+  "McPherson University, Seriki-Sotayo": "Ogun State",
+  "Mewar International University, Masaka": "Nasarawa State",
+  "Michael and Cecilia Ibru University, Agbarha-Otor": "Delta State",
+  "Mountain Top University, Makogi Oba": "Ogun State",
+  "Nile University of Nigeria, Abuja": "FCT - Abuja",
+  "Novena University, Ogume": "Delta State",
+  "Obong University, Obong Ntak": "Akwa Ibom State",
+  "PAMO University of Medical Sciences, Port Harcourt": "Rivers State",
+  "Pan-Atlantic University, Ibeju-Lekki, Lagos (PAU)": "Lagos State",
+  "Paul University, Awka": "Anambra State",
+  "Philomath University, Kuje, Abuja": "FCT - Abuja",
+  "Precious Cornerstone University, Ibadan": "Oyo State",
+  "Redeemer's University, Ede (RUN)": "Osun State",
+  "Renaissance University, Ugbawka": "Enugu State",
+  "Rhema University, Aba": "Abia State",
+  "Ritman University, Ikot Ekpene": "Akwa Ibom State",
+  "Salem University, Lokoja": "Kogi State",
+  "Skyline University Nigeria, Kano": "Kano State",
+  "Southwestern University, Okun Owa": "Ogun State",
+  "Spiritan University, Nneochi": "Abia State",
+  "Summit University, Offa": "Kwara State",
+  "Tansian University, Umunya": "Anambra State",
+  "Thomas Adewumi University, Oko-Irese": "Kwara State",
+  "Topfaith University, Mkpatak": "Akwa Ibom State",
+  "Trinity University, Yaba, Lagos": "Lagos State",
+  "Veritas University, Bwari, Abuja": "FCT - Abuja",
+  "Wellspring University, Benin City": "Edo State",
+  "Wesley University, Ondo": "Ondo State",
+  "Western Delta University, Oghara": "Delta State",
+  "Wigwe University, Isiokpo": "Rivers State",
+};
+
+/** Map any university name, abbreviation or keyword to its host Nigerian state */
+export function getUniversityState(universityName: string): string | null {
+  if (!universityName) return null;
+  const trimmed = universityName.trim();
+
+  // 1. Direct exact match in catalog
+  if (NIGERIAN_UNIVERSITY_STATE_MAP[trimmed]) {
+    return NIGERIAN_UNIVERSITY_STATE_MAP[trimmed];
+  }
+
+  const lower = trimmed.toLowerCase();
+
+  // 2. Case-insensitive lookup against mapped keys
+  for (const [key, state] of Object.entries(NIGERIAN_UNIVERSITY_STATE_MAP)) {
+    if (key.toLowerCase() === lower) {
+      return state;
+    }
+  }
+
+  // 3. Keyword / abbreviation / alias detection
+  if (
+    lower.includes("unilag") ||
+    lower.includes("lagos") ||
+    lower.includes("lasu") ||
+    lower.includes("lasued") ||
+    lower.includes("lasustech") ||
+    lower.includes("yaba") ||
+    lower.includes("pan-atlantic") ||
+    lower.includes("pau") ||
+    lower.includes("caleb") ||
+    lower.includes("anchor") ||
+    lower.includes("augustine") ||
+    lower.includes("trinity") ||
+    lower.includes("eko university") ||
+    lower.includes("ijanikin")
+  ) {
+    return "Lagos State";
+  }
+  if (
+    lower.includes("ui") ||
+    lower.includes("ibadan") ||
+    lower.includes("lautech") ||
+    lower.includes("atiba") ||
+    lower.includes("lead city") ||
+    lower.includes("koladaisi") ||
+    lower.includes("ajayi crowther") ||
+    lower.includes("dominican") ||
+    lower.includes("precious cornerstone") ||
+    lower.includes("oyo")
+  ) {
+    return "Oyo State";
+  }
+  if (
+    lower.includes("oau") ||
+    lower.includes("ife") ||
+    lower.includes("uniosun") ||
+    lower.includes("osun") ||
+    lower.includes("redeemer") ||
+    lower.includes("run") ||
+    lower.includes("adeleke") ||
+    lower.includes("bowen") ||
+    lower.includes("fountain") ||
+    lower.includes("kings university") ||
+    lower.includes("jabu") ||
+    lower.includes("osogbo") ||
+    lower.includes("ede") ||
+    lower.includes("iwo")
+  ) {
+    return "Osun State";
+  }
+  if (
+    lower.includes("funaab") ||
+    lower.includes("covenant") ||
+    lower.includes("babcock") ||
+    lower.includes("bells") ||
+    lower.includes("oou") ||
+    lower.includes("tasued") ||
+    lower.includes("crawford") ||
+    lower.includes("crescent") ||
+    lower.includes("chrisland") ||
+    lower.includes("christopher") ||
+    lower.includes("hallmark") ||
+    lower.includes("mcpherson") ||
+    lower.includes("mountain top") ||
+    lower.includes("southwestern") ||
+    lower.includes("ogun") ||
+    lower.includes("abeokuta") ||
+    lower.includes("ota") ||
+    lower.includes("mowe") ||
+    lower.includes("ago-iwoye")
+  ) {
+    return "Ogun State";
+  }
+  if (
+    lower.includes("abuja") ||
+    lower.includes("uniabuja") ||
+    lower.includes("baze") ||
+    lower.includes("nile") ||
+    lower.includes("veritas") ||
+    lower.includes("aust") ||
+    lower.includes("philomath") ||
+    lower.includes("fct")
+  ) {
+    return "FCT - Abuja";
+  }
+  if (
+    lower.includes("uniport") ||
+    lower.includes("port harcourt") ||
+    lower.includes("rivers") ||
+    lower.includes("rsu") ||
+    lower.includes("iaue") ||
+    lower.includes("pamo") ||
+    lower.includes("wigwe") ||
+    lower.includes("madonna")
+  ) {
+    return "Rivers State";
+  }
+  if (
+    lower.includes("uniben") ||
+    lower.includes("benin") ||
+    lower.includes("aau") ||
+    lower.includes("ambrose alli") ||
+    lower.includes("edsu") ||
+    lower.includes("edo") ||
+    lower.includes("igbinedion") ||
+    lower.includes("biu") ||
+    lower.includes("benson idahosa") ||
+    lower.includes("wellspring")
+  ) {
+    return "Edo State";
+  }
+  if (
+    lower.includes("delsu") ||
+    lower.includes("fupre") ||
+    lower.includes("delta") ||
+    lower.includes("effurun") ||
+    lower.includes("dsust") ||
+    lower.includes("dennis osadebay") ||
+    lower.includes("edwin clark") ||
+    lower.includes("novena") ||
+    lower.includes("michael and cecilia") ||
+    lower.includes("western delta")
+  ) {
+    return "Delta State";
+  }
+  if (
+    lower.includes("unn") ||
+    lower.includes("nsukka") ||
+    lower.includes("esut") ||
+    lower.includes("enugu") ||
+    lower.includes("caritas") ||
+    lower.includes("coal city") ||
+    lower.includes("godfrey okoye") ||
+    lower.includes("renaissance")
+  ) {
+    return "Enugu State";
+  }
+  if (
+    lower.includes("unizik") ||
+    lower.includes("awka") ||
+    lower.includes("coou") ||
+    lower.includes("anambra") ||
+    lower.includes("paul university") ||
+    lower.includes("tansian")
+  ) {
+    return "Anambra State";
+  }
+  if (
+    lower.includes("futo") ||
+    lower.includes("imsu") ||
+    lower.includes("owerri") ||
+    lower.includes("imo") ||
+    lower.includes("hezekiah") ||
+    lower.includes("komu")
+  ) {
+    return "Imo State";
+  }
+  if (
+    lower.includes("mouau") ||
+    lower.includes("absu") ||
+    lower.includes("abia") ||
+    lower.includes("uturu") ||
+    lower.includes("umudike") ||
+    lower.includes("gregory") ||
+    lower.includes("clifford") ||
+    lower.includes("rhema") ||
+    lower.includes("spiritan") ||
+    lower.includes("nneochi")
+  ) {
+    return "Abia State";
+  }
+  if (
+    lower.includes("ae-funai") ||
+    lower.includes("ebsu") ||
+    lower.includes("ebonyi") ||
+    lower.includes("abakaliki") ||
+    lower.includes("evangel")
+  ) {
+    return "Ebonyi State";
+  }
+  if (
+    lower.includes("unical") ||
+    lower.includes("unicross") ||
+    lower.includes("calabar") ||
+    lower.includes("cross river") ||
+    lower.includes("arthur jarvis")
+  ) {
+    return "Cross River State";
+  }
+  if (
+    lower.includes("uniuyo") ||
+    lower.includes("aksu") ||
+    lower.includes("akwa ibom") ||
+    lower.includes("uyo") ||
+    lower.includes("obong") ||
+    lower.includes("ritman") ||
+    lower.includes("topfaith")
+  ) {
+    return "Akwa Ibom State";
+  }
+  if (
+    lower.includes("fuotuoke") ||
+    lower.includes("ndu") ||
+    lower.includes("bmu") ||
+    lower.includes("bayelsa") ||
+    lower.includes("yenagoa") ||
+    lower.includes("wilberforce") ||
+    lower.includes("university of africa")
+  ) {
+    return "Bayelsa State";
+  }
+  if (
+    lower.includes("futa") ||
+    lower.includes("akure") ||
+    lower.includes("aaua") ||
+    lower.includes("oaustech") ||
+    lower.includes("ondo") ||
+    lower.includes("achievers") ||
+    lower.includes("elizade") ||
+    lower.includes("wesley")
+  ) {
+    return "Ondo State";
+  }
+  if (
+    lower.includes("fuoye") ||
+    lower.includes("eksu") ||
+    lower.includes("ekiti") ||
+    lower.includes("abuad") ||
+    lower.includes("afe babalola")
+  ) {
+    return "Ekiti State";
+  }
+  if (
+    lower.includes("unilorin") ||
+    lower.includes("ilorin") ||
+    lower.includes("kwasu") ||
+    lower.includes("kwara") ||
+    lower.includes("al-hikmah") ||
+    lower.includes("landmark") ||
+    lower.includes("summit") ||
+    lower.includes("thomas adewumi")
+  ) {
+    return "Kwara State";
+  }
+  if (
+    lower.includes("fulokoja") ||
+    lower.includes("lokoja") ||
+    lower.includes("custech") ||
+    lower.includes("kogi") ||
+    lower.includes("salem")
+  ) {
+    return "Kogi State";
+  }
+  if (
+    lower.includes("futminna") ||
+    lower.includes("minna") ||
+    lower.includes("ibbu") ||
+    lower.includes("niger")
+  ) {
+    return "Niger State";
+  }
+  if (
+    lower.includes("fulafia") ||
+    lower.includes("lafia") ||
+    lower.includes("nsuk") ||
+    lower.includes("nasarawa") ||
+    lower.includes("bingham") ||
+    lower.includes("mewar")
+  ) {
+    return "Nasarawa State";
+  }
+  if (
+    lower.includes("unijos") ||
+    lower.includes("jos") ||
+    lower.includes("plasu") ||
+    lower.includes("plateau")
+  ) {
+    return "Plateau State";
+  }
+  if (
+    lower.includes("makurdi") ||
+    lower.includes("bsum") ||
+    lower.includes("benue") ||
+    lower.includes("fuam") ||
+    lower.includes("joseph sarwuan")
+  ) {
+    return "Benue State";
+  }
+  if (
+    lower.includes("abu") ||
+    lower.includes("zaria") ||
+    lower.includes("afit") ||
+    lower.includes("kasu") ||
+    lower.includes("kaduna") ||
+    lower.includes("nda") ||
+    lower.includes("greenfield")
+  ) {
+    return "Kaduna State";
+  }
+  if (
+    lower.includes("buk") ||
+    lower.includes("kano") ||
+    lower.includes("kust") ||
+    lower.includes("polac") ||
+    lower.includes("wudil") ||
+    lower.includes("maitama sule") ||
+    lower.includes("skyline")
+  ) {
+    return "Kano State";
+  }
+  if (
+    lower.includes("fudma") ||
+    lower.includes("umyu") ||
+    lower.includes("katsina") ||
+    lower.includes("al-qalam")
+  ) {
+    return "Katsina State";
+  }
+  if (
+    lower.includes("fud") ||
+    lower.includes("dutse") ||
+    lower.includes("slu") ||
+    lower.includes("jigawa")
+  ) {
+    return "Jigawa State";
+  }
+  if (
+    lower.includes("atbu") ||
+    lower.includes("bauchi") ||
+    lower.includes("basug")
+  ) {
+    return "Bauchi State";
+  }
+  if (
+    lower.includes("fuk") ||
+    lower.includes("kashere") ||
+    lower.includes("gsu") ||
+    lower.includes("gombe")
+  ) {
+    return "Gombe State";
+  }
+  if (
+    lower.includes("unimaid") ||
+    lower.includes("maiduguri") ||
+    lower.includes("bosu") ||
+    lower.includes("naub") ||
+    lower.includes("borno")
+  ) {
+    return "Borno State";
+  }
+  if (
+    lower.includes("fuga") ||
+    lower.includes("gashua") ||
+    lower.includes("ysu") ||
+    lower.includes("damaturu") ||
+    lower.includes("yobe")
+  ) {
+    return "Yobe State";
+  }
+  if (
+    lower.includes("mau") ||
+    lower.includes("yola") ||
+    lower.includes("adsu") ||
+    lower.includes("adamawa")
+  ) {
+    return "Adamawa State";
+  }
+  if (
+    lower.includes("fuwukari") ||
+    lower.includes("wukari") ||
+    lower.includes("tsu") ||
+    lower.includes("jalingo") ||
+    lower.includes("taraba") ||
+    lower.includes("kwararafa")
+  ) {
+    return "Taraba State";
+  }
+  if (
+    lower.includes("udus") ||
+    lower.includes("sokoto")
+  ) {
+    return "Sokoto State";
+  }
+  if (
+    lower.includes("fubk") ||
+    lower.includes("ksusta") ||
+    lower.includes("kebbi") ||
+    lower.includes("birnin kebbi")
+  ) {
+    return "Kebbi State";
+  }
+  if (
+    lower.includes("fugus") ||
+    lower.includes("gusau") ||
+    lower.includes("zamfara")
+  ) {
+    return "Zamfara State";
+  }
+
+  // 4. Fallback: check if any state name is in the university string
+  for (const s of NIGERIAN_STATES) {
+    const rawState = s.replace(" State", "").toLowerCase();
+    if (lower.includes(rawState)) {
+      return s;
+    }
+  }
+
+  return null;
+}
+

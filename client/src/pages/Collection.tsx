@@ -230,8 +230,8 @@ export default function Collection() {
                   </div>
                 )}
 
-                <Link href={`/product/${product.slug}`} className="collection-image" style={{ background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 16 }} />
+                <Link href={`/product/${product.slug}`} className="collection-image">
+                  <img src={product.image} alt={product.name} />
                   <span>0{index + 1}</span>
                 </Link>
                 <div className="collection-card-meta">

@@ -16,6 +16,7 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import OrderReview from "./pages/OrderReview";
 
 // Disable browser auto scroll restoration so route transitions always start at top (0, 0)
 if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
@@ -50,6 +51,9 @@ function Router() {
         <Route path={"/collection"} component={Collection} />
         <Route path={"/product/:slug"} component={ProductDetail} />
         <Route path={"/checkout"} component={Checkout} />
+        <Route path={"/order-review"} component={OrderReview} />
+        <Route path={"/order-failed"} component={OrderReview} />
+        <Route path={"/payment-failed"} component={OrderReview} />
         <Route path={"/archives"} component={Archives} />
         <Route path={"/about"} component={About} />
         <Route path={"/admin"} component={Admin} />
