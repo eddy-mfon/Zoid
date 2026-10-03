@@ -1074,110 +1074,85 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
    ZOID MOBILE FLOATING BOTTOM NAVIGATION (Reference: Image 1)
    Floating capsule at bottom on mobile, active pill highlight
 ─────────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────────────────────
+   ZOID RESPONSIVE FIXED BOTTOM NAVBAR (Pinned at bottom edge)
+   - Top Bar: Brand Logo/Text + User Utilities (Wishlist, Profile, Bag)
+   - Bottom Bar: Page Nav (Home, Shop, About, Archives) pinned to bottom
+   - Icon-only on <= 480px screens; Icon + Text Label beside it on > 480px
+─────────────────────────────────────────────────────────────────── */
 .mobile-bottom-nav-floating {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .mobile-bottom-nav-floating {
-    display: flex;
-    position: fixed;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 28px);
-    max-width: 420px;
-    z-index: 9990;
-    pointer-events: auto;
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    z-index: 9990 !important;
+    background: rgba(12, 12, 14, 0.96) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .mobile-bottom-nav-capsule {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    width: 100%;
-    background: rgba(18, 18, 20, 0.94);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 9999px;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
-    padding: 5px 6px;
-    gap: 4px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 6px 10px 8px !important;
+    gap: 4px !important;
   }
 
   .mobile-bottom-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 8px 12px;
-    border-radius: 9999px;
-    color: #a1a1aa;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-decoration: none;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-    -webkit-tap-highlight-color: transparent;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    color: #a1a1aa !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    text-decoration: none !important;
+    border: 0 !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    transition: all 0.22s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
 
-  /* Active Capsule Pill Highlight - exact reference to Image 1 */
   .mobile-bottom-tab.active {
-    background: var(--pink) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 16px rgba(231, 25, 75, 0.45);
+    background: rgba(231, 25, 75, 0.16) !important;
+    color: var(--pink) !important;
+    border: 1px solid rgba(231, 25, 75, 0.35) !important;
   }
 
-  .mobile-bottom-tab.active span {
-    color: #ffffff !important;
-    font-weight: 700;
-  }
-
-  .mobile-tab-icon-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mobile-tab-dot {
-    position: absolute;
-    top: -5px;
-    right: -7px;
-    background: #ffffff;
-    color: var(--pink);
-    font-size: 8px;
-    font-weight: 800;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  }
-
-  .mobile-bottom-tab.active .mobile-tab-dot {
-    background: #ffffff;
-    color: var(--pink);
+  .mobile-bottom-tab.active svg {
+    color: var(--pink) !important;
   }
 
   body {
-    padding-bottom: 74px !important;
+    padding-bottom: 64px !important;
   }
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   ZOID RESPONSIVE MOBILE NAVBAR ARCHITECTURE
-   - Top Bar: Brand Logo/Text + User Utilities (Wishlist, Profile, Bag)
-   - Bottom Capsule Bar: Page Nav (Home, Shop, About, Archives)
-   - Icon-only on <= 480px screens; Icon + Text Label beside it on > 480px
-─────────────────────────────────────────────────────────────────── */
 @media (max-width: 500px) {
   .topbar {
     padding: 0 8px !important;
@@ -1232,43 +1207,21 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
 /* Icon-Only Mode on <= 480px (e.g. 320px x 480px) */
 @media (max-width: 480px) {
-  .mobile-bottom-nav-floating {
-    bottom: 12px !important;
-    width: auto !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-  }
-
-  .mobile-bottom-nav-capsule {
-    width: auto !important;
-    min-width: 220px !important;
-    max-width: 270px !important;
-    padding: 4px 6px !important;
-    gap: 6px !important;
-    border-radius: 9999px !important;
-    justify-content: center !important;
-  }
-
   .mobile-bottom-tab span {
     display: none !important;
   }
 
   .mobile-bottom-tab {
-    flex: 0 0 auto !important;
-    width: 40px !important;
-    height: 38px !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 9999px !important;
+    flex: 1 !important;
+    padding: 8px 0 !important;
+    height: 42px !important;
+    border-radius: 6px !important;
   }
 
   .mobile-bottom-tab.active {
     background: var(--pink) !important;
-    width: 50px !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 4px 18px rgba(231, 25, 75, 0.55) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(231, 25, 75, 0.45) !important;
   }
 
   .mobile-bottom-tab.active svg {
@@ -1278,64 +1231,11 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
 /* Icon + Text Label Mode when screen width > 480px */
 @media (min-width: 481px) and (max-width: 800px) {
-  .mobile-bottom-nav-floating {
-    display: flex !important;
-    position: fixed !important;
-    bottom: 14px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: calc(100% - 32px) !important;
-    max-width: 440px !important;
-    z-index: 9990 !important;
-  }
-
-  .mobile-bottom-nav-capsule {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-around !important;
-    width: 100% !important;
-    background: rgba(18, 18, 20, 0.94) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65) !important;
-    padding: 6px 10px !important;
-    gap: 4px !important;
-  }
-
-  .mobile-bottom-tab {
-    flex: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    padding: 8px 12px !important;
-    border-radius: 9999px !important;
-    color: #a1a1aa !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    text-decoration: none !important;
-    background: transparent !important;
-    transition: all 0.25s ease !important;
-  }
-
   .mobile-bottom-tab span {
     display: inline-block !important;
     font-size: 11px !important;
     font-weight: 600 !important;
     color: inherit !important;
-  }
-
-  .mobile-bottom-tab.active {
-    background: var(--pink) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 16px rgba(231, 25, 75, 0.45) !important;
-  }
-
-  .mobile-bottom-tab.active span {
-    color: #ffffff !important;
-    font-weight: 700 !important;
   }
 }
 
