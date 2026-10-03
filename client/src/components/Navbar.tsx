@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight } from "lucide-react";
+import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight, Home, Grid } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { products } from "@/lib/catalog";
@@ -80,36 +80,38 @@ export default function Navbar({
           <i />
         </Link>
 
-        {/* Center Nav Links - ONLY standard page navigation links */}
+        {/* Center Nav Links & Mobile Dropdown Drawer */}
         <div className="nav-frame">
           <nav className={isMobileMenuOpen ? "nav-links nav-open" : "nav-links"} aria-label="Main navigation">
-            {navItems.map((item) => {
-              const isActive = location === item.href || (item.href === "/" && location === "");
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={isActive ? "active" : ""}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+            {isMobileMenuOpen && (
+              <div className="mobile-menu-header">
+                <span className="mobile-menu-title">NAVIGATION</span>
+                <button className="mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+                  <X size={18} />
+                </button>
+              </div>
+            )}
+
+            <div className="nav-items-wrap">
+              {navItems.map((item) => {
+                const isActive = location === item.href || (item.href === "/" && location === "");
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={isActive ? "active" : ""}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span>{item.label}</span>
+                    {isMobileMenuOpen && <ArrowRight size={14} className="mobile-nav-arrow" />}
+                  </Link>
+                );
+              })}
+            </div>
 
             {/* Mobile-only auth links inside drawer */}
             {isMobileMenuOpen && (
-              <div
-                style={{
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTop: "1px solid #282828",
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
+              <div className="mobile-menu-auth">
                 {isLoggedIn ? (
                   <Link
                     href="/profile"
@@ -117,10 +119,10 @@ export default function Navbar({
                     onClick={() => setIsMobileMenuOpen(false)}
                     style={{ justifyContent: "center", width: "100%", display: "flex", alignItems: "center", gap: 8 }}
                   >
-                    <User size={14} /> Profile
+                    <User size={14} /> Profile & Orders
                   </Link>
                 ) : (
-                  <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                  <div style={{ display: "flex", gap: 10, width: "100%" }}>
                     <Link
                       href="/login"
                       className="ghost-button small"
@@ -139,12 +141,16 @@ export default function Navbar({
                     </Link>
                   </div>
                 )}
+                <div className="mobile-menu-footer">
+                  <span>ZOID STUDIOS / LAGOS</span>
+                  <small>Built on grit • Worn with intent</small>
+                </div>
               </div>
             )}
           </nav>
         </div>
 
-        {/* Right Action Rail */}
+        {/* Right Action Rail - PROFILE REMAINS AT TOP HEADER AS REQUESTED */}
         <div className="top-actions action-rail">
           {/* Search Button */}
           {externalSetUtilityOpen ? (
@@ -162,7 +168,7 @@ export default function Navbar({
             </Link>
           )}
 
-          {/* Wishlist Button - opens wishlist panel directly */}
+          {/* Wishlist Button */}
           <button
             aria-label="Open wishlist"
             title="Wishlist"
@@ -194,73 +200,28 @@ export default function Navbar({
             </button>
           )}
 
-          {/* AUTH: Profile Icon when signed in; Log In / Sign Up buttons when NOT signed in */}
-          {isLoggedIn ? (
-            <Link
-              href="/profile"
-              className="icon-button"
-              aria-label="Profile"
-              title="Profile"
-              style={{
-                background: "rgba(231,25,75,0.12)",
-                border: "1px solid var(--pink)",
-                color: "var(--pink)",
-                borderRadius: "50%",
-                width: 36,
-                minWidth: 36,
-                height: 36,
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <User size={16} />
-            </Link>
-          ) : (
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <Link
-                href="/login"
-                style={{
-                  fontSize: 9,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  color: "#ded8d0",
-                  padding: "6px 11px",
-                  border: "1px solid rgba(255,255,255,0.22)",
-                  borderRadius: 3,
-                  background: "transparent",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  transition: "all 0.2s ease",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Log In
-              </Link>
-              <Link
-                href="/signup"
-                style={{
-                  fontSize: 9,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  color: "#fff",
-                  padding: "6px 11px",
-                  border: "1px solid var(--pink)",
-                  borderRadius: 3,
-                  background: "var(--pink)",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  transition: "all 0.2s ease",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+          {/* PROFILE BUTTON AT TOP HEADER - Visible on Desktop & Mobile */}
+          <Link
+            href={isLoggedIn ? "/profile" : "/login"}
+            className="icon-button profile-top-button"
+            aria-label="Profile"
+            title={isLoggedIn ? `Profile (${user?.name || "Account"})` : "Log In / Profile"}
+            style={{
+              background: isLoggedIn ? "rgba(231,25,75,0.14)" : "rgba(255,255,255,0.06)",
+              border: isLoggedIn ? "1px solid var(--pink)" : "1px solid rgba(255,255,255,0.2)",
+              color: isLoggedIn ? "var(--pink)" : "#fff",
+              borderRadius: "50%",
+              width: 34,
+              minWidth: 34,
+              height: 34,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textDecoration: "none",
+            }}
+          >
+            <User size={16} />
+          </Link>
 
           {/* Mobile menu toggle */}
           <button
@@ -272,6 +233,59 @@ export default function Navbar({
           </button>
         </div>
       </header>
+
+      {/* ── FLOATING MOBILE BOTTOM NAVIGATION BAR (TAKED REFERENCE FROM IMAGE 1) ── */}
+      <div className="mobile-bottom-nav-floating">
+        <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation">
+          {/* Home */}
+          <Link
+            href="/"
+            className={`mobile-bottom-tab ${location === "/" ? "active" : ""}`}
+            aria-label="Home"
+          >
+            <Home size={18} />
+            <span>Home</span>
+          </Link>
+
+          {/* Shop */}
+          <Link
+            href="/collection"
+            className={`mobile-bottom-tab ${location.startsWith("/collection") ? "active" : ""}`}
+            aria-label="Shop"
+          >
+            <ShoppingBag size={18} />
+            <span>Shop</span>
+          </Link>
+
+          {/* Saved / Wishlist */}
+          <button
+            type="button"
+            className={`mobile-bottom-tab ${(externalUtilityOpen === "saved" || internalWishlistOpen) ? "active" : ""}`}
+            onClick={handleWishlistClick}
+            aria-label="Wishlist"
+          >
+            <div className="mobile-tab-icon-wrap">
+              <Heart size={18} fill={activeWishlistCount > 0 ? "currentColor" : "none"} />
+              {activeWishlistCount > 0 && <span className="mobile-tab-dot">{activeWishlistCount}</span>}
+            </div>
+            <span>Saved</span>
+          </button>
+
+          {/* Cart Bag */}
+          <button
+            type="button"
+            className="mobile-bottom-tab"
+            onClick={() => (setCartOpen ? setCartOpen(true) : navigate(isLoggedIn ? "/checkout" : "/login?redirect=/checkout"))}
+            aria-label="Bag"
+          >
+            <div className="mobile-tab-icon-wrap">
+              <ShoppingBag size={18} />
+              {cartCount > 0 && <span className="mobile-tab-dot">{cartCount}</span>}
+            </div>
+            <span>Bag</span>
+          </button>
+        </nav>
+      </div>
 
       {/* Embedded Wishlist Drawer (for pages where external utility panel is not handled) */}
       {internalWishlistOpen && !externalSetUtilityOpen && (

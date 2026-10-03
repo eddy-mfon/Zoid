@@ -14,6 +14,9 @@ import {
   ChevronRight,
   Flame,
   Sparkles,
+  Star,
+  Quote,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -21,6 +24,46 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const MARK = "/zoid-logo.svg";
 const STORY_IMG = "/manus-storage/zoid-story_425b40db.jpg";
+
+/* ── Testimonials data ── */
+const testimonials = [
+  {
+    id: "1",
+    name: "Emeka N.",
+    role: "Verified Buyer · Lagos",
+    rating: 5,
+    text: "The quality on the 1998 Brazil jersey is unbelievable. The weight of the fabric and detail on the crest took me straight back to childhood matchdays.",
+    kit: "Brazil / 1998 Vintage",
+    avatar: "/jerseys/National/Brazil 1998 home vintage jersey.jpg",
+  },
+  {
+    id: "2",
+    name: "Dr. Farouk A.",
+    role: "Verified Buyer · Abuja",
+    rating: 5,
+    text: "Delivered to my door in Abuja in 3 days flat. ZOID Gym Set fits better than any big international activewear brand I've owned.",
+    kit: "ZOID Pro Gym Set",
+    avatar: "/manus-storage/zoid-jersey-detail_0ef688bb.jpg",
+  },
+  {
+    id: "3",
+    name: "Bisi Ogundipe",
+    role: "Verified Buyer · Port Harcourt",
+    rating: 5,
+    text: "Japan 2026 Special kit is a work of art. The wave motif details in person look even crazier than the photos. Customer support was super responsive.",
+    kit: "Japan / 2026 Special",
+    avatar: "/jerseys/National/Japan 26 WCC.jpg",
+  },
+  {
+    id: "4",
+    name: "Kofi Mensah",
+    role: "Verified Buyer · Accra / Lagos",
+    rating: 5,
+    text: "Finally an archive sports brand that understands African street style. Built on real grit and delivered with premium packaging.",
+    kit: "France / 2026 Away",
+    avatar: "/jerseys/National/France FIFA world cup 2026 away.jpg",
+  },
+];
 
 /* ── Hero slides ── */
 const heroSlides = [
@@ -378,7 +421,30 @@ export default function Home() {
       </section>
 
       {/* ── BRAND PILLARS ───────────────────────────── */}
-      <section style={{ background: "#0d0d0d", borderBottom: "1px solid #1f1f1f", padding: "72px clamp(24px,8vw,120px)" }}>
+      <section
+        style={{ background: "#0d0d0d", borderBottom: "1px solid #1f1f1f", padding: "72px clamp(24px,8vw,120px)" }}
+        ref={(el) => {
+          if (!el) return;
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  const cards = el.querySelectorAll(".pillar-card");
+                  cards.forEach((card, i) => {
+                    setTimeout(() => {
+                      (card as HTMLElement).style.opacity = "1";
+                      (card as HTMLElement).style.transform = "translateY(0)";
+                    }, i * 130);
+                  });
+                  observer.disconnect();
+                }
+              });
+            },
+            { threshold: 0.18 }
+          );
+          observer.observe(el);
+        }}
+      >
         <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 32 }}>
           WHAT ZOID STANDS FOR
         </p>
@@ -386,6 +452,7 @@ export default function Home() {
           {pillars.map((p, i) => (
             <div
               key={p.num}
+              className="pillar-card"
               onClick={() => setActivePillar(i)}
               style={{
                 padding: "40px 36px",
@@ -393,175 +460,171 @@ export default function Home() {
                 cursor: "pointer",
                 background: activePillar === i ? "rgba(231,25,75,0.07)" : "transparent",
                 borderTop: activePillar === i ? "2px solid var(--pink)" : "2px solid transparent",
-                transition: "background 0.3s ease, border-color 0.3s ease",
+                transition: "background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
+                boxShadow: activePillar === i ? "inset 0 0 60px rgba(231,25,75,0.04)" : "none",
+                /* scroll-reveal initial state */
+                opacity: 0,
+                transform: "translateY(28px)",
               }}
             >
-              <span style={{ fontSize: 9, color: activePillar === i ? "var(--pink)" : "#555", letterSpacing: "0.18em", display: "block", marginBottom: 12 }}>
-                {p.num}
-              </span>
-              <h3 style={{ fontFamily: "Anton", fontSize: "clamp(28px,3vw,42px)", margin: "0 0 16px", color: activePillar === i ? "#fff" : "#aaa", transition: "color 0.3s ease" }}>
+              {/* Animated number indicator */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: activePillar === i ? "var(--pink)" : "#444",
+                    letterSpacing: "0.18em",
+                    fontWeight: 700,
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  {p.num}
+                </span>
+                {activePillar === i && (
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 18,
+                      height: 2,
+                      background: "var(--pink)",
+                      borderRadius: 2,
+                      animation: "pillar-line-in 0.4s cubic-bezier(.23,1,.32,1) both",
+                    }}
+                  />
+                )}
+              </div>
+              <h3
+                style={{
+                  fontFamily: "Anton",
+                  fontSize: "clamp(28px,3vw,42px)",
+                  margin: "0 0 16px",
+                  color: activePillar === i ? "#fff" : "#777",
+                  transition: "color 0.35s ease",
+                  letterSpacing: "-0.01em",
+                }}
+              >
                 {p.title}
               </h3>
-              <p style={{ color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{p.text}</p>
+              <p
+                style={{
+                  color: activePillar === i ? "#a9a49d" : "#555",
+                  fontSize: 13,
+                  lineHeight: 1.75,
+                  margin: 0,
+                  transition: "color 0.35s ease",
+                }}
+              >
+                {p.text}
+              </p>
+              {/* Active dot */}
+              {activePillar === i && (
+                <div
+                  style={{
+                    marginTop: 22,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    animation: "pillar-line-in 0.4s cubic-bezier(.23,1,.32,1) both",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "var(--pink)",
+                      boxShadow: "0 0 10px var(--pink)",
+                    }}
+                  />
+                  <span style={{ fontSize: 8, color: "var(--pink)", letterSpacing: "0.2em", fontWeight: 700 }}>
+                    ACTIVE
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── DEDICATED VERTICAL BESTSELLERS & SPECIAL KITS SECTION ── */}
-      <section style={{ padding: "80px clamp(24px, 8vw, 120px)", background: "#111", borderBottom: "1px solid #1f1f1f" }}>
-        {/* Section Header */}
+      {/* ── VERIFIED CUSTOMER TESTIMONIALS SECTION ── */}
+      <section style={{ padding: "80px clamp(24px, 8vw, 120px)", background: "#0e0e10", borderBottom: "1px solid #1f1f22" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 48 }}>
           <div>
-            <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 8 }}>CURATED HIGHLIGHTS</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(38px, 6vw, 76px)", margin: 0, textTransform: "uppercase", color: "#fff", lineHeight: 0.95 }}>
-              BESTSELLERS & <span style={{ color: "var(--pink)" }}>SPECIAL KITS.</span>
+            <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+              <Star size={14} fill="var(--pink)" color="var(--pink)" /> WHAT THE COMMUNITY SAYS
+            </p>
+            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(36px, 6vw, 72px)", margin: 0, textTransform: "uppercase", color: "#fff", lineHeight: 0.95 }}>
+              TESTIMONIALS & <span style={{ color: "var(--pink)" }}>REVIEWS.</span>
             </h2>
           </div>
-          <Link className="pink-button" href="/collection">
-            View All Collection <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        {/* 1. Bestsellers Vertical Grid */}
-        <div style={{ marginBottom: 56 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, borderBottom: "1px solid #262626", paddingBottom: 12 }}>
-            <Flame size={16} color="var(--pink)" />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: "#fff", textTransform: "uppercase" }}>
-              MOST WANTED / BESTSELLERS
-            </span>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 24 }}>
-            {bestsellers.map((item) => (
-              <div
-                key={item.slug}
-                style={{
-                  background: "#161616",
-                  border: "1px solid #282828",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  transition: "transform 0.25s ease, border-color 0.25s ease",
-                }}
-              >
-                <Link href={`/product/${item.slug}`} style={{ display: "block", position: "relative", overflow: "hidden", height: 280, background: "#0c0c0c" }}>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    style={{ width: "100%", height: "100%", objectFit: "contain", padding: 12, transition: "transform 0.4s ease" }}
-                  />
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      left: 10,
-                      background: "var(--pink)",
-                      color: "#fff",
-                      fontSize: 8,
-                      fontWeight: 700,
-                      letterSpacing: "0.14em",
-                      padding: "4px 8px",
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <Flame size={10} /> BESTSELLER
-                  </span>
-                </Link>
-
-                <div style={{ padding: 18 }}>
-                  <span style={{ fontSize: 8, letterSpacing: "0.14em", color: "#777", textTransform: "uppercase" }}>{item.category}</span>
-                  <Link href={`/product/${item.slug}`}>
-                    <h3 style={{ fontFamily: "Anton", fontSize: 18, color: "#fff", margin: "4px 0 10px", textTransform: "uppercase" }}>
-                      {item.name}
-                    </h3>
-                  </Link>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #242424", paddingTop: 12 }}>
-                    <strong style={{ fontSize: 14, color: "var(--pink)" }}>{item.price}</strong>
-                    <Link
-                      href={`/product/${item.slug}`}
-                      className="pink-button small"
-                      style={{ fontSize: 9, padding: "0 12px", minHeight: 32 }}
-                    >
-                      View
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", padding: "10px 18px", borderRadius: 4 }}>
+            <div style={{ display: "flex", gap: 2 }}>
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={14} fill="var(--pink)" color="var(--pink)" />
+              ))}
+            </div>
+            <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em" }}>4.95/5 AVERAGE RATING</span>
           </div>
         </div>
 
-        {/* 2. Special Kits Vertical Grid */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24, borderBottom: "1px solid #262626", paddingBottom: 12 }}>
-            <Sparkles size={16} color="#a855f7" />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.18em", color: "#fff", textTransform: "uppercase" }}>
-              SPECIAL EDITIONS & GYM PERFORMANCE KITS
-            </span>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+          {testimonials.map((t) => (
+            <div
+              key={t.id}
+              style={{
+                background: "#141417",
+                border: "1px solid #242429",
+                borderRadius: 6,
+                padding: 28,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                position: "relative",
+                transition: "transform 0.3s ease, border-color 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(231,25,75,0.5)";
+                e.currentTarget.style.transform = "translateY(-4px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#242429";
+                e.currentTarget.style.transform = "none";
+              }}
+            >
+              <Quote size={28} color="rgba(231,25,75,0.2)" style={{ position: "absolute", top: 20, right: 20 }} />
+              
+              <div>
+                <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} size={13} fill="var(--pink)" color="var(--pink)" />
+                  ))}
+                </div>
+                <p style={{ color: "#ddd", fontSize: 13, lineHeight: 1.7, margin: "0 0 20px", fontStyle: "italic" }}>
+                  "{t.text}"
+                </p>
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 24 }}>
-            {specialKits.map((item) => (
-              <div
-                key={item.slug}
-                style={{
-                  background: "#161616",
-                  border: "1px solid #282828",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <Link href={`/product/${item.slug}`} style={{ display: "block", position: "relative", overflow: "hidden", height: 280, background: "#0c0c0c" }}>
+              <div style={{ borderTop: "1px solid #222226", paddingTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <img
-                    src={item.image}
-                    alt={item.name}
-                    style={{ width: "100%", height: "100%", objectFit: "contain", padding: 12 }}
+                    src={t.avatar}
+                    alt={t.name}
+                    style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--pink)" }}
                   />
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      left: 10,
-                      background: "#a855f7",
-                      color: "#fff",
-                      fontSize: 8,
-                      fontWeight: 700,
-                      letterSpacing: "0.14em",
-                      padding: "4px 8px",
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <Sparkles size={10} /> SPECIAL KIT
-                  </span>
-                </Link>
-
-                <div style={{ padding: 18 }}>
-                  <span style={{ fontSize: 8, letterSpacing: "0.14em", color: "#777", textTransform: "uppercase" }}>{item.category}</span>
-                  <Link href={`/product/${item.slug}`}>
-                    <h3 style={{ fontFamily: "Anton", fontSize: 18, color: "#fff", margin: "4px 0 10px", textTransform: "uppercase" }}>
-                      {item.name}
-                    </h3>
-                  </Link>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #242424", paddingTop: 12 }}>
-                    <strong style={{ fontSize: 14, color: "var(--pink)" }}>{item.price}</strong>
-                    <Link
-                      href={`/product/${item.slug}`}
-                      className="pink-button small"
-                      style={{ fontSize: 9, padding: "0 12px", minHeight: 32 }}
-                    >
-                      View
-                    </Link>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <strong style={{ color: "#fff", fontSize: 13, fontFamily: "Anton", letterSpacing: "0.04em" }}>{t.name}</strong>
+                      <CheckCircle2 size={12} color="#10b981" />
+                    </div>
+                    <span style={{ fontSize: 9, color: "#888", display: "block" }}>{t.role}</span>
                   </div>
                 </div>
+                <span style={{ fontSize: 9, background: "#1f1f26", color: "var(--pink)", padding: "4px 8px", borderRadius: 3, fontWeight: 600 }}>
+                  {t.kit}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
