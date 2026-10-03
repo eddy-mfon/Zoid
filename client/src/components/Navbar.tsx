@@ -157,13 +157,13 @@ export default function Navbar({
             <button
               aria-label="Search products"
               title="Search"
-              className={externalUtilityOpen === "search" ? "icon-button utility-active" : "icon-button"}
+              className={externalUtilityOpen === "search" ? "icon-button search-top-button utility-active" : "icon-button search-top-button"}
               onClick={() => externalSetUtilityOpen(externalUtilityOpen === "search" ? null : "search")}
             >
               <Search size={16} />
             </button>
           ) : (
-            <Link href="/?search=1" className="icon-button" aria-label="Search products" title="Search">
+            <Link href="/?search=1" className="icon-button search-top-button" aria-label="Search products" title="Search">
               <Search size={16} />
             </Link>
           )}
@@ -174,8 +174,8 @@ export default function Navbar({
             title="Wishlist"
             className={
               (externalUtilityOpen === "saved" || internalWishlistOpen)
-                ? "icon-button saved-button utility-active"
-                : "icon-button saved-button"
+                ? "icon-button saved-button saved-top-button utility-active"
+                : "icon-button saved-button saved-top-button"
             }
             onClick={handleWishlistClick}
           >
