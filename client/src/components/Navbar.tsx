@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight, Home, Grid } from "lucide-react";
+import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight, Home, Grid, Info, Archive } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { products } from "@/lib/catalog";
@@ -234,7 +234,7 @@ export default function Navbar({
         </div>
       </header>
 
-      {/* ── FLOATING MOBILE BOTTOM NAVIGATION BAR (TAKED REFERENCE FROM IMAGE 1) ── */}
+      {/* ── FLOATING MOBILE BOTTOM NAVIGATION BAR (CONTAINS HOME, SHOP, ABOUT, ARCHIVES) ── */}
       <div className="mobile-bottom-nav-floating">
         <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation">
           {/* Home */}
@@ -250,40 +250,32 @@ export default function Navbar({
           {/* Shop */}
           <Link
             href="/collection"
-            className={`mobile-bottom-tab ${location.startsWith("/collection") ? "active" : ""}`}
+            className={`mobile-bottom-tab ${(location.startsWith("/collection") || location.startsWith("/product")) ? "active" : ""}`}
             aria-label="Shop"
           >
-            <ShoppingBag size={18} />
+            <Grid size={18} />
             <span>Shop</span>
           </Link>
 
-          {/* Saved / Wishlist */}
-          <button
-            type="button"
-            className={`mobile-bottom-tab ${(externalUtilityOpen === "saved" || internalWishlistOpen) ? "active" : ""}`}
-            onClick={handleWishlistClick}
-            aria-label="Wishlist"
+          {/* About */}
+          <Link
+            href="/about"
+            className={`mobile-bottom-tab ${location === "/about" ? "active" : ""}`}
+            aria-label="About"
           >
-            <div className="mobile-tab-icon-wrap">
-              <Heart size={18} fill={activeWishlistCount > 0 ? "currentColor" : "none"} />
-              {activeWishlistCount > 0 && <span className="mobile-tab-dot">{activeWishlistCount}</span>}
-            </div>
-            <span>Saved</span>
-          </button>
+            <Info size={18} />
+            <span>About</span>
+          </Link>
 
-          {/* Cart Bag */}
-          <button
-            type="button"
-            className="mobile-bottom-tab"
-            onClick={() => (setCartOpen ? setCartOpen(true) : navigate(isLoggedIn ? "/checkout" : "/login?redirect=/checkout"))}
-            aria-label="Bag"
+          {/* Archives */}
+          <Link
+            href="/archives"
+            className={`mobile-bottom-tab ${location === "/archives" ? "active" : ""}`}
+            aria-label="Archives"
           >
-            <div className="mobile-tab-icon-wrap">
-              <ShoppingBag size={18} />
-              {cartCount > 0 && <span className="mobile-tab-dot">{cartCount}</span>}
-            </div>
-            <span>Bag</span>
-          </button>
+            <Archive size={18} />
+            <span>Archives</span>
+          </Link>
         </nav>
       </div>
 

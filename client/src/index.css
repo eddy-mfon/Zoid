@@ -1173,48 +1173,64 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   ZOID SMALL MOBILE OPTIMIZATIONS (320px - 480px, e.g. iPod / Small Phones)
-   - Prominent un-squished Brand Logo + ZOID Text
-   - Hide redundant top actions (Search/Wishlist) on small screens
-   - Icon-only bottom navigation capsule so text never clips
+   ZOID RESPONSIVE MOBILE NAVBAR ARCHITECTURE
+   - Top Bar: Brand Logo/Text + User Utilities (Wishlist, Profile, Bag)
+   - Bottom Capsule Bar: Page Nav (Home, Shop, About, Archives)
+   - Icon-only on <= 480px screens; Icon + Text Label beside it on > 480px
 ─────────────────────────────────────────────────────────────────── */
 @media (max-width: 500px) {
   .topbar {
-    padding: 0 10px !important;
+    padding: 0 8px !important;
   }
 
   .topbar .brand, .brand {
     display: flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 6px !important;
     flex-shrink: 0 !important;
   }
 
   .topbar .brand span, .brand span {
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 800 !important;
-    letter-spacing: 0.16em !important;
+    letter-spacing: 0.14em !important;
     color: #ffffff !important;
     display: inline-block !important;
   }
 
   .topbar .brand img, .brand img {
-    height: 22px !important;
+    height: 20px !important;
     width: auto !important;
     display: block !important;
   }
 
-  /* Hide redundant top Search and Wishlist buttons on small screens */
-  .topbar .search-top-button,
-  .topbar .saved-top-button {
-    display: none !important;
+  /* Compact top utilities (Wishlist, Profile, Bag, Menu) on small screens */
+  .topbar .action-rail, .top-actions.action-rail {
+    gap: 4px !important;
   }
 
-  .topbar .action-rail, .top-actions.action-rail {
-    gap: 6px !important;
+  .topbar .action-rail .icon-button, .action-rail .icon-button {
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+  }
+
+  .topbar .action-rail .bag-button, .action-rail .bag-button {
+    min-width: 46px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 10px !important;
+    border-radius: 9999px !important;
+  }
+
+  .topbar .mobile-toggle, .mobile-toggle {
+    width: 32px !important;
+    height: 32px !important;
   }
 }
 
+/* Icon-Only Mode on <= 480px (e.g. 320px x 480px) */
 @media (max-width: 480px) {
   .mobile-bottom-nav-floating {
     bottom: 12px !important;
@@ -1225,23 +1241,22 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
   .mobile-bottom-nav-capsule {
     width: auto !important;
-    min-width: 230px !important;
-    max-width: 280px !important;
+    min-width: 220px !important;
+    max-width: 270px !important;
     padding: 4px 6px !important;
     gap: 6px !important;
     border-radius: 9999px !important;
     justify-content: center !important;
   }
 
-  /* Hide text labels on small screens so only clean, high-end icons display */
   .mobile-bottom-tab span {
     display: none !important;
   }
 
   .mobile-bottom-tab {
     flex: 0 0 auto !important;
-    width: 42px !important;
-    height: 40px !important;
+    width: 40px !important;
+    height: 38px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -1251,13 +1266,76 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
   .mobile-bottom-tab.active {
     background: var(--pink) !important;
-    width: 52px !important;
+    width: 50px !important;
     border-radius: 9999px !important;
     box-shadow: 0 4px 18px rgba(231, 25, 75, 0.55) !important;
   }
 
   .mobile-bottom-tab.active svg {
     color: #ffffff !important;
+  }
+}
+
+/* Icon + Text Label Mode when screen width > 480px */
+@media (min-width: 481px) and (max-width: 800px) {
+  .mobile-bottom-nav-floating {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 32px) !important;
+    max-width: 440px !important;
+    z-index: 9990 !important;
+  }
+
+  .mobile-bottom-nav-capsule {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    width: 100% !important;
+    background: rgba(18, 18, 20, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65) !important;
+    padding: 6px 10px !important;
+    gap: 4px !important;
+  }
+
+  .mobile-bottom-tab {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+    border-radius: 9999px !important;
+    color: #a1a1aa !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    transition: all 0.25s ease !important;
+  }
+
+  .mobile-bottom-tab span {
+    display: inline-block !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: inherit !important;
+  }
+
+  .mobile-bottom-tab.active {
+    background: var(--pink) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(231, 25, 75, 0.45) !important;
+  }
+
+  .mobile-bottom-tab.active span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
 }
 
