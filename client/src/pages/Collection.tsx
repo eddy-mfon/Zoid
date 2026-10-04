@@ -481,7 +481,7 @@ export default function Collection() {
                   <div style={{ position: "absolute", top: 10, left: 10, right: 10, zIndex: 5, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, pointerEvents: "none" }}>
                     {/* Status badge — only one shown, priority: Bestseller > Special > New */}
                     {product.isBestseller ? (
-                      <span style={{ background: "var(--pink)", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(231,25,75,0.45)" }}>
+                      <span style={{ background: "var(--pink)", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(179, 13, 13,0.45)" }}>
                         <Flame size={9} /> BESTSELLER
                       </span>
                     ) : product.isSpecial ? (
@@ -586,7 +586,7 @@ export default function Collection() {
             <br />
             Archive-led sportwear from Lagos.
           </p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
             <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
               HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
             </span>

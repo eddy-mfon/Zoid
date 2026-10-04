@@ -390,7 +390,7 @@ export default function Archives() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         style={{
-                          background: "rgba(231,25,75,0.1)", border: "1px solid rgba(231,25,75,0.3)",
+                          background: "rgba(179, 13, 13,0.1)", border: "1px solid rgba(179, 13, 13,0.3)",
                           color: "var(--pink)", padding: "4px 10px", borderRadius: 4,
                           cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
                           fontSize: 10, fontWeight: 600,
@@ -442,7 +442,7 @@ export default function Archives() {
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "10px 18px",
                 border: `1px solid ${likedIds.includes(readingStory.id) ? "var(--pink)" : "#ccc"}`,
-                background: likedIds.includes(readingStory.id) ? "rgba(231,25,75,0.08)" : "transparent",
+                background: likedIds.includes(readingStory.id) ? "rgba(179, 13, 13,0.08)" : "transparent",
                 color: likedIds.includes(readingStory.id) ? "var(--pink)" : "#555",
                 borderRadius: 4, cursor: "pointer", fontSize: 12, fontWeight: 600, marginBottom: 28,
               }}
@@ -658,7 +658,7 @@ export default function Archives() {
             <span>ZOID</span>
           </Link>
           <p>Stories from the pitch and the street.</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
               HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
             </span>

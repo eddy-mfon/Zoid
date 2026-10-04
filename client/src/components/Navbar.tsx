@@ -205,7 +205,7 @@ export default function Navbar({
             aria-label="Profile"
             title={isLoggedIn ? `Profile (${user?.name || "Account"})` : "Log In / Profile"}
             style={{
-              background: isLoggedIn ? "rgba(231,25,75,0.14)" : "rgba(255,255,255,0.06)",
+              background: isLoggedIn ? "rgba(179, 13, 13,0.14)" : "rgba(255,255,255,0.06)",
               border: isLoggedIn ? "1px solid var(--pink)" : "1px solid rgba(255,255,255,0.2)",
               color: isLoggedIn ? "var(--pink)" : "#fff",
               borderRadius: "50%",
@@ -259,8 +259,8 @@ export default function Navbar({
                     bottom: 4,
                     width: `calc(${100 / tabs.length}% - 8px)`,
                     borderRadius: 10,
-                    background: "rgba(231, 25, 75, 0.15)",
-                    border: "1px solid rgba(231, 25, 75, 0.38)",
+                    background: "rgba(179, 13, 13, 0.15)",
+                    border: "1px solid rgba(179, 13, 13, 0.38)",
                     zIndex: 0,
                     pointerEvents: "none",
                   }}

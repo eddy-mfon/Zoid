@@ -137,8 +137,8 @@ export default function AuthModal() {
                 type="button"
                 onClick={handleQuickDemoLogin}
                 style={{
-                  width: "100%", padding: "10px", background: "rgba(231,25,75,0.08)",
-                  border: "1px solid rgba(231,25,75,0.3)", borderRadius: 4,
+                  width: "100%", padding: "10px", background: "rgba(179, 13, 13,0.08)",
+                  border: "1px solid rgba(179, 13, 13,0.3)", borderRadius: 4,
                   color: "var(--pink)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
                 }}

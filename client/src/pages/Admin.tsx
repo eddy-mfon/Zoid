@@ -740,8 +740,8 @@ export default function Admin() {
             <span
               style={{
                 fontSize: 9,
-                background: "rgba(231,25,75,0.12)",
-                border: "1px solid rgba(231,25,75,0.4)",
+                background: "rgba(179, 13, 13,0.12)",
+                border: "1px solid rgba(179, 13, 13,0.4)",
                 color: "var(--pink)",
                 padding: "2px 7px",
                 borderRadius: 12,
@@ -1060,7 +1060,7 @@ export default function Admin() {
                       padding: "6px 10px",
                       fontSize: 10,
                       borderRadius: 4,
-                      background: stockStatusFilter === st.id ? "rgba(231,25,75,0.15)" : "#141414",
+                      background: stockStatusFilter === st.id ? "rgba(179, 13, 13,0.15)" : "#141414",
                       border: stockStatusFilter === st.id ? "1px solid var(--pink)" : "1px solid #242424",
                       color: stockStatusFilter === st.id ? "var(--pink)" : "#888",
                       fontWeight: 600,
@@ -1169,7 +1169,7 @@ export default function Admin() {
                             padding: "4px 8px",
                             fontSize: 9,
                             borderRadius: 4,
-                            background: product.isBestseller ? "rgba(231,25,75,0.18)" : "transparent",
+                            background: product.isBestseller ? "rgba(179, 13, 13,0.18)" : "transparent",
                             border: product.isBestseller ? "1px solid var(--pink)" : "1px solid #282828",
                             color: product.isBestseller ? "#fff" : "#888",
                             display: "flex",
@@ -1251,7 +1251,7 @@ export default function Admin() {
                             borderRadius: 3,
                             fontWeight: 700,
                             letterSpacing: "0.08em",
-                            background: totalStock > 5 ? "rgba(41,163,106,0.12)" : totalStock > 0 ? "rgba(231,166,25,0.12)" : "rgba(231,25,75,0.12)",
+                            background: totalStock > 5 ? "rgba(41,163,106,0.12)" : totalStock > 0 ? "rgba(231,166,25,0.12)" : "rgba(179, 13, 13,0.12)",
                             color: totalStock > 5 ? "#29a36a" : totalStock > 0 ? "#e7a619" : "var(--pink)",
                           }}
                         >
@@ -1614,21 +1614,21 @@ export default function Admin() {
                     <div
                       onClick={() => fileInputRef.current?.click()}
                       style={{
-                        border: "2px dashed rgba(231,25,75,0.4)",
+                        border: "2px dashed rgba(179, 13, 13,0.4)",
                         borderRadius: 6,
                         padding: "20px 16px",
                         textAlign: "center",
-                        background: "rgba(231,25,75,0.04)",
+                        background: "rgba(179, 13, 13,0.04)",
                         cursor: "pointer",
                         transition: "all 0.2s ease",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = "var(--pink)";
-                        e.currentTarget.style.background = "rgba(231,25,75,0.08)";
+                        e.currentTarget.style.background = "rgba(179, 13, 13,0.08)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(231,25,75,0.4)";
-                        e.currentTarget.style.background = "rgba(231,25,75,0.04)";
+                        e.currentTarget.style.borderColor = "rgba(179, 13, 13,0.4)";
+                        e.currentTarget.style.background = "rgba(179, 13, 13,0.04)";
                       }}
                     >
                       <Upload size={22} color="var(--pink)" style={{ margin: "0 auto 8px" }} />
@@ -1989,7 +1989,7 @@ export default function Admin() {
                       padding: "6px 10px",
                       fontSize: 10,
                       borderRadius: 4,
-                      background: orderStatusFilter === st.id ? "rgba(231,25,75,0.15)" : "#141414",
+                      background: orderStatusFilter === st.id ? "rgba(179, 13, 13,0.15)" : "#141414",
                       border: orderStatusFilter === st.id ? "1px solid var(--pink)" : "1px solid #242424",
                       color: orderStatusFilter === st.id ? "var(--pink)" : st.color || "#888",
                       fontWeight: 600,
@@ -2012,7 +2012,7 @@ export default function Admin() {
                     key={order.orderId}
                     style={{
                       background: "rgba(18, 18, 18, 0.8)",
-                      border: isExpanded ? "1px solid rgba(231,25,75,0.3)" : "1px solid rgba(255, 255, 255, 0.06)",
+                      border: isExpanded ? "1px solid rgba(179, 13, 13,0.3)" : "1px solid rgba(255, 255, 255, 0.06)",
                       borderRadius: 8,
                       overflow: "visible",
                     }}

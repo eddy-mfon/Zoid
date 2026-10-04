@@ -484,10 +484,10 @@ export default function Home() {
                 padding: "40px 36px",
                 borderRight: i < pillars.length - 1 ? "1px solid #222" : "none",
                 cursor: "pointer",
-                background: activePillar === i ? "rgba(231,25,75,0.07)" : "transparent",
+                background: activePillar === i ? "rgba(179, 13, 13,0.07)" : "transparent",
                 borderTop: activePillar === i ? "2px solid var(--pink)" : "2px solid transparent",
                 transition: "background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
-                boxShadow: activePillar === i ? "inset 0 0 60px rgba(231,25,75,0.04)" : "none",
+                boxShadow: activePillar === i ? "inset 0 0 60px rgba(179, 13, 13,0.04)" : "none",
                 /* scroll-reveal initial state */
                 opacity: 0,
                 transform: "translateY(28px)",
@@ -583,7 +583,7 @@ export default function Home() {
               TESTIMONIALS & <span style={{ color: "var(--pink)" }}>REVIEWS.</span>
             </h2>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", padding: "10px 18px", borderRadius: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", padding: "10px 18px", borderRadius: 4 }}>
             <div style={{ display: "flex", gap: 2 }}>
               {[...Array(5)].map((_, i) => (
                 <Star key={i} size={14} fill="var(--pink)" color="var(--pink)" />
@@ -609,7 +609,7 @@ export default function Home() {
                 transition: "transform 0.3s ease, border-color 0.3s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(231,25,75,0.5)";
+                e.currentTarget.style.borderColor = "rgba(179, 13, 13,0.5)";
                 e.currentTarget.style.transform = "translateY(-4px)";
               }}
               onMouseLeave={(e) => {
@@ -617,7 +617,7 @@ export default function Home() {
                 e.currentTarget.style.transform = "none";
               }}
             >
-              <Quote size={28} color="rgba(231,25,75,0.2)" style={{ position: "absolute", top: 20, right: 20 }} />
+              <Quote size={28} color="rgba(179, 13, 13,0.2)" style={{ position: "absolute", top: 20, right: 20 }} />
               
               <div>
                 <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
@@ -701,7 +701,7 @@ export default function Home() {
               left: 20,
               background: "rgba(12, 12, 12, 0.88)",
               backdropFilter: "blur(12px)",
-              border: "1px solid rgba(231,25,75,0.6)",
+              border: "1px solid rgba(179, 13, 13,0.6)",
               borderRadius: 6,
               padding: "14px 20px",
               display: "flex",
@@ -819,7 +819,7 @@ export default function Home() {
                 fontSize: 12,
                 padding: "0 44px",
                 minHeight: 56,
-                boxShadow: "0 8px 32px rgba(231, 25, 75, 0.45)",
+                boxShadow: "0 8px 32px rgba(179, 13, 13, 0.45)",
                 fontWeight: 700,
                 letterSpacing: "0.16em",
               }}
@@ -995,7 +995,7 @@ export default function Home() {
             color: "#fff",
             display: "grid",
             placeItems: "center",
-            boxShadow: "0 4px 20px rgba(231,25,75,0.45)",
+            boxShadow: "0 4px 20px rgba(179, 13, 13,0.45)",
             border: "none",
             cursor: "pointer",
             transition: "transform 0.2s ease",

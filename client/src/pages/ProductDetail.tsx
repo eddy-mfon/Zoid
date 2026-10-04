@@ -320,8 +320,8 @@ export default function ProductDetail() {
                     alignItems: "center",
                     gap: 6,
                     padding: "6px 12px",
-                    background: "rgba(231,25,75,0.1)",
-                    border: "1px solid rgba(231,25,75,0.3)",
+                    background: "rgba(179, 13, 13,0.1)",
+                    border: "1px solid rgba(179, 13, 13,0.3)",
                     borderRadius: 4,
                   }}
                 >
@@ -376,7 +376,7 @@ export default function ProductDetail() {
             <br />
             Archive-led sportwear from Lagos.
           </p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
             <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
               HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
             </span>
@@ -466,7 +466,7 @@ export default function ProductDetail() {
             color: "#fff",
             display: "grid",
             placeItems: "center",
-            boxShadow: "0 4px 20px rgba(231,25,75,0.4)",
+            boxShadow: "0 4px 20px rgba(179, 13, 13,0.4)",
             border: "none",
             cursor: "pointer",
             transition: "transform 0.2s ease, opacity 0.2s ease",

@@ -484,7 +484,7 @@ export default function Checkout() {
                               alignItems: "center",
                               justifyContent: "space-between",
                               padding: "15px 16px",
-                              background: isSelected ? "rgba(231,25,75,0.08)" : "#fff",
+                              background: isSelected ? "rgba(179, 13, 13,0.08)" : "#fff",
                               border: isSelected ? "1.5px solid var(--pink)" : "1px solid #cbc5bd",
                               borderRadius: isSelected ? "4px 4px 0 0" : 4,
                               cursor: "pointer",
@@ -572,7 +572,7 @@ export default function Checkout() {
                                 padding: "12px 14px",
                                 background:
                                   standardSubType === "university"
-                                    ? "rgba(231,25,75,0.06)"
+                                    ? "rgba(179, 13, 13,0.06)"
                                     : "#fff",
                                 border:
                                   standardSubType === "university"
@@ -629,7 +629,7 @@ export default function Checkout() {
                                 padding: "12px 14px",
                                 background:
                                   standardSubType === "given_address"
-                                    ? "rgba(231,25,75,0.06)"
+                                    ? "rgba(179, 13, 13,0.06)"
                                     : "#fff",
                                 border:
                                   standardSubType === "given_address"
@@ -868,8 +868,8 @@ export default function Checkout() {
                               alignItems: "flex-start",
                               gap: 10,
                               padding: "12px 14px",
-                              background: "rgba(231,25,75,0.06)",
-                              border: "1px solid rgba(231,25,75,0.25)",
+                              background: "rgba(179, 13, 13,0.06)",
+                              border: "1px solid rgba(179, 13, 13,0.25)",
                               borderRadius: 4,
                               marginBottom: 16,
                             }}
@@ -1012,12 +1012,12 @@ export default function Checkout() {
                                       padding: "14px 16px",
                                       border: isSelectedState ? "2px solid var(--pink)" : "1px solid #d5d0c8",
                                       borderRadius: 6,
-                                      background: isSelectedState ? "rgba(231,25,75,0.08)" : "#fff",
+                                      background: isSelectedState ? "rgba(179, 13, 13,0.08)" : "#fff",
                                       cursor: "pointer",
                                       transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                                       textAlign: "center",
                                       transform: isSelectedState ? "scale(1.02)" : "scale(1)",
-                                      boxShadow: isSelectedState ? "0 4px 12px rgba(231,25,75,0.12)" : "none",
+                                      boxShadow: isSelectedState ? "0 4px 12px rgba(179, 13, 13,0.12)" : "none",
                                     }}
                                   >
                                     <MapPin
@@ -1051,7 +1051,7 @@ export default function Checkout() {
                                           padding: "11px 13px",
                                           border: isSelectedTerm ? "1.5px solid var(--pink)" : "1px solid #d5d0c8",
                                           borderRadius: 4,
-                                          background: isSelectedTerm ? "rgba(231,25,75,0.06)" : "#fff",
+                                          background: isSelectedTerm ? "rgba(179, 13, 13,0.06)" : "#fff",
                                           cursor: "pointer",
                                           transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                                           transform: isSelectedTerm ? "translateX(3px)" : "none",
@@ -1165,8 +1165,8 @@ export default function Checkout() {
                 justifyContent: "center",
                 gap: 8,
                 padding: "9px 14px",
-                background: "rgba(231,25,75,0.06)",
-                border: "1px solid rgba(231,25,75,0.2)",
+                background: "rgba(179, 13, 13,0.06)",
+                border: "1px solid rgba(179, 13, 13,0.2)",
                 borderRadius: 4,
                 fontSize: 12,
                 color: "#444",

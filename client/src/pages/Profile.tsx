@@ -47,7 +47,7 @@ export default function Profile() {
                 width: 64,
                 height: 64,
                 borderRadius: "50%",
-                background: "rgba(231,25,75,0.12)",
+                background: "rgba(179, 13, 13,0.12)",
                 border: "1px solid var(--pink)",
                 display: "grid",
                 placeItems: "center",
@@ -156,8 +156,8 @@ export default function Profile() {
             }}
             style={{
               marginTop: 4,
-              background: "rgba(231,25,75,0.1)",
-              border: "1px solid rgba(231,25,75,0.3)",
+              background: "rgba(179, 13, 13,0.1)",
+              border: "1px solid rgba(179, 13, 13,0.3)",
               color: "var(--pink)",
               padding: "8px 12px",
               borderRadius: 4,
@@ -260,7 +260,7 @@ export default function Profile() {
                             fontWeight: 700,
                             padding: "4px 10px",
                             borderRadius: 20,
-                            background: order.status === "Delivered" ? "rgba(41,163,106,0.15)" : "rgba(231,25,75,0.15)",
+                            background: order.status === "Delivered" ? "rgba(41,163,106,0.15)" : "rgba(179, 13, 13,0.15)",
                             color: order.status === "Delivered" ? "#29a36a" : "var(--pink)",
                             letterSpacing: "0.1em",
                           }}
@@ -394,7 +394,7 @@ export default function Profile() {
             <span>ZOID</span>
           </Link>
           <p>For the ones still rising.</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
               HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
             </span>

@@ -157,8 +157,8 @@ export default function Auth() {
             135deg,
             #080808 0px,
             #080808 36px,
-            #e7194b 36px,
-            #e7194b 48px,
+            #b30d0d 36px,
+            #b30d0d 48px,
             #080808 48px,
             #080808 84px,
             #ffffff 84px,
@@ -184,7 +184,7 @@ export default function Auth() {
           transform: "translate(-50%, -50%)",
           width: "min(600px, 90vw)",
           height: "400px",
-          background: "radial-gradient(circle, rgba(231,25,75,0.18) 0%, rgba(8,8,8,0) 72%)",
+          background: "radial-gradient(circle, rgba(179, 13, 13,0.18) 0%, rgba(8,8,8,0) 72%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -260,7 +260,7 @@ export default function Auth() {
             border: "1px solid rgba(255, 255, 255, 0.12)",
             borderRadius: 10,
             padding: "clamp(26px, 5vw, 36px) clamp(18px, 5vw, 32px)",
-            boxShadow: "0 30px 70px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(231, 25, 75, 0.15)",
+            boxShadow: "0 30px 70px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(179, 13, 13, 0.15)",
           }}
         >
           {/* Brand Mark & Dynamic Title */}
@@ -270,12 +270,12 @@ export default function Auth() {
                 width: 42,
                 height: 42,
                 borderRadius: "50%",
-                background: "rgba(231,25,75,0.12)",
-                border: "1px solid rgba(231,25,75,0.4)",
+                background: "rgba(179, 13, 13,0.12)",
+                border: "1px solid rgba(179, 13, 13,0.4)",
                 display: "grid",
                 placeItems: "center",
                 margin: "0 auto 12px",
-                boxShadow: "0 0 20px rgba(231,25,75,0.25)",
+                boxShadow: "0 0 20px rgba(179, 13, 13,0.25)",
               }}
             >
               <img src={MARK} alt="ZOID" style={{ height: 17, width: "auto" }} />
@@ -405,7 +405,7 @@ export default function Auth() {
                 background: "var(--pink)",
                 borderRadius: 4,
                 zIndex: 1,
-                boxShadow: "0 2px 10px rgba(231,25,75,0.4)",
+                boxShadow: "0 2px 10px rgba(179, 13, 13,0.4)",
               }}
             />
           </div>
@@ -521,8 +521,8 @@ export default function Auth() {
                       transition: "all 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(231,25,75,0.1)";
-                      e.currentTarget.style.borderColor = "rgba(231,25,75,0.35)";
+                      e.currentTarget.style.background = "rgba(179, 13, 13,0.1)";
+                      e.currentTarget.style.borderColor = "rgba(179, 13, 13,0.35)";
                       e.currentTarget.style.color = "#f4f0ea";
                     }}
                     onMouseLeave={(e) => {
@@ -689,8 +689,8 @@ export default function Auth() {
                       transition: "all 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(231,25,75,0.1)";
-                      e.currentTarget.style.borderColor = "rgba(231,25,75,0.35)";
+                      e.currentTarget.style.background = "rgba(179, 13, 13,0.1)";
+                      e.currentTarget.style.borderColor = "rgba(179, 13, 13,0.35)";
                       e.currentTarget.style.color = "#f4f0ea";
                     }}
                     onMouseLeave={(e) => {

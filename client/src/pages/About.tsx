@@ -98,7 +98,7 @@ export default function About() {
         <div style={{ maxWidth: 880 }}>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "5px 12px", background: "rgba(231,25,75,0.12)",
+            padding: "5px 12px", background: "rgba(179, 13, 13,0.12)",
             border: "1px solid var(--pink)", borderRadius: 3,
             color: "var(--pink)", fontSize: 9, letterSpacing: "0.2em", fontWeight: 700,
             marginBottom: 24, textTransform: "uppercase"
@@ -165,11 +165,11 @@ export default function About() {
               border: activeTab === "vision" ? "1px solid var(--pink)" : "1px solid #222",
               padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
               transition: "all 0.5s ease",
-              boxShadow: activeTab === "vision" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
+              boxShadow: activeTab === "vision" ? "0 12px 35px rgba(179, 13, 13,0.15)" : "none"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(231,25,75,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Globe size={20} />
               </div>
               <div>
@@ -204,11 +204,11 @@ export default function About() {
               border: activeTab === "mission" ? "1px solid var(--pink)" : "1px solid #222",
               padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
               transition: "all 0.5s ease",
-              boxShadow: activeTab === "mission" ? "0 12px 35px rgba(231,25,75,0.15)" : "none"
+              boxShadow: activeTab === "mission" ? "0 12px 35px rgba(179, 13, 13,0.15)" : "none"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(231,25,75,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Target size={20} />
               </div>
               <div>
@@ -247,7 +247,7 @@ export default function About() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
           {pillars.map((p) => (
             <div key={p.num} style={{ background: "#161616", border: "1px solid #242424", padding: 32, borderRadius: 4, position: "relative" }}>
-              <span style={{ fontFamily: "Anton", fontSize: 44, color: "rgba(231,25,75,0.22)", lineHeight: 1, display: "block", marginBottom: 14 }}>{p.num}</span>
+              <span style={{ fontFamily: "Anton", fontSize: 44, color: "rgba(179, 13, 13,0.22)", lineHeight: 1, display: "block", marginBottom: 14 }}>{p.num}</span>
               <h3 style={{ fontFamily: "Anton", fontSize: 20, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>{p.title}</h3>
               <p style={{ color: "#888", lineHeight: 1.65, fontSize: 13, margin: 0 }}>{p.body}</p>
             </div>
@@ -359,7 +359,7 @@ export default function About() {
             width: 44, height: 44, borderRadius: "50%",
             background: "var(--pink)", color: "#fff",
             display: "grid", placeItems: "center",
-            boxShadow: "0 4px 20px rgba(231,25,75,0.4)",
+            boxShadow: "0 4px 20px rgba(179, 13, 13,0.4)",
             border: "none", cursor: "pointer"
           }}
         >
