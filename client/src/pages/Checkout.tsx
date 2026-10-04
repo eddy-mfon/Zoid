@@ -88,8 +88,53 @@ function isSupportedState(state: string): boolean {
     s === "rivers state" ||
     s === "rivers" ||
     s === "port harcourt" ||
-    s === "ph"
+    s === "ph" ||
+    s.includes("lagos") ||
+    s.includes("rivers") ||
+    s.includes("port harcourt") ||
+    s.includes("ph")
   );
+}
+
+/** Normalize user input to canonical Lagos or Rivers State */
+function normalizeState(val: string): {
+  standardState: string;
+  pickupState: string;
+  isLagos: boolean;
+  isPH: boolean;
+  isSupported: boolean;
+} {
+  const s = val.trim().toLowerCase();
+  if (s.includes("lagos")) {
+    return {
+      standardState: "Lagos State",
+      pickupState: "Lagos",
+      isLagos: true,
+      isPH: false,
+      isSupported: true,
+    };
+  }
+  if (
+    s.includes("river") ||
+    s.includes("port") ||
+    s.includes("ph") ||
+    s.includes("harcourt")
+  ) {
+    return {
+      standardState: "Rivers State",
+      pickupState: "Port Harcourt",
+      isLagos: false,
+      isPH: true,
+      isSupported: true,
+    };
+  }
+  return {
+    standardState: val.trim() || "Lagos State",
+    pickupState: "Lagos",
+    isLagos: false,
+    isPH: false,
+    isSupported: false,
+  };
 }
 
 interface DeliveryMethod {
@@ -246,6 +291,24 @@ export default function Checkout() {
     [form.expressState]
   );
 
+  // Universities filtered / prioritised for selected state
+  const filteredUniversities = useMemo(() => {
+    const norm = normalizeState(form.contactState);
+    if (norm.isLagos) {
+      return LAGOS_PH_UNIVERSITIES.filter((u) => {
+        const st = getUniversityState(u);
+        return st === "Lagos State" || u.toLowerCase().includes("lagos");
+      });
+    }
+    if (norm.isPH) {
+      return LAGOS_PH_UNIVERSITIES.filter((u) => {
+        const st = getUniversityState(u);
+        return st === "Rivers State" || u.toLowerCase().includes("port") || u.toLowerCase().includes("rivers");
+      });
+    }
+    return LAGOS_PH_UNIVERSITIES;
+  }, [form.contactState]);
+
   // When Lagos or Port Harcourt is picked, remove "not_mentioned" from delivery options
   const availableDeliveryMethods = useMemo(() => {
     if (stateEntered && deliveryAvailable) {
@@ -388,7 +451,20 @@ export default function Checkout() {
                     list="contact-states-list"
                     value={form.contactState}
                     onChange={(e) => {
-                      update("contactState", e.target.value);
+                      const val = e.target.value;
+                      const norm = normalizeState(val);
+                      const defaultCity = norm.isPH ? "Port Harcourt (City)" : "Ikeja";
+                      setForm((prev) => ({
+                        ...prev,
+                        contactState: val,
+                        state: norm.standardState,
+                        expressState: norm.standardState,
+                        studentCityState: norm.standardState,
+                        city: (!prev.city || prev.city === "Ikeja" || prev.city === "Port Harcourt (City)") ? defaultCity : prev.city,
+                        expressCity: (!prev.expressCity || prev.expressCity === "Ikeja" || prev.expressCity === "Port Harcourt (City)") ? defaultCity : prev.expressCity,
+                        pickupState: norm.pickupState,
+                        pickupTerminal: GUO_LOCATIONS[norm.pickupState]?.[0] || GUO_LOCATIONS["Lagos"][0],
+                      }));
                       // Reset delivery option when state changes
                       setDeliveryOption("standard");
                       setStandardSubType(null);
@@ -715,35 +791,32 @@ export default function Checkout() {
                                     autoComplete="off"
                                   />
                                   <datalist id="universities-list">
-                                    {LAGOS_PH_UNIVERSITIES.map((uni) => (
+                                    {filteredUniversities.map((uni) => (
                                       <option key={uni} value={uni} />
                                     ))}
                                   </datalist>
                                 </div>
-                                {form.schoolName && form.studentCityState && (
-                                  <span style={{ fontSize: 11, color: "var(--pink)", display: "flex", alignItems: "center", gap: 5, marginTop: 4, textTransform: "none", letterSpacing: "normal" }}>
-                                    <Check size={12} /> Campus State auto-matched: <strong>{form.studentCityState}</strong>
-                                  </span>
-                                )}
                               </label>
-                              <label>
-                                Campus State *
-                                <div style={{ position: "relative" }}>
-                                  <input
-                                    required
-                                    list="student-states-list"
-                                    value={form.studentCityState}
-                                    onChange={(e) => update("studentCityState", e.target.value)}
-                                    placeholder="Lagos State or Rivers State"
-                                    autoComplete="off"
-                                  />
-                                  <datalist id="student-states-list">
-                                    {SUPPORTED_STATES.map((s) => (
-                                      <option key={s} value={s} />
-                                    ))}
-                                  </datalist>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "10px 14px",
+                                  background: "#f6f4f0",
+                                  border: "1px solid #e2ddd5",
+                                  borderRadius: 4,
+                                  fontSize: 12,
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#333" }}>
+                                  <MapPin size={14} color="var(--pink)" />
+                                  <span>Campus State: <strong style={{ color: "#111" }}>{form.studentCityState || form.contactState}</strong></span>
                                 </div>
-                              </label>
+                                <span style={{ fontSize: 11, color: "#29a36a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <Check size={12} /> Auto-filled from contact
+                                </span>
+                              </div>
                               <label>
                                 Hostel name & room number *
                                 <input
@@ -780,24 +853,26 @@ export default function Checkout() {
                               <p style={{ fontSize: 11, fontWeight: 700, color: "var(--pink)", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                                 Delivery Address Details
                               </p>
-                              <label>
-                                State *
-                                <div style={{ position: "relative" }}>
-                                  <input
-                                    required
-                                    list="states-list"
-                                    value={form.state}
-                                    onChange={(e) => update("state", e.target.value)}
-                                    placeholder="e.g. Lagos State, Rivers State"
-                                    autoComplete="off"
-                                  />
-                                  <datalist id="states-list">
-                                    {NIGERIAN_STATES.map((s) => (
-                                      <option key={s} value={s} />
-                                    ))}
-                                  </datalist>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "10px 14px",
+                                  background: "#f6f4f0",
+                                  border: "1px solid #e2ddd5",
+                                  borderRadius: 4,
+                                  fontSize: 12,
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#333" }}>
+                                  <MapPin size={14} color="var(--pink)" />
+                                  <span>Delivery State: <strong style={{ color: "#111" }}>{form.state || form.contactState}</strong></span>
                                 </div>
-                              </label>
+                                <span style={{ fontSize: 11, color: "#29a36a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <Check size={12} /> Auto-filled from contact
+                                </span>
+                              </div>
                               <label>
                                 City or town in {form.state || "your state"} *
                                 <div style={{ position: "relative" }}>
@@ -894,24 +969,26 @@ export default function Checkout() {
                             <p style={{ fontSize: 11, fontWeight: 700, color: "var(--pink)", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                               Express Destination Address
                             </p>
-                            <label>
-                              State *
-                              <div style={{ position: "relative" }}>
-                                <input
-                                  required
-                                  list="express-states-list"
-                                  value={form.expressState}
-                                  onChange={(e) => update("expressState", e.target.value)}
-                                  placeholder="e.g. Lagos State, Abuja"
-                                  autoComplete="off"
-                                />
-                                <datalist id="express-states-list">
-                                  {NIGERIAN_STATES.map((s) => (
-                                    <option key={s} value={s} />
-                                  ))}
-                                </datalist>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "10px 14px",
+                                background: "#f6f4f0",
+                                border: "1px solid #e2ddd5",
+                                borderRadius: 4,
+                                fontSize: 12,
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#333" }}>
+                                <MapPin size={14} color="var(--pink)" />
+                                <span>Express State: <strong style={{ color: "#111" }}>{form.expressState || form.contactState}</strong></span>
                               </div>
-                            </label>
+                              <span style={{ fontSize: 11, color: "#29a36a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                <Check size={12} /> Auto-filled from contact
+                              </span>
+                            </div>
                             <label>
                               City or area *
                               <div style={{ position: "relative" }}>
@@ -995,8 +1072,30 @@ export default function Checkout() {
                               borderRadius: 4,
                             }}
                           >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "10px 14px",
+                                background: "#f6f4f0",
+                                border: "1px solid #e2ddd5",
+                                borderRadius: 4,
+                                fontSize: 12,
+                                marginBottom: 14,
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#333" }}>
+                                <MapPin size={14} color="var(--pink)" />
+                                <span>Pickup Region: <strong style={{ color: "#111" }}>{form.pickupState}</strong></span>
+                              </div>
+                              <span style={{ fontSize: 11, color: "#29a36a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                <Check size={12} /> Auto-matched ({form.pickupState})
+                              </span>
+                            </div>
+
                             <p style={{ fontSize: 12, fontWeight: 700, color: "#333", marginBottom: 10 }}>
-                              1. Select your state:
+                              1. Pickup State:
                             </p>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                               {Object.keys(GUO_LOCATIONS).map((state) => {

@@ -770,6 +770,12 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     border-right: none !important;
     border-bottom: 1px solid #222 !important;
     padding: 28px 22px !important;
+    border-left: 3px solid transparent !important;
+    border-top: none !important;
+  }
+  .pillar-card.active-pillar {
+    background: rgba(179, 13, 13, 0.09) !important;
+    border-left: 3px solid var(--pink) !important;
   }
   .pillar-card:last-child { border-bottom: none !important; }
 }

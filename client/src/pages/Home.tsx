@@ -160,9 +160,12 @@ export default function Home() {
     return () => clearInterval(t);
   }, [prevHero]);
 
-  /* Pillar auto-cycle */
+  /* Pillar auto-cycle (active on desktop when not interacting) */
   useEffect(() => {
-    const t = setInterval(() => setActivePillar((p) => (p + 1) % pillars.length), 3500);
+    if (typeof window !== "undefined" && window.innerWidth <= 700) {
+      return; // On mobile, highlight is driven by scroll position
+    }
+    const t = setInterval(() => setActivePillar((p) => (p + 1) % pillars.length), 3800);
     return () => clearInterval(t);
   }, []);
 
@@ -185,31 +188,57 @@ export default function Home() {
     };
   }, []);
 
-  /* Mobile: highlight pillar card as it scrolls into centre of the viewport */
+  /* Mobile / scroll reactivity: highlight pillar cards progressively as user scrolls down */
   useEffect(() => {
-    // Only activate the per-card observer on narrow screens (stacked layout)
-    if (typeof window === "undefined" || window.innerWidth > 700) return;
+    let ticking = false;
 
-    const cards = Array.from(document.querySelectorAll(".pillar-card")) as HTMLElement[];
-    if (!cards.length) return;
+    const updatePillarOnScroll = () => {
+      const cards = Array.from(document.querySelectorAll(".pillar-card")) as HTMLElement[];
+      if (!cards.length) return;
 
-    const observers: IntersectionObserver[] = cards.map((card, i) => {
-      const obs = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActivePillar(i);
-            }
-          });
-        },
-        { threshold: 0.55 } // card must be >55% in view to activate
-      );
-      obs.observe(card);
-      return obs;
-    });
+      const vh = window.innerHeight;
+      const triggerY = vh * 0.5; // Centerline of viewport
 
-    return () => observers.forEach((obs) => obs.disconnect());
-  }, []); // run once on mount
+      let closestIdx = -1;
+      let minDistance = Infinity;
+
+      cards.forEach((card, i) => {
+        const rect = card.getBoundingClientRect();
+        // Check if card is within visible viewport range
+        if (rect.bottom > vh * 0.15 && rect.top < vh * 0.85) {
+          const cardCenter = rect.top + rect.height / 2;
+          const dist = Math.abs(cardCenter - triggerY);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestIdx = i;
+          }
+        }
+      });
+
+      if (closestIdx !== -1) {
+        setActivePillar(closestIdx);
+      }
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updatePillarOnScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    updatePillarOnScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
 
   /* Search */
   const searchResults = useMemo(() => (query.trim() ? searchProducts(query) : []), [query]);
@@ -478,7 +507,8 @@ export default function Home() {
           {pillars.map((p, i) => (
             <div
               key={p.num}
-              className="pillar-card"
+              className={`pillar-card ${activePillar === i ? "active-pillar" : ""}`}
+              onMouseEnter={() => setActivePillar(i)}
               onClick={() => setActivePillar(i)}
               style={{
                 padding: "40px 36px",
