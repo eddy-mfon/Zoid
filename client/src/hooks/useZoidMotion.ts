@@ -1,5 +1,5 @@
 /* ZOID Concrete Ritual: GSAP motion is directional, editorial, and subordinate to the story. Reduced motion exits cleanly. */
-import { useLayoutEffect, type RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -38,21 +38,15 @@ function splitHeadline(element: HTMLElement) {
 }
 
 export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: { floatingJersey?: boolean; floatingJerseyKey?: string } = {}) {
-  useLayoutEffect(() => {
+  useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const navbar = root.querySelector<HTMLElement>(".topbar");
         const hero = root.querySelector<HTMLElement>(".hero");
         const heroCopy = root.querySelector<HTMLElement>(".hero-copy");
-        const navLinks = root.querySelectorAll<HTMLElement>(".nav-links a");
-
-        if (navbar) {
-          gsap.fromTo(navbar, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
-        }
 
         if (hero && heroCopy) {
           const heroTimeline = gsap.timeline({ defaults: { ease: "power4.out" } });
@@ -67,8 +61,6 @@ export function useZoidMotion(rootRef: RefObject<HTMLElement | null>, options: {
         gsap.utils.toArray<HTMLElement>(root.querySelectorAll(".manifesto-band, .shop-section, .special-kits, .story-section, .drop-banner, .collection-card, .detail-info, .fit-guide")).forEach((section) => {
           gsap.fromTo(section, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: .5, ease: "power3.out", scrollTrigger: { trigger: section, start: "top 95%", once: true } });
         });
-
-        if (navLinks.length) gsap.fromTo(navLinks, { y: -6, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: .3, stagger: .05, delay: .1, ease: "power2.out" });
 
         const headlineTargets = [root.querySelector<HTMLElement>(".hero-copy h1"), root.querySelector<HTMLElement>(".manifesto-band h2"), ...Array.from(root.querySelectorAll<HTMLElement>(".feature-info h3, .rail-meta strong, .archive-card-meta h3"))].filter((heading): heading is HTMLElement => Boolean(heading));
         headlineTargets.forEach((heading, index) => {

@@ -341,9 +341,10 @@ export default function About() {
             <Link href="/about">About</Link>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid #1f1f1f", paddingTop: 18, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, color: "#555", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        <div style={{ borderTop: "1px solid #1f1f1f", paddingTop: 18, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, color: "#777", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
           <span>© ZOID STUDIOS / 2026</span>
           <span>Lagos — Nigeria</span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", textDecoration: "none", fontWeight: 700 }}>09020711737</a></span>
           <span>Built on grit • Worn with intent</span>
         </div>
       </footer>

@@ -185,6 +185,32 @@ export default function Home() {
     };
   }, []);
 
+  /* Mobile: highlight pillar card as it scrolls into centre of the viewport */
+  useEffect(() => {
+    // Only activate the per-card observer on narrow screens (stacked layout)
+    if (typeof window === "undefined" || window.innerWidth > 700) return;
+
+    const cards = Array.from(document.querySelectorAll(".pillar-card")) as HTMLElement[];
+    if (!cards.length) return;
+
+    const observers: IntersectionObserver[] = cards.map((card, i) => {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActivePillar(i);
+            }
+          });
+        },
+        { threshold: 0.55 } // card must be >55% in view to activate
+      );
+      obs.observe(card);
+      return obs;
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, []); // run once on mount
+
   /* Search */
   const searchResults = useMemo(() => (query.trim() ? searchProducts(query) : []), [query]);
 
@@ -884,6 +910,14 @@ export default function Home() {
                   {l}
                 </Link>
               ))}
+              <div style={{ marginTop: 6, paddingTop: 8, borderTop: "1px solid #1c1c1c" }}>
+                <span style={{ display: "block", color: "var(--pink)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+                  Emergency Hotline
+                </span>
+                <a href="tel:09020711737" style={{ color: "#fff", fontSize: 12, textDecoration: "none", fontWeight: 600 }}>
+                  09020711737
+                </a>
+              </div>
             </div>
           </div>
           {/* Newsletter */}
@@ -929,7 +963,7 @@ export default function Home() {
             justifyContent: "space-between",
             flexWrap: "wrap",
             gap: 10,
-            color: "#444",
+            color: "#666",
             fontSize: 9,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
@@ -937,6 +971,7 @@ export default function Home() {
         >
           <span>© ZOID STUDIOS / 2026</span>
           <span>Lagos — Nigeria</span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", textDecoration: "none", fontWeight: 700 }}>09020711737</a></span>
           <span>
             Built on grit <b style={{ color: "var(--pink)" }}>•</b> Worn with intent
           </span>

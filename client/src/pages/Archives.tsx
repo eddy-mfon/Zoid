@@ -658,12 +658,18 @@ export default function Archives() {
             <span>ZOID</span>
           </Link>
           <p>Stories from the pitch and the street.</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
+              HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
+            </span>
+          </div>
           <Link className="footer-cta" href="/collection">
             Shop the Edit <ArrowDownRight size={16} />
           </Link>
         </div>
         <div className="footer-bottom">
           <span>© ZOID STUDIOS / 2026</span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "inherit", textDecoration: "none" }}>09020711737</a></span>
           <span>Built on grit • Worn with intent</span>
         </div>
       </footer>

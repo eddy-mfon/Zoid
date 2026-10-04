@@ -52,6 +52,46 @@ const GUO_LOCATIONS: Record<string, string[]> = {
 type DeliveryOptionType = "standard" | "express" | "pickup" | "not_mentioned";
 type StandardSubType = "university" | "given_address" | null;
 
+// States we currently deliver to directly
+const SUPPORTED_STATES = ["Lagos State", "Rivers State"];
+
+// Universities in Lagos and Port Harcourt (Rivers State) only
+const LAGOS_PH_UNIVERSITIES = [
+  // Lagos
+  "University of Lagos, Akoka (UNILAG)",
+  "Lagos State University, Ojo (LASU)",
+  "Lagos State University of Science and Technology, Ikorodu (LASUSTECH)",
+  "Lagos State University of Education, Ijanikin (LASUED)",
+  "Yaba College of Technology, Lagos (YABATECH)",
+  "Lagos City Polytechnic",
+  "Anchor University, Ayobo, Lagos",
+  "Augustine University, Ilara, Epe",
+  "Caleb University, Imota, Lagos",
+  "Eko University of Medicine and Health Sciences, Ijanikin",
+  "Pan-Atlantic University, Ibeju-Lekki, Lagos (PAU)",
+  "Trinity University, Yaba, Lagos",
+  // Port Harcourt / Rivers State
+  "University of Port Harcourt (UNIPORT)",
+  "Rivers State University, Port Harcourt (RSU)",
+  "Ignatius Ajuru University of Education, Port Harcourt (IAUE)",
+  "Madonna University, Elele",
+  "PAMO University of Medical Sciences, Port Harcourt",
+  "Wigwe University, Isiokpo",
+];
+
+/** Returns true when the user's entered state matches Lagos or Port Harcourt */
+function isSupportedState(state: string): boolean {
+  const s = state.trim().toLowerCase();
+  return (
+    s === "lagos state" ||
+    s === "lagos" ||
+    s === "rivers state" ||
+    s === "rivers" ||
+    s === "port harcourt" ||
+    s === "ph"
+  );
+}
+
 interface DeliveryMethod {
   id: DeliveryOptionType;
   title: string;
@@ -64,7 +104,7 @@ const deliveryMethods: DeliveryMethod[] = [
   {
     id: "standard",
     title: "Straight to your doorstep",
-    subtitle: "We bring your order directly to your door or university campus",
+    subtitle: "We deliver directly to your door or university campus in Lagos or Port Harcourt",
     fee: 2500,
     icon: <Home size={18} />,
   },
@@ -96,6 +136,7 @@ export interface CheckoutDraft {
   name: string;
   email: string;
   phone: string;
+  contactState: string; // state entered in contact details — drives which delivery options show
   deliveryOption: DeliveryOptionType;
   standardSubType: StandardSubType;
   // student fields
@@ -147,6 +188,7 @@ export default function Checkout() {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
+    contactState: "",
     deliveryOption: "standard",
     standardSubType: null,
     schoolName: "",
@@ -163,6 +205,10 @@ export default function Checkout() {
     pickupNote: "",
     notes: "",
   });
+
+  // Derived: has the user entered a state we can deliver to?
+  const deliveryAvailable = isSupportedState(form.contactState);
+  const stateEntered = form.contactState.trim().length > 0;
 
   // Sync user details on login
   useEffect(() => {
@@ -200,8 +246,16 @@ export default function Checkout() {
     [form.expressState]
   );
 
-  const selectedMethod = deliveryMethods.find((m) => m.id === deliveryOption) || deliveryMethods[0];
-  const deliveryFee = selectedMethod.fee;
+  // When Lagos or Port Harcourt is picked, remove "not_mentioned" from delivery options
+  const availableDeliveryMethods = useMemo(() => {
+    if (stateEntered && deliveryAvailable) {
+      return deliveryMethods.filter((m) => m.id !== "not_mentioned");
+    }
+    return deliveryMethods;
+  }, [stateEntered, deliveryAvailable]);
+
+  const selectedMethod = availableDeliveryMethods.find((m) => m.id === deliveryOption) || availableDeliveryMethods[0] || deliveryMethods[0];
+  const deliveryFee = deliveryAvailable ? selectedMethod.fee : 0;
 
   // Compute customization costs
   const customizationTotal = bag.reduce((sum, item) => {
@@ -214,7 +268,7 @@ export default function Checkout() {
   const grandTotal = total + deliveryFee + customizationTotal;
 
   const whatsappMessage = encodeURIComponent(
-    "Hello ZOID! My delivery location is not listed on the website. I would like to arrange delivery for my order."
+    `Hello ZOID! I am ordering from ${form.contactState.trim() ? form.contactState : "outside Lagos/PH"} and would like to arrange interstate delivery for my order.`
   );
   const whatsappUrl = `https://wa.me/2349020711737?text=${whatsappMessage}`;
 
@@ -326,52 +380,125 @@ export default function Checkout() {
                   placeholder="e.g. 0802 345 6789"
                 />
               </label>
+              <label>
+                Your state *
+                <div style={{ position: "relative" }}>
+                  <input
+                    required
+                    list="contact-states-list"
+                    value={form.contactState}
+                    onChange={(e) => {
+                      update("contactState", e.target.value);
+                      // Reset delivery option when state changes
+                      setDeliveryOption("standard");
+                      setStandardSubType(null);
+                    }}
+                    placeholder="e.g. Lagos State, Rivers State"
+                    autoComplete="off"
+                  />
+                  <datalist id="contact-states-list">
+                    {NIGERIAN_STATES.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
+                </div>
+                {stateEntered && !deliveryAvailable && (
+                  <span style={{ fontSize: 12, color: "#e05a00", display: "flex", alignItems: "center", gap: 5, marginTop: 6, fontWeight: 500 }}>
+                    We cannot deliver to {form.contactState}. Please contact us on WhatsApp.
+                  </span>
+                )}
+                {stateEntered && deliveryAvailable && (
+                  <span style={{ fontSize: 11, color: "#29a36a", display: "flex", alignItems: "center", gap: 5, marginTop: 5, fontWeight: 600 }}>
+                    <Check size={13} /> Great — automated delivery is available in {form.contactState}!
+                  </span>
+                )}
+              </label>
             </div>
 
             {/* 02 / SHIPPING & DELIVERY METHOD */}
             <div className="form-section">
               <p className="eyebrow">02 / HOW WOULD YOU LIKE TO RECEIVE YOUR ORDER?</p>
-              <p style={{ fontSize: 13, color: "#666", marginTop: -4, marginBottom: 16, lineHeight: 1.5 }}>
-                Tap on an option below to fill in your delivery or pickup details.
-              </p>
 
-              <div style={{ display: "grid", gap: 12 }}>
-                {deliveryMethods.map((method) => {
-                  const isSelected = deliveryOption === method.id;
-                  return (
-                    <div
-                      key={method.id}
-                      style={{
-                        transition: "all 0.3s ease",
-                        transform: isSelected ? "scale(1.002)" : "scale(1)",
-                      }}
-                    >
-                      {/* Method Card */}
-                      <div
-                        onClick={() => {
-                          setDeliveryOption(method.id);
-                          if (method.id !== "standard") setStandardSubType(null);
-                        }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "15px 16px",
-                          background: isSelected ? "rgba(231,25,75,0.08)" : "#fff",
-                          border: isSelected ? "1.5px solid var(--pink)" : "1px solid #cbc5bd",
-                          borderRadius: isSelected ? "4px 4px 0 0" : 4,
-                          cursor: "pointer",
-                          transition: "all 0.25s ease",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                          <input
-                            type="radio"
-                            name="deliveryOption"
-                            checked={isSelected}
-                            onChange={() => {
+              {/* State not yet entered */}
+              {!stateEntered && (
+                <p style={{ fontSize: 13, color: "#888", fontStyle: "italic", marginTop: -4, marginBottom: 0, lineHeight: 1.6 }}>
+                  Enter your state above to see your delivery options.
+                </p>
+              )}
+
+              {/* Unsupported state — simple text + WhatsApp link only */}
+              {stateEntered && !deliveryAvailable && (
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: 14, color: "#222", marginBottom: 14, lineHeight: 1.5 }}>
+                    We cannot deliver to {form.contactState}. Please contact us on WhatsApp.
+                  </p>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      background: "#25D366",
+                      color: "#fff",
+                      padding: "12px 20px",
+                      borderRadius: 4,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      letterSpacing: "0.04em",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <MessageSquare size={16} /> Contact Us on WhatsApp
+                  </a>
+                </div>
+              )}
+
+              {/* Supported state — show all delivery options */}
+              {stateEntered && deliveryAvailable && (
+                <>
+                  <p style={{ fontSize: 13, color: "#666", marginTop: -4, marginBottom: 16, lineHeight: 1.5 }}>
+                    Tap on an option below to fill in your delivery or pickup details.
+                  </p>
+
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {availableDeliveryMethods.map((method) => {
+                      const isSelected = deliveryOption === method.id;
+                      return (
+                        <div
+                          key={method.id}
+                          style={{
+                            transition: "all 0.3s ease",
+                            transform: isSelected ? "scale(1.002)" : "scale(1)",
+                          }}
+                        >
+                          {/* Method Card */}
+                          <div
+                            onClick={() => {
                               setDeliveryOption(method.id);
                               if (method.id !== "standard") setStandardSubType(null);
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "15px 16px",
+                              background: isSelected ? "rgba(231,25,75,0.08)" : "#fff",
+                              border: isSelected ? "1.5px solid var(--pink)" : "1px solid #cbc5bd",
+                              borderRadius: isSelected ? "4px 4px 0 0" : 4,
+                              cursor: "pointer",
+                              transition: "all 0.25s ease",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                              <input
+                                type="radio"
+                                name="deliveryOption"
+                                checked={isSelected}
+                                onChange={() => {
+                                  setDeliveryOption(method.id);
+                                  if (method.id !== "standard") setStandardSubType(null);
                             }}
                             style={{ marginTop: 3, accentColor: "var(--pink)", cursor: "pointer" }}
                           />
@@ -584,11 +711,11 @@ export default function Checkout() {
                                         ...(matchedState ? { studentCityState: matchedState } : {}),
                                       }));
                                     }}
-                                    placeholder="Type or select university (e.g. UNILAG, UI, OAU, Covenant)"
+                                    placeholder="e.g. UNILAG, UNIPORT, LASU, RSU"
                                     autoComplete="off"
                                   />
                                   <datalist id="universities-list">
-                                    {NIGERIAN_UNIVERSITIES.map((uni) => (
+                                    {LAGOS_PH_UNIVERSITIES.map((uni) => (
                                       <option key={uni} value={uni} />
                                     ))}
                                   </datalist>
@@ -607,11 +734,11 @@ export default function Checkout() {
                                     list="student-states-list"
                                     value={form.studentCityState}
                                     onChange={(e) => update("studentCityState", e.target.value)}
-                                    placeholder="e.g. Lagos State, Oyo State"
+                                    placeholder="Lagos State or Rivers State"
                                     autoComplete="off"
                                   />
                                   <datalist id="student-states-list">
-                                    {NIGERIAN_STATES.map((s) => (
+                                    {SUPPORTED_STATES.map((s) => (
                                       <option key={s} value={s} />
                                     ))}
                                   </datalist>
@@ -1007,6 +1134,8 @@ export default function Checkout() {
                   );
                 })}
               </div>
+              </>
+              )}
             </div>
 
             <button

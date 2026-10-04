@@ -657,13 +657,53 @@ input::placeholder, textarea::placeholder {
   }
 }
 
-/* Product cards on very small screens: single column */
-@media (max-width: 480px) {
-  div[style*="repeat(auto-fill, minmax(250px"] {
-    grid-template-columns: 1fr !important;
+/* ── Product cards on mobile: STRICT 2-BY-2 GRID MATCHING IMAGE 2 ── */
+@media (max-width: 800px) {
+  .collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    padding: 24px 12px 90px !important;
   }
+
+  div[style*="repeat(auto-fill, minmax(230px"],
+  div[style*="repeat(auto-fill, minmax(250px"],
   div[style*="repeat(auto-fill, minmax(260px"] {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .collection-card {
+    padding: 10px !important;
+    border-radius: 8px !important;
+    background: #131316 !important;
+    border: 1px solid #222226 !important;
+  }
+
+  .collection-image {
+    height: 180px !important;
+    aspect-ratio: 4/5 !important;
+    border-radius: 6px !important;
+    background: #0a0a0c !important;
+  }
+
+  .collection-image img {
+    padding: 8px !important;
+  }
+
+  .collection-card-meta h2 {
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .add-to-cart-action-btn {
+    padding: 9px 10px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+    border-radius: 6px !important;
   }
 }
 
@@ -1102,6 +1142,7 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
     padding: 0 !important;
     margin: 0 !important;
+    touch-action: manipulation !important;
   }
 
   .mobile-bottom-nav-capsule {
@@ -1116,6 +1157,7 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     box-shadow: none !important;
     padding: 6px 10px 8px !important;
     gap: 4px !important;
+    touch-action: manipulation !important;
   }
 
   .mobile-bottom-tab {
@@ -1124,9 +1166,9 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-    padding: 8px 10px !important;
-    border-radius: 8px !important;
-    color: #a1a1aa !important;
+    padding: 8px 6px !important;
+    border-radius: 10px !important;
+    color: #777 !important;
     font-size: 11px !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em !important;
@@ -1134,22 +1176,43 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     border: 0 !important;
     background: transparent !important;
     cursor: pointer !important;
-    transition: all 0.22s ease !important;
+    position: relative !important;
     -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    /* smooth color transition */
+    transition: color 0.12s ease !important;
+  }
+
+  /* The CSS class for the motion bg — layout is overridden inline by Framer Motion */
+  .mobile-bottom-tab-bg {
+    border-radius: 10px !important;
+    will-change: transform, left !important;
+    pointer-events: none !important;
   }
 
   .mobile-bottom-tab.active {
-    background: rgba(231, 25, 75, 0.16) !important;
     color: var(--pink) !important;
-    border: 1px solid rgba(231, 25, 75, 0.35) !important;
+    background: transparent !important;
+    border: 0 !important;
   }
 
   .mobile-bottom-tab.active svg {
     color: var(--pink) !important;
   }
 
+  /* Shop tab — always slightly highlighted to draw attention */
+  .mobile-bottom-tab[aria-label="Shop"]:not(.active) {
+    color: #c084fc !important;
+  }
+  .mobile-bottom-tab[aria-label="Shop"]:not(.active) svg {
+    color: #c084fc !important;
+  }
+
   body {
     padding-bottom: 64px !important;
+    touch-action: manipulation;
   }
 }
 
@@ -1205,27 +1268,16 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
   }
 }
 
-/* Icon-Only Mode on <= 480px (e.g. 320px x 480px) */
+/* Icon-Only Mode on <= 480px (small phones) */
 @media (max-width: 480px) {
-  .mobile-bottom-tab span {
+  /* Hide text label — show icon only */
+  .mobile-bottom-tab .mobile-tab-icon-wrap > span:last-child {
     display: none !important;
   }
 
   .mobile-bottom-tab {
-    flex: 1 !important;
+    height: 46px !important;
     padding: 8px 0 !important;
-    height: 42px !important;
-    border-radius: 6px !important;
-  }
-
-  .mobile-bottom-tab.active {
-    background: var(--pink) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(231, 25, 75, 0.45) !important;
-  }
-
-  .mobile-bottom-tab.active svg {
-    color: #ffffff !important;
   }
 }
 

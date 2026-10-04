@@ -42,11 +42,15 @@ function ScrollToTop() {
   return null;
 }
 
+import { AnimatePresence, motion } from "framer-motion";
+
 function Router() {
+  const [location] = useLocation();
+
   return (
     <>
       <ScrollToTop />
-      <Switch>
+      <Switch location={location}>
         <Route path={"/"} component={Home} />
         <Route path={"/collection"} component={Collection} />
         <Route path={"/product/:slug"} component={ProductDetail} />

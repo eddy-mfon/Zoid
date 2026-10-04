@@ -509,30 +509,32 @@ export default function Collection() {
             sortedForGrid.map((product, index) => (
               <article className="collection-card" key={product.slug} style={{ position: "relative", background: "#131316", border: "1px solid #222226", borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div>
-                  {/* Badges */}
-                  <div style={{ position: "absolute", top: 18, left: 18, zIndex: 5, display: "flex", flexDirection: "column", gap: 4 }}>
-                    {product.isBestseller && (
-                      <span style={{ background: "var(--pink)", color: "#fff", fontSize: 7, fontWeight: 700, padding: "3px 6px", borderRadius: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                        <Flame size={8} /> BESTSELLER
+                  {/* ── Badge Row: single status badge left + discount right ── */}
+                  <div style={{ position: "absolute", top: 10, left: 10, right: 10, zIndex: 5, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, pointerEvents: "none" }}>
+                    {/* Status badge — only one shown, priority: Bestseller > Special > New */}
+                    {product.isBestseller ? (
+                      <span style={{ background: "var(--pink)", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(231,25,75,0.45)" }}>
+                        <Flame size={9} /> BESTSELLER
                       </span>
-                    )}
-                    {product.isSpecial && !product.isBestseller && (
-                      <span style={{ background: "#a855f7", color: "#fff", fontSize: 7, fontWeight: 700, padding: "3px 6px", borderRadius: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                        <Sparkles size={8} /> SPECIAL
+                    ) : product.isSpecial ? (
+                      <span style={{ background: "#a855f7", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(168,85,247,0.45)" }}>
+                        <Sparkles size={9} /> SPECIAL
                       </span>
+                    ) : product.isNewArrival ? (
+                      <span style={{ background: "#0284c7", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(2,132,199,0.45)" }}>
+                        <Zap size={9} /> NEW
+                      </span>
+                    ) : (
+                      <span /> /* spacer */
                     )}
-                    {product.isNewArrival && (
-                      <span style={{ background: "#0284c7", color: "#fff", fontSize: 7, fontWeight: 700, padding: "3px 6px", borderRadius: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                        <Zap size={8} /> NEW
+
+                    {/* Discount badge — top right */}
+                    {product.discountBadge && (
+                      <span style={{ background: "#10b981", color: "#fff", fontSize: 8, fontWeight: 800, padding: "4px 7px", borderRadius: 4, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(16,185,129,0.4)" }}>
+                        {product.discountBadge}
                       </span>
                     )}
                   </div>
-
-                  {product.discountBadge && (
-                    <span style={{ position: "absolute", top: 18, right: 18, zIndex: 5, background: "#10b981", color: "#fff", fontSize: 7, fontWeight: 700, padding: "3px 6px", borderRadius: 2 }}>
-                      {product.discountBadge}
-                    </span>
-                  )}
 
                   {/* Product Image */}
                   <Link href={`/product/${product.slug}`} className="collection-image" style={{ borderRadius: 4, height: 260, background: "#0a0a0c" }}>
@@ -616,6 +618,11 @@ export default function Collection() {
             <br />
             Archive-led sportwear from Lagos.
           </p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(231,25,75,0.08)", border: "1px solid rgba(231,25,75,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
+              HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
+            </span>
+          </div>
           <Link className="footer-cta" href="/collection">
             Enter the edit <ArrowDownRight size={16} />
           </Link>
@@ -623,6 +630,7 @@ export default function Collection() {
         <div className="footer-bottom">
           <span>© ZOID / 2026</span>
           <span>Lagos — Nigeria</span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "inherit", textDecoration: "none" }}>09020711737</a></span>
           <span>
             Built on grit <b>•</b> Worn with intent
           </span>

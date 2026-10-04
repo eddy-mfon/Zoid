@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight, Home, Grid, Info, Archive } from "lucide-react";
+import { motion } from "framer-motion";
+import { Search, Heart, ShoppingBag, Menu, X, User, ArrowRight, Home, Shirt, Info, Archive } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { products } from "@/lib/catalog";
@@ -235,49 +236,67 @@ export default function Navbar({
       </header>
 
       {/* ── FLOATING MOBILE BOTTOM NAVIGATION BAR (CONTAINS HOME, SHOP, ABOUT, ARCHIVES) ── */}
-      <div className="mobile-bottom-nav-floating">
-        <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation">
-          {/* Home */}
-          <Link
-            href="/"
-            className={`mobile-bottom-tab ${location === "/" ? "active" : ""}`}
-            aria-label="Home"
-          >
-            <Home size={18} />
-            <span>Home</span>
-          </Link>
+      {(() => {
+        const tabs = [
+          { label: "Home",     href: "/",          icon: Home,    match: location === "/" },
+          { label: "Shop",     href: "/collection", icon: Shirt,   match: location.startsWith("/collection") || location.startsWith("/product") },
+          { label: "About",    href: "/about",      icon: Info,    match: location === "/about" },
+          { label: "Archives", href: "/archives",   icon: Archive, match: location === "/archives" },
+        ];
+        const activeIndex = tabs.findIndex((t) => t.match);
 
-          {/* Shop */}
-          <Link
-            href="/collection"
-            className={`mobile-bottom-tab ${(location.startsWith("/collection") || location.startsWith("/product")) ? "active" : ""}`}
-            aria-label="Shop"
-          >
-            <Grid size={18} />
-            <span>Shop</span>
-          </Link>
+        return (
+          <div className="mobile-bottom-nav-floating">
+            <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation" style={{ position: "relative" }}>
 
-          {/* About */}
-          <Link
-            href="/about"
-            className={`mobile-bottom-tab ${location === "/about" ? "active" : ""}`}
-            aria-label="About"
-          >
-            <Info size={18} />
-            <span>About</span>
-          </Link>
+              {/* ── Single sliding pill indicator ── */}
+              {activeIndex !== -1 && (
+                <motion.div
+                  className="mobile-bottom-tab-bg"
+                  animate={{ left: `calc(${(activeIndex / tabs.length) * 100}% + 4px)` }}
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 600, damping: 40, mass: 0.5 }}
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    bottom: 4,
+                    width: `calc(${100 / tabs.length}% - 8px)`,
+                    borderRadius: 10,
+                    background: "rgba(231, 25, 75, 0.15)",
+                    border: "1px solid rgba(231, 25, 75, 0.38)",
+                    zIndex: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
 
-          {/* Archives */}
-          <Link
-            href="/archives"
-            className={`mobile-bottom-tab ${location === "/archives" ? "active" : ""}`}
-            aria-label="Archives"
-          >
-            <Archive size={18} />
-            <span>Archives</span>
-          </Link>
-        </nav>
-      </div>
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <Link
+                    key={tab.label}
+                    href={tab.href}
+                    className={`mobile-bottom-tab ${tab.match ? "active" : ""}`}
+                    aria-label={tab.label}
+                    style={{ position: "relative", zIndex: 1, touchAction: "manipulation" }}
+                    onClick={(e) => {
+                      if (tab.match && location === tab.href) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                  >
+                    <span className="mobile-tab-icon-wrap" style={{ display: "flex", alignItems: "center", gap: 6, pointerEvents: "none" }}>
+                      <Icon size={18} />
+                      <span>{tab.label}</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        );
+      })()}
 
       {/* Embedded Wishlist Drawer (for pages where external utility panel is not handled) */}
       {internalWishlistOpen && !externalSetUtilityOpen && (
