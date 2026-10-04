@@ -50,7 +50,6 @@ export default function Navbar({
   const isMobileMenuOpen = externalMobileMenu ?? internalMobileMenu;
   const setIsMobileMenuOpen = externalSetMobileMenu ?? setInternalMobileMenu;
 
-  const isShopOrProduct = location.startsWith("/collection") || location.startsWith("/product");
   const activeWishlistCount = isLoggedIn ? wishlist.length : savedCount;
 
   // Active Wishlist items
@@ -188,18 +187,16 @@ export default function Navbar({
             {activeWishlistCount > 0 && <b>{activeWishlistCount}</b>}
           </button>
 
-          {/* Cart Bag button */}
-          {(isShopOrProduct || setCartOpen || cartCount > 0) && (
-            <button
-              className="bag-button"
-              title="Bag"
-              aria-label={`Open bag with ${cartCount} items`}
-              onClick={() => (setCartOpen ? setCartOpen(true) : navigate(isLoggedIn ? "/checkout" : "/login?redirect=/checkout"))}
-            >
-              <ShoppingBag size={15} />
-              <span>{cartCount}</span>
-            </button>
-          )}
+          {/* Cart Bag button - Visible on all pages */}
+          <button
+            className="bag-button"
+            title="Bag"
+            aria-label={`Open bag with ${cartCount} items`}
+            onClick={() => (setCartOpen ? setCartOpen(true) : navigate(isLoggedIn ? "/checkout" : "/login?redirect=/checkout"))}
+          >
+            <ShoppingBag size={15} />
+            <span>{cartCount}</span>
+          </button>
 
           {/* PROFILE BUTTON AT TOP HEADER - Visible on Desktop & Mobile */}
           <Link
