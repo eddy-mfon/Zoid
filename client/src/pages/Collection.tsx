@@ -4,7 +4,6 @@ import { useZoidMotion } from "@/hooks/useZoidMotion";
 import { useCollectionMotion } from "@/hooks/useCollectionMotion";
 import {
   ArrowDownRight,
-  ArrowLeft,
   ChevronDown,
   Filter,
   Heart,
@@ -120,38 +119,7 @@ export default function Collection() {
         savedCount={wishlist.length}
       />
 
-      {/* Collection Intro */}
-      <div className="collection-intro">
-        <div>
-          <Link className="back-link" href="/">
-            <ArrowLeft size={15} /> Back to home
-          </Link>
-          <p className="eyebrow">THE CURRENT SELECTION / {products.length} PIECES</p>
-          <h1>
-            THE
-            <br />
-            <span>STOREFRONT.</span>
-          </h1>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "flex-start", maxWidth: 340, alignSelf: "flex-end", marginBottom: 5 }}>
-          <img
-            src={MARK}
-            alt="ZOID"
-            style={{
-              height: 48,
-              width: "auto",
-              objectFit: "contain",
-              filter: "brightness(0.12)",
-              display: "block",
-            }}
-          />
-          <p className="collection-note" style={{ margin: 0, width: "100%" }}>
-            <strong>Curating before creating.</strong> Every piece is selected for the story it carries, the material it holds, and the distance it can travel with you.
-          </p>
-        </div>
-      </div>
-
-      {/* ── IMAGE 2 REFERENCE: HORIZONTAL CATEGORY PILL FILTER BAR ── */}
+      {/* ── HORIZONTAL CATEGORY PILL FILTER BAR (Shop starts directly from filters) ── */}
       <nav className="category-pills-bar" aria-label="Category Filters">
         {categoryPills.map((pill) => {
           const isActive = style === pill.value || (pill.value === "Heritage" && (style === "Heritage" || style === "Special"));

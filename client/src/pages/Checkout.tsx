@@ -1155,6 +1155,34 @@ export default function Checkout() {
                 </>
               )}
             </button>
+
+            {/* Hotline below review order button */}
+            <div
+              style={{
+                marginTop: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                padding: "9px 14px",
+                background: "rgba(231,25,75,0.06)",
+                border: "1px solid rgba(231,25,75,0.2)",
+                borderRadius: 4,
+                fontSize: 12,
+                color: "#444",
+              }}
+            >
+              <PhoneCall size={14} color="var(--pink)" />
+              <span>
+                Need help? Hotline for emergencies & questions:{" "}
+                <a
+                  href="tel:09020711737"
+                  style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}
+                >
+                  09020711737
+                </a>
+              </span>
+            </div>
           </form>
 
           {/* ── ORDER SUMMARY SIDEBAR (STICKY) ────────────────── */}
