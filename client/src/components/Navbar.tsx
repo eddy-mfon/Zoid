@@ -241,55 +241,68 @@ export default function Navbar({
           { label: "Archives", href: "/archives",   icon: Archive, match: location === "/archives" },
         ];
         const activeIndex = tabs.findIndex((t) => t.match);
+        const tabWidthPercent = 100 / tabs.length;
 
         return (
           <div className="mobile-bottom-nav-floating">
-            <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation" style={{ position: "relative" }}>
-
-              {/* ── Single sliding pill indicator ── */}
-              {activeIndex !== -1 && (
-                <motion.div
-                  className="mobile-bottom-tab-bg"
-                  animate={{ left: `calc(${(activeIndex / tabs.length) * 100}% + 4px)` }}
-                  initial={false}
-                  transition={{ type: "spring", stiffness: 600, damping: 40, mass: 0.5 }}
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    bottom: 4,
-                    width: `calc(${100 / tabs.length}% - 8px)`,
-                    borderRadius: 10,
-                    background: "rgba(179, 13, 13, 0.15)",
-                    border: "1px solid rgba(179, 13, 13, 0.38)",
-                    zIndex: 0,
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <Link
-                    key={tab.label}
-                    href={tab.href}
-                    className={`mobile-bottom-tab ${tab.match ? "active" : ""}`}
-                    aria-label={tab.label}
-                    style={{ position: "relative", zIndex: 1, touchAction: "manipulation" }}
-                    onClick={(e) => {
-                      if (tab.match && location === tab.href) {
-                        e.preventDefault();
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
+            <nav className="mobile-bottom-nav-capsule" aria-label="Mobile Bottom Navigation">
+              <div
+                className="mobile-bottom-nav-grid"
+                style={{
+                  position: "relative",
+                  display: "grid",
+                  gridTemplateColumns: `repeat(${tabs.length}, 1fr)`,
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                {/* ── Single sliding pill indicator with exact centered alignment ── */}
+                {activeIndex !== -1 && (
+                  <motion.div
+                    className="mobile-bottom-tab-bg"
+                    animate={{ left: `calc(${activeIndex * tabWidthPercent}% + 2px)` }}
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.5 }}
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      bottom: 2,
+                      left: `calc(${activeIndex * tabWidthPercent}% + 2px)`,
+                      width: `calc(${tabWidthPercent}% - 4px)`,
+                      borderRadius: 14,
+                      background: "rgba(179, 13, 13, 0.18)",
+                      border: "1px solid rgba(179, 13, 13, 0.45)",
+                      boxShadow: "inset 0 0 12px rgba(179, 13, 13, 0.15), 0 2px 8px rgba(179, 13, 13, 0.2)",
+                      zIndex: 0,
+                      pointerEvents: "none",
                     }}
-                  >
-                    <span className="mobile-tab-icon-wrap" style={{ display: "flex", alignItems: "center", gap: 6, pointerEvents: "none" }}>
-                      <Icon size={18} />
-                      <span>{tab.label}</span>
-                    </span>
-                  </Link>
-                );
-              })}
+                  />
+                )}
+
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <Link
+                      key={tab.label}
+                      href={tab.href}
+                      className={`mobile-bottom-tab ${tab.match ? "active" : ""}`}
+                      aria-label={tab.label}
+                      style={{ position: "relative", zIndex: 1, touchAction: "manipulation" }}
+                      onClick={(e) => {
+                        if (tab.match && location === tab.href) {
+                          e.preventDefault();
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                    >
+                      <span className="mobile-tab-icon-wrap" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, pointerEvents: "none" }}>
+                        <Icon size={17} />
+                        <span>{tab.label}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
             </nav>
           </div>
         );

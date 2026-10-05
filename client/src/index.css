@@ -1117,14 +1117,8 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   ZOID MOBILE FLOATING BOTTOM NAVIGATION (Reference: Image 1)
-   Floating capsule at bottom on mobile, active pill highlight
-─────────────────────────────────────────────────────────────────── */
-/* ───────────────────────────────────────────────────────────────────
-   ZOID RESPONSIVE FIXED BOTTOM NAVBAR (Pinned at bottom edge)
-   - Top Bar: Brand Logo/Text + User Utilities (Wishlist, Profile, Bag)
-   - Bottom Bar: Page Nav (Home, Shop, About, Archives) pinned to bottom
-   - Icon-only on <= 480px screens; Icon + Text Label beside it on > 480px
+   ZOID MOBILE FLOATING BOTTOM NAVIGATION
+   Floating rounded capsule at bottom with spaced margins and centered highlight
 ─────────────────────────────────────────────────────────────────── */
 .mobile-bottom-nav-floating {
   display: none;
@@ -1134,47 +1128,48 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
   .mobile-bottom-nav-floating {
     display: flex !important;
     position: fixed !important;
-    bottom: 0 !important;
+    bottom: max(14px, env(safe-area-inset-bottom, 14px)) !important;
     left: 0 !important;
     right: 0 !important;
-    transform: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 16px !important;
     z-index: 9990 !important;
-    background: rgba(12, 12, 14, 0.96) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5) !important;
-    padding: 0 !important;
+    pointer-events: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     margin: 0 !important;
-    touch-action: manipulation !important;
   }
 
   .mobile-bottom-nav-capsule {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-around !important;
+    pointer-events: auto !important;
     width: 100% !important;
-    max-width: 100% !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    padding: 6px 10px 8px !important;
-    gap: 4px !important;
+    max-width: 380px !important;
+    background: rgba(14, 14, 16, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    padding: 4px !important;
     touch-action: manipulation !important;
   }
 
+  .mobile-bottom-nav-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+  }
+
   .mobile-bottom-tab {
-    flex: 1 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
-    padding: 8px 6px !important;
-    border-radius: 10px !important;
-    color: #777 !important;
+    padding: 8px 4px !important;
+    border-radius: 14px !important;
+    color: #8e8a85 !important;
     font-size: 11px !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em !important;
@@ -1187,13 +1182,19 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     touch-action: manipulation !important;
     user-select: none !important;
     -webkit-user-select: none !important;
-    /* smooth color transition */
-    transition: color 0.12s ease !important;
+    transition: color 0.15s ease !important;
   }
 
-  /* The CSS class for the motion bg — layout is overridden inline by Framer Motion */
+  .mobile-tab-icon-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    pointer-events: none !important;
+  }
+
   .mobile-bottom-tab-bg {
-    border-radius: 10px !important;
+    border-radius: 14px !important;
     will-change: transform, left !important;
     pointer-events: none !important;
   }
@@ -1208,16 +1209,16 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     color: var(--pink) !important;
   }
 
-  /* Shop tab — always slightly highlighted to draw attention */
+  /* Shop tab — subtle accent */
   .mobile-bottom-tab[aria-label="Shop"]:not(.active) {
-    color: #c084fc !important;
+    color: #d0c8be !important;
   }
   .mobile-bottom-tab[aria-label="Shop"]:not(.active) svg {
-    color: #c084fc !important;
+    color: #d0c8be !important;
   }
 
   body {
-    padding-bottom: 64px !important;
+    padding-bottom: 78px !important;
     touch-action: manipulation;
   }
 }
