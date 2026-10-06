@@ -235,10 +235,10 @@ export default function Navbar({
       {/* ── FLOATING MOBILE BOTTOM NAVIGATION BAR (CONTAINS HOME, SHOP, ABOUT, ARCHIVES) ── */}
       {(() => {
         const tabs = [
-          { label: "Home",     href: "/",          icon: Home,    match: location === "/" },
-          { label: "Shop",     href: "/collection", icon: Shirt,   match: location.startsWith("/collection") || location.startsWith("/product") },
-          { label: "About",    href: "/about",      icon: Info,    match: location === "/about" },
-          { label: "Archives", href: "/archives",   icon: Archive, match: location === "/archives" },
+          { label: "Home",     href: "/",          icon: Home,    iconColor: undefined,   match: location === "/" },
+          { label: "Shop",     href: "/collection", icon: Shirt,   iconColor: "#a855f7",   match: location.startsWith("/collection") || location.startsWith("/product") },
+          { label: "About",    href: "/about",      icon: Info,    iconColor: "#3b82f6",   match: location === "/about" },
+          { label: "Archives", href: "/archives",   icon: Archive, iconColor: undefined,   match: location === "/archives" },
         ];
         const activeIndex = tabs.findIndex((t) => t.match);
         const tabWidthPercent = 100 / tabs.length;
@@ -295,8 +295,8 @@ export default function Navbar({
                         }
                       }}
                     >
-                      <span className="mobile-tab-icon-wrap" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, pointerEvents: "none" }}>
-                        <Icon size={17} />
+                      <span className="mobile-tab-icon-wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, pointerEvents: "none" }}>
+                        <Icon size={17} color={tab.iconColor} />
                         <span>{tab.label}</span>
                       </span>
                     </Link>
