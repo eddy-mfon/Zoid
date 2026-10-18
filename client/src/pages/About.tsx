@@ -1,36 +1,12 @@
 /* ZOID About Page — Brand Philosophy, Vision, Mission & Dossier */
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Shield, Sparkles, Target, Zap, Menu, X } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Target } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
 import Navbar from "@/components/Navbar";
 
 const MARK = "/zoid-logo.svg";
 const STORY_IMG = "/manus-storage/zoid-story_425b40db.jpg";
-const MILAN_IMG = "/manus-storage/ac-milan-2526_b917ea29.jpg";
-
-const pillars = [
-  {
-    num: "01",
-    title: "CURATING BEFORE CREATING",
-    body: "We don't produce for the sake of volume. Every kit in the ZOID edit is selected for its narrative weight, graphic discipline, and material longevity.",
-  },
-  {
-    num: "02",
-    title: "FOOTBALL AS UNIVERSAL LANGUAGE",
-    body: "The jersey is a badge of identity. From Surulere to San Siro, from local turf to city streets, football sportswear carries stories that connect generations.",
-  },
-  {
-    num: "03",
-    title: "THE HEIGHT IS YOURS",
-    body: "Your environment is not your limit. ZOID exists for the ones still rising — those who move with intention, persistence, and unyielding conviction.",
-  },
-  {
-    num: "04",
-    title: "COMMUNITY-FIRST ARCHIVE",
-    body: "We collect memories alongside sportswear. Every submission to the ZOID Archives preserves match-day culture and African street perspective.",
-  },
-];
 
 const brandDossier = [
   { label: "FOUNDED / ORIGIN", val: "Lagos, Nigeria (2026)" },
@@ -237,23 +213,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── 4 PHILOSOPHY PILLARS GRID ───────────────── */}
-      <section style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#111" }}>
-        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 16 }}>BRAND PILLARS</p>
-        <h2 style={{ fontFamily: "Anton", fontSize: "clamp(38px, 6vw, 76px)", margin: "0 0 56px", textTransform: "uppercase", color: "#fff" }}>
-          BUILT ON GRIT.
-        </h2>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
-          {pillars.map((p) => (
-            <div key={p.num} style={{ background: "#161616", border: "1px solid #242424", padding: 32, borderRadius: 4, position: "relative" }}>
-              <span style={{ fontFamily: "Anton", fontSize: 44, color: "rgba(179, 13, 13,0.22)", lineHeight: 1, display: "block", marginBottom: 14 }}>{p.num}</span>
-              <h3 style={{ fontFamily: "Anton", fontSize: 20, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>{p.title}</h3>
-              <p style={{ color: "#888", lineHeight: 1.65, fontSize: 13, margin: 0 }}>{p.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ── TECHNICAL BRAND DOSSIER ─────────────────── */}
       <section style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#0b0b0b", borderTop: "1px solid #1a1a1a" }}>

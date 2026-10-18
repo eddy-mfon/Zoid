@@ -1,7 +1,8 @@
 /* ZOID Storefront — Branding-First Homepage: pure identity, story, and curated edits. */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { products, searchProducts } from "@/lib/catalog";
+import CentralSearchModal from "@/components/CentralSearchModal";
 import { useZoidMotion } from "@/hooks/useZoidMotion";
 import {
   ArrowDownRight,
@@ -123,6 +124,7 @@ const pillars = [
 ];
 
 export default function Home() {
+  const [location] = useLocation();
   const pageRef = useRef<HTMLElement | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [prevHero, setPrevHero] = useState<number | null>(null);
@@ -141,6 +143,21 @@ export default function Home() {
 
   /* Scrolled state */
   const scrolled = scrollY > 20;
+
+  /* Check URL for ?search=1 and automatically open central search */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("search") !== null) {
+      setUtilityOpen("search");
+    }
+  }, [location]);
+
+  function closeSearch() {
+    setUtilityOpen(null);
+    if (window.location.search.includes("search")) {
+      window.history.replaceState({}, "", "/");
+    }
+  }
 
   /* Auto-carousel with crossfade */
   useEffect(() => {
@@ -264,68 +281,11 @@ export default function Home() {
         savedCount={wishlist.length}
       />
 
-      {/* ── SEARCH OVERLAY ─────────────────────────── */}
-      {utilityOpen === "search" && (
-        <div className="search-overlay" role="dialog" aria-modal="true">
-          <button className="search-overlay-backdrop" onClick={() => setUtilityOpen(null)} />
-          <section className="search-overlay-panel">
-            <div className="utility-panel-head">
-              <div>
-                <span>UNIVERSAL SEARCH</span>
-                <small>Products, kits, stories & more</small>
-              </div>
-              <button onClick={() => setUtilityOpen(null)}>
-                <X size={18} />
-              </button>
-            </div>
-            <div className="search-field">
-              <Search size={20} />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Try: Milan, Gym Kit, Brazil, Vintage, Lagos…"
-              />
-            </div>
-            {!query && (
-              <div className="search-discovery">
-                <div className="search-discovery-group">
-                  <span>POPULAR SEARCHES</span>
-                  <div>
-                    {["Gym Kit", "AC Milan", "Brazil 1998", "Special Kits", "Heritage"].map((t) => (
-                      <button key={t} onClick={() => setQuery(t)}>
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="utility-results">
-              {searchResults.slice(0, 6).map((item) => (
-                <Link key={item.slug} href={`/product/${item.slug}`} onClick={() => setUtilityOpen(null)}>
-                  <img src={item.image} alt="" />
-                  <span>
-                    <strong>{item.name}</strong>
-                    <small>
-                      {item.category} · {item.price}
-                    </small>
-                  </span>
-                  <ArrowRight size={14} />
-                </Link>
-              ))}
-            </div>
-            {query && searchResults.length === 0 && (
-              <div className="utility-empty search-empty">
-                <Search size={23} />
-                <p>Nothing matched "{query}"</p>
-                <small>Try a team name, category, or colour.</small>
-                <button onClick={() => setQuery("")}>Clear</button>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
+      {/* ── CENTRALIZED BLURRED SEARCH MODAL ─────────────────── */}
+      <CentralSearchModal
+        isOpen={utilityOpen === "search"}
+        onClose={closeSearch}
+      />
 
       {/* ── WISHLIST PANEL ─────────────────────────── */}
       {utilityOpen === "saved" && (

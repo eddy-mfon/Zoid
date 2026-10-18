@@ -152,21 +152,26 @@ export default function Navbar({
 
         {/* Right Action Rail - PROFILE REMAINS AT TOP HEADER AS REQUESTED */}
         <div className="top-actions action-rail">
-          {/* Search Button */}
-          {externalSetUtilityOpen ? (
-            <button
-              aria-label="Search products"
-              title="Search"
-              className={externalUtilityOpen === "search" ? "icon-button search-top-button utility-active" : "icon-button search-top-button"}
-              onClick={() => externalSetUtilityOpen(externalUtilityOpen === "search" ? null : "search")}
-            >
-              <Search size={16} />
-            </button>
-          ) : (
-            <Link href="/?search=1" className="icon-button search-top-button" aria-label="Search products" title="Search">
-              <Search size={16} />
-            </Link>
-          )}
+          {/* Search Button: Navigates to home and opens central search overlay */}
+          <button
+            aria-label="Search products"
+            title="Search"
+            className={externalUtilityOpen === "search" ? "icon-button search-top-button utility-active" : "icon-button search-top-button"}
+            onClick={(e) => {
+              e.preventDefault();
+              if (location === "/" || location === "") {
+                if (externalSetUtilityOpen) {
+                  externalSetUtilityOpen(externalUtilityOpen === "search" ? null : "search");
+                } else {
+                  navigate("/?search=1");
+                }
+              } else {
+                navigate("/?search=1");
+              }
+            }}
+          >
+            <Search size={16} />
+          </button>
 
           {/* Wishlist Button */}
           <button

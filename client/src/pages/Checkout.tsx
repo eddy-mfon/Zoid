@@ -27,37 +27,32 @@ import {
   NIGERIAN_CITIES_BY_STATE,
   getUniversityState,
 } from "@/lib/nigeriaLocations";
+import {
+  HAND_DELIVERY_STATES,
+  PORT_HARCOURT_AREAS,
+  VERIFIED_GUO_TERMINALS,
+  normalizeStateName,
+  checkDeliveryEligibility,
+  isUniversityEligibleForHandDelivery,
+} from "@/lib/deliveryEligibility";
 
 const MARK = "/zoid-logo.svg";
 
 // Jersey customization cost (name + number)
 const JERSEY_CUSTOMIZATION_COST = 2000;
 
-// GUO Transport locations
+// GUO Transport verified terminals
 const GUO_LOCATIONS: Record<string, string[]> = {
-  "Lagos": [
-    "Ojota Terminal (7 Ikorodu Road, Ojota)",
-    "Maryland Terminal (Lagos-Ibadan Expressway)",
-    "Mile 2 Terminal",
-    "Tin Can Island",
-  ],
-  "Port Harcourt": [
-    "Mile 1 Terminal (Old GUO Park, Mile 1)",
-    "Rumuola Terminal",
-    "Eleme Junction Terminal",
-    "Trans-Amadi Terminal",
-  ],
+  "Lagos State": VERIFIED_GUO_TERMINALS["Lagos State"],
+  "Rivers State": VERIFIED_GUO_TERMINALS["Rivers State"],
 };
 
 type DeliveryOptionType = "standard" | "express" | "pickup" | "not_mentioned";
 type StandardSubType = "university" | "given_address" | null;
 
-// States we currently deliver to directly
-const SUPPORTED_STATES = ["Lagos State", "Rivers State"];
-
-// Universities in Lagos and Port Harcourt (Rivers State) only
-const LAGOS_PH_UNIVERSITIES = [
-  // Lagos
+// Universities in eligible hand-delivery zones (Lagos, Ogun, Port Harcourt)
+const HAND_DELIVERY_UNIVERSITIES = [
+  // Lagos State
   "University of Lagos, Akoka (UNILAG)",
   "Lagos State University, Ojo (LASU)",
   "Lagos State University of Science and Technology, Ikorodu (LASUSTECH)",
@@ -70,72 +65,27 @@ const LAGOS_PH_UNIVERSITIES = [
   "Eko University of Medicine and Health Sciences, Ijanikin",
   "Pan-Atlantic University, Ibeju-Lekki, Lagos (PAU)",
   "Trinity University, Yaba, Lagos",
-  // Port Harcourt / Rivers State
+  // Ogun State
+  "Federal University of Agriculture, Abeokuta (FUNAAB)",
+  "Covenant University, Ota",
+  "Babcock University, Ilishan-Remo",
+  "Bells University of Technology, Ota",
+  "Olabisi Onabanjo University, Ago-Iwoye (OOU)",
+  "Tai Solarin University of Education, Ijagun (TASUED)",
+  "Crawford University, Igbesa",
+  "Crescent University, Abeokuta",
+  "Chrisland University, Owode, Abeokuta",
+  "Christopher University, Mowe",
+  "Hallmark University, Ijebu-Itele",
+  "McPherson University, Seriki-Sotayo",
+  "Mountain Top University, Makogi Oba",
+  "Southwestern University, Okun Owa",
+  // Port Harcourt (Rivers State)
   "University of Port Harcourt (UNIPORT)",
   "Rivers State University, Port Harcourt (RSU)",
   "Ignatius Ajuru University of Education, Port Harcourt (IAUE)",
-  "Madonna University, Elele",
   "PAMO University of Medical Sciences, Port Harcourt",
-  "Wigwe University, Isiokpo",
 ];
-
-/** Returns true when the user's entered state matches Lagos or Port Harcourt */
-function isSupportedState(state: string): boolean {
-  const s = state.trim().toLowerCase();
-  return (
-    s === "lagos state" ||
-    s === "lagos" ||
-    s === "rivers state" ||
-    s === "rivers" ||
-    s === "port harcourt" ||
-    s === "ph" ||
-    s.includes("lagos") ||
-    s.includes("rivers") ||
-    s.includes("port harcourt") ||
-    s.includes("ph")
-  );
-}
-
-/** Normalize user input to canonical Lagos or Rivers State */
-function normalizeState(val: string): {
-  standardState: string;
-  pickupState: string;
-  isLagos: boolean;
-  isPH: boolean;
-  isSupported: boolean;
-} {
-  const s = val.trim().toLowerCase();
-  if (s.includes("lagos")) {
-    return {
-      standardState: "Lagos State",
-      pickupState: "Lagos",
-      isLagos: true,
-      isPH: false,
-      isSupported: true,
-    };
-  }
-  if (
-    s.includes("river") ||
-    s.includes("port") ||
-    s.includes("ph") ||
-    s.includes("harcourt")
-  ) {
-    return {
-      standardState: "Rivers State",
-      pickupState: "Port Harcourt",
-      isLagos: false,
-      isPH: true,
-      isSupported: true,
-    };
-  }
-  return {
-    standardState: val.trim() || "Lagos State",
-    pickupState: "Lagos",
-    isLagos: false,
-    isPH: false,
-    isSupported: false,
-  };
-}
 
 interface DeliveryMethod {
   id: DeliveryOptionType;
@@ -149,28 +99,28 @@ const deliveryMethods: DeliveryMethod[] = [
   {
     id: "standard",
     title: "Straight to your doorstep",
-    subtitle: "We deliver directly to your door or university campus in Lagos or Port Harcourt",
+    subtitle: "Direct hand delivery to your door or university campus in Lagos, Ogun, or Port Harcourt",
     fee: 2500,
     icon: <Home size={18} />,
   },
   {
     id: "express",
     title: "Express — Get it faster",
-    subtitle: "Your order goes out first so you receive it earlier",
+    subtitle: "Prioritized hand dispatch in Lagos, Ogun, or Port Harcourt",
     fee: 4500,
     icon: <Zap size={18} />,
   },
   {
     id: "pickup",
-    title: "Come pick it up yourself",
-    subtitle: "Collect it at a GUO Transport station in Lagos or Port Harcourt",
+    title: "GUO Terminal Pickup",
+    subtitle: "Collect at a GUO Terminal in your selected state",
     fee: 0,
     icon: <MapPin size={18} />,
   },
   {
     id: "not_mentioned",
-    title: "My location isn't listed",
-    subtitle: "Talk to us on WhatsApp and we will organize your delivery",
+    title: "For Further Enquiry",
+    subtitle: "Not sure about delivery to your area? Chat with us on WhatsApp and we'll sort it out",
     fee: 0,
     icon: <PhoneCall size={18} />,
   },
@@ -198,8 +148,10 @@ export interface CheckoutDraft {
   expressAddress: string;
   // pickup
   pickupState: string;
+  pickupCity: string;
   pickupTerminal: string;
   pickupNote: string;
+  isTerminalPending?: boolean;
   // shared
   notes: string;
 }
@@ -245,14 +197,20 @@ export default function Checkout() {
     expressState: "Lagos State",
     expressCity: "Ikeja",
     expressAddress: "",
-    pickupState: "Lagos",
-    pickupTerminal: GUO_LOCATIONS["Lagos"][0],
+    pickupState: "Lagos State",
+    pickupCity: "Ikeja",
+    pickupTerminal: GUO_LOCATIONS["Lagos State"][0],
     pickupNote: "",
+    isTerminalPending: false,
     notes: "",
   });
 
-  // Derived: has the user entered a state we can deliver to?
-  const deliveryAvailable = isSupportedState(form.contactState);
+  // Derived delivery eligibility for entered state & city
+  const eligibility = useMemo(
+    () => checkDeliveryEligibility(form.contactState, form.city),
+    [form.contactState, form.city]
+  );
+  const deliveryAvailable = eligibility.isHandDeliveryEligible;
   const stateEntered = form.contactState.trim().length > 0;
 
   // Sync user details on login
@@ -291,34 +249,29 @@ export default function Checkout() {
     [form.expressState]
   );
 
-  // Universities filtered / prioritised for selected state
+  // Universities filtered / prioritised for selected state (Lagos, Ogun, Rivers - Port Harcourt)
   const filteredUniversities = useMemo(() => {
-    const norm = normalizeState(form.contactState);
-    if (norm.isLagos) {
-      return LAGOS_PH_UNIVERSITIES.filter((u) => {
+    const normState = normalizeStateName(form.contactState);
+    if (normState === "Lagos State" || normState === "Ogun State" || normState === "Rivers State") {
+      return HAND_DELIVERY_UNIVERSITIES.filter((u) => {
         const st = getUniversityState(u);
-        return st === "Lagos State" || u.toLowerCase().includes("lagos");
+        return st === normState;
       });
     }
-    if (norm.isPH) {
-      return LAGOS_PH_UNIVERSITIES.filter((u) => {
-        const st = getUniversityState(u);
-        return st === "Rivers State" || u.toLowerCase().includes("port") || u.toLowerCase().includes("rivers");
-      });
-    }
-    return LAGOS_PH_UNIVERSITIES;
+    return HAND_DELIVERY_UNIVERSITIES;
   }, [form.contactState]);
 
-  // When Lagos or Port Harcourt is picked, remove "not_mentioned" from delivery options
+  // Delivery methods available based on location eligibility
   const availableDeliveryMethods = useMemo(() => {
-    if (stateEntered && deliveryAvailable) {
-      return deliveryMethods.filter((m) => m.id !== "not_mentioned");
+    if (stateEntered && !deliveryAvailable) {
+      // Outside hand delivery area: customer can request GUO Terminal pickup or custom WhatsApp support
+      return deliveryMethods.filter((m) => m.id === "pickup" || m.id === "not_mentioned");
     }
-    return deliveryMethods;
+    return deliveryMethods.filter((m) => m.id !== "not_mentioned");
   }, [stateEntered, deliveryAvailable]);
 
   const selectedMethod = availableDeliveryMethods.find((m) => m.id === deliveryOption) || availableDeliveryMethods[0] || deliveryMethods[0];
-  const deliveryFee = deliveryAvailable ? selectedMethod.fee : 0;
+  const deliveryFee = (deliveryAvailable && deliveryOption !== "pickup") ? selectedMethod.fee : 0;
 
   // Compute customization costs
   const customizationTotal = bag.reduce((sum, item) => {
@@ -331,7 +284,7 @@ export default function Checkout() {
   const grandTotal = total + deliveryFee + customizationTotal;
 
   const whatsappMessage = encodeURIComponent(
-    `Hello ZOID! I am ordering from ${form.contactState.trim() ? form.contactState : "outside Lagos/PH"} and would like to arrange interstate delivery for my order.`
+    `Hello ZOID! I am ordering from ${form.contactState.trim() ? form.contactState : "outside Lagos/Ogun/PH"} and would like to arrange interstate delivery for my order.`
   );
   const whatsappUrl = `https://wa.me/2349020711737?text=${whatsappMessage}`;
 
@@ -345,11 +298,15 @@ export default function Checkout() {
       return;
     }
 
+    const isPickup = deliveryOption === "pickup";
+    const terminalPending = isPickup && (!VERIFIED_GUO_TERMINALS[form.pickupState] || form.pickupTerminal.toLowerCase().includes("pending"));
+
     // Build updated draft with current delivery state
     const draft: CheckoutDraft = {
       ...form,
       deliveryOption,
       standardSubType,
+      isTerminalPending: terminalPending,
     };
 
     // Store draft in sessionStorage to pass to review page
@@ -452,24 +409,33 @@ export default function Checkout() {
                     value={form.contactState}
                     onChange={(e) => {
                       const val = e.target.value;
-                      const norm = normalizeState(val);
-                      const defaultCity = norm.isPH ? "Port Harcourt (City)" : "Ikeja";
+                      const norm = normalizeStateName(val);
+                      const defaultCity = norm === "Rivers State" ? "Port Harcourt (City)" : norm === "Ogun State" ? "Abeokuta" : "Ikeja";
+                      const verifiedTerms = VERIFIED_GUO_TERMINALS[norm];
+                      const check = checkDeliveryEligibility(val, defaultCity);
+
                       setForm((prev) => ({
                         ...prev,
                         contactState: val,
-                        state: norm.standardState,
-                        expressState: norm.standardState,
-                        studentCityState: norm.standardState,
-                        city: (!prev.city || prev.city === "Ikeja" || prev.city === "Port Harcourt (City)") ? defaultCity : prev.city,
-                        expressCity: (!prev.expressCity || prev.expressCity === "Ikeja" || prev.expressCity === "Port Harcourt (City)") ? defaultCity : prev.expressCity,
-                        pickupState: norm.pickupState,
-                        pickupTerminal: GUO_LOCATIONS[norm.pickupState]?.[0] || GUO_LOCATIONS["Lagos"][0],
+                        state: norm,
+                        expressState: norm,
+                        studentCityState: norm,
+                        city: (!prev.city || prev.city === "Ikeja" || prev.city === "Port Harcourt (City)" || prev.city === "Abeokuta") ? defaultCity : prev.city,
+                        expressCity: (!prev.expressCity || prev.expressCity === "Ikeja" || prev.expressCity === "Port Harcourt (City)" || prev.expressCity === "Abeokuta") ? defaultCity : prev.expressCity,
+                        pickupState: norm,
+                        pickupCity: defaultCity,
+                        pickupTerminal: verifiedTerms ? verifiedTerms[0] : `GUO Terminal (${norm}) — Pending Confirmation`,
                       }));
-                      // Reset delivery option when state changes
-                      setDeliveryOption("standard");
+
+                      // If outside direct hand delivery, automatically choose pickup
+                      if (!check.isHandDeliveryEligible) {
+                        setDeliveryOption("pickup");
+                      } else {
+                        setDeliveryOption("standard");
+                      }
                       setStandardSubType(null);
                     }}
-                    placeholder="e.g. Lagos State, Rivers State"
+                    placeholder="e.g. Lagos State, Ogun State, Rivers State"
                     autoComplete="off"
                   />
                   <datalist id="contact-states-list">
@@ -480,12 +446,12 @@ export default function Checkout() {
                 </div>
                 {stateEntered && !deliveryAvailable && (
                   <span style={{ fontSize: 12, color: "#e05a00", display: "flex", alignItems: "center", gap: 5, marginTop: 6, fontWeight: 500 }}>
-                    We cannot deliver to {form.contactState}. Please contact us on WhatsApp.
+                    <MapPin size={13} /> Direct hand delivery is unavailable in {eligibility.normalizedState}. You can select GUO Terminal pickup below.
                   </span>
                 )}
                 {stateEntered && deliveryAvailable && (
                   <span style={{ fontSize: 11, color: "#29a36a", display: "flex", alignItems: "center", gap: 5, marginTop: 5, fontWeight: 600 }}>
-                    <Check size={13} /> Great — automated delivery is available in {form.contactState}!
+                    <Check size={13} /> Direct hand delivery is available in {eligibility.normalizedState}!
                   </span>
                 )}
               </label>
@@ -502,41 +468,45 @@ export default function Checkout() {
                 </p>
               )}
 
-              {/* Unsupported state — simple text + WhatsApp link only */}
+              {/* Unsupported state banner offering GUO terminal pickup */}
               {stateEntered && !deliveryAvailable && (
-                <div style={{ marginTop: 8 }}>
-                  <p style={{ fontSize: 14, color: "#222", marginBottom: 14, lineHeight: 1.5 }}>
-                    We cannot deliver to {form.contactState}. Please contact us on WhatsApp.
-                  </p>
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div style={{ marginTop: 8, marginBottom: 18 }}>
+                  <div
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "#25D366",
-                      color: "#fff",
-                      padding: "12px 20px",
-                      borderRadius: 4,
-                      fontWeight: 700,
-                      fontSize: 13,
-                      letterSpacing: "0.04em",
-                      textDecoration: "none",
+                      padding: "14px 16px",
+                      background: "rgba(224, 90, 0, 0.08)",
+                      border: "1px solid rgba(224, 90, 0, 0.28)",
+                      borderRadius: 6,
+                      marginBottom: 14,
                     }}
                   >
-                    <MessageSquare size={16} /> Contact Us on WhatsApp
-                  </a>
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <MapPin size={18} color="#e05a00" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <div>
+                        <strong style={{ fontSize: 13, color: "#d95300", display: "block", marginBottom: 3 }}>
+                          We don't deliver directly to {eligibility.normalizedState}
+                        </strong>
+                        <p style={{ margin: 0, fontSize: 12, color: "#555", lineHeight: 1.5 }}>
+                          No worries — you can still get your order by picking it up from a <strong>GUO Transport terminal</strong> near you. Choose your nearest terminal below.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: 13, color: "#666", marginBottom: 12, lineHeight: 1.5 }}>
+                    Available fulfillment options for {eligibility.normalizedState}:
+                  </p>
                 </div>
               )}
 
-              {/* Supported state — show all delivery options */}
-              {stateEntered && deliveryAvailable && (
+              {/* Delivery options list (shown when state is entered) */}
+              {stateEntered && (
                 <>
-                  <p style={{ fontSize: 13, color: "#666", marginTop: -4, marginBottom: 16, lineHeight: 1.5 }}>
-                    Tap on an option below to fill in your delivery or pickup details.
-                  </p>
+                  {deliveryAvailable && (
+                    <p style={{ fontSize: 13, color: "#666", marginTop: -4, marginBottom: 16, lineHeight: 1.5 }}>
+                      Tap on an option below to fill in your delivery or pickup details.
+                    </p>
+                  )}
 
                   <div style={{ display: "grid", gap: 12 }}>
                     {availableDeliveryMethods.map((method) => {
@@ -1059,8 +1029,8 @@ export default function Checkout() {
                           >
                             <Building2 size={16} color="#29a36a" style={{ flexShrink: 0, marginTop: 2 }} />
                             <p style={{ margin: 0, fontSize: 12, color: "#333", lineHeight: 1.6 }}>
-                              <strong style={{ color: "#1a8a52" }}>Pick up your package yourself at GUO Transport.</strong>{" "}
-                              We have GUO pickup stations in <strong>Lagos</strong> and <strong>Port Harcourt</strong>. Select your state and pick the station closest to you.
+                              <strong style={{ color: "#1a8a52" }}>Pick up from a GUO terminal near you.</strong>{" "}
+                              Once your order is ready, we'll send it to your chosen GUO station in <strong>{form.pickupState || "your state"}</strong>. You collect it from there.
                             </p>
                           </div>
 
@@ -1087,105 +1057,134 @@ export default function Checkout() {
                             >
                               <div style={{ display: "flex", alignItems: "center", gap: 7, color: "#333" }}>
                                 <MapPin size={14} color="var(--pink)" />
-                                <span>Pickup Region: <strong style={{ color: "#111" }}>{form.pickupState}</strong></span>
+                                <span>Pickup State: <strong style={{ color: "#111" }}>{form.pickupState}</strong></span>
                               </div>
                               <span style={{ fontSize: 11, color: "#29a36a", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                                 <Check size={12} /> Auto-matched ({form.pickupState})
                               </span>
                             </div>
 
-                            <p style={{ fontSize: 12, fontWeight: 700, color: "#333", marginBottom: 10 }}>
-                              1. Pickup State:
-                            </p>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                              {Object.keys(GUO_LOCATIONS).map((state) => {
-                                const isSelectedState = form.pickupState === state;
-                                return (
-                                  <div
-                                    key={state}
-                                    onClick={() => {
-                                      update("pickupState", state);
-                                      update("pickupTerminal", GUO_LOCATIONS[state][0]);
+                            {/* State Selector */}
+                            <label style={{ display: "block", marginBottom: 14 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#333", display: "block", marginBottom: 6 }}>
+                                1. Pickup State:
+                              </span>
+                              <select
+                                value={form.pickupState}
+                                onChange={(e) => {
+                                  const newState = e.target.value;
+                                  const terms = VERIFIED_GUO_TERMINALS[newState];
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    pickupState: newState,
+                                    pickupTerminal: terms ? terms[0] : `GUO Terminal (${newState}) — Pending Confirmation`,
+                                  }));
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "9px 12px",
+                                  border: "1px solid #d5d0c8",
+                                  borderRadius: 4,
+                                  fontSize: 13,
+                                  background: "#fff",
+                                  color: "#222",
+                                }}
+                              >
+                                {NIGERIAN_STATES.map((st) => (
+                                  <option key={st} value={st}>
+                                    {st} {VERIFIED_GUO_TERMINALS[st] ? "(Verified Terminals Available)" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+
+
+                            {/* 2. Terminal Selection */}
+                            <label style={{ display: 'block', marginBottom: 14 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#333', display: 'block', marginBottom: 6 }}>
+                                2. Choose your nearest GUO terminal in {form.pickupState}:
+                              </span>
+                              {VERIFIED_GUO_TERMINALS[form.pickupState] ? (
+                                <select
+                                  value={form.pickupTerminal}
+                                  onChange={(e) => update('pickupTerminal', e.target.value)}
+                                  style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    border: '1.5px solid var(--pink)',
+                                    borderRadius: 4,
+                                    fontSize: 13,
+                                    background: '#fff',
+                                    color: '#111',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {VERIFIED_GUO_TERMINALS[form.pickupState].map((terminal) => (
+                                    <option key={terminal} value={terminal}>
+                                      {terminal}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <>
+                                  <input
+                                    value={form.pickupCity}
+                                    onChange={(e) => {
+                                      const cityVal = e.target.value;
+                                      update('pickupCity', cityVal);
+                                      update('pickupTerminal', `GUO Terminal (${form.pickupState}${cityVal ? ' - ' + cityVal : ''}) — Pending Confirmation`);
                                     }}
+                                    placeholder={`Enter your city or nearest town in ${form.pickupState}`}
                                     style={{
-                                      padding: "14px 16px",
-                                      border: isSelectedState ? "2px solid var(--pink)" : "1px solid #d5d0c8",
-                                      borderRadius: 6,
-                                      background: isSelectedState ? "rgba(179, 13, 13,0.08)" : "#fff",
-                                      cursor: "pointer",
-                                      transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-                                      textAlign: "center",
-                                      transform: isSelectedState ? "scale(1.02)" : "scale(1)",
-                                      boxShadow: isSelectedState ? "0 4px 12px rgba(179, 13, 13,0.12)" : "none",
+                                      width: '100%',
+                                      padding: '10px 12px',
+                                      border: '1px solid #d5d0c8',
+                                      borderRadius: 4,
+                                      fontSize: 13,
+                                      color: '#111',
+                                      marginBottom: 10,
+                                    }}
+                                  />
+                                  <div
+                                    style={{
+                                      padding: '10px 13px',
+                                      background: 'rgba(59, 130, 246, 0.07)',
+                                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                                      borderRadius: 4,
+                                      fontSize: 12,
+                                      color: '#1e3a8a',
+                                      lineHeight: 1.5,
                                     }}
                                   >
-                                    <MapPin
-                                      size={18}
-                                      color={isSelectedState ? "var(--pink)" : "#888"}
-                                      style={{ margin: "0 auto 4px", display: "block" }}
-                                    />
-                                    <strong style={{ fontSize: 12, color: isSelectedState ? "var(--pink)" : "#333" }}>
-                                      {state}
-                                    </strong>
+                                    We'll confirm the closest GUO terminal in your area and reach out before your order is dispatched.
                                   </div>
-                                );
-                              })}
-                            </div>
+                                </>
+                              )}
+                            </label>
 
-                            {form.pickupState && (
-                              <>
-                                <p style={{ fontSize: 12, fontWeight: 700, color: "#333", marginBottom: 8 }}>
-                                  2. Choose your nearest GUO station in {form.pickupState}:
-                                </p>
-                                <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
-                                  {GUO_LOCATIONS[form.pickupState]?.map((terminal) => {
-                                    const isSelectedTerm = form.pickupTerminal === terminal;
-                                    return (
-                                      <label
-                                        key={terminal}
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 10,
-                                          padding: "11px 13px",
-                                          border: isSelectedTerm ? "1.5px solid var(--pink)" : "1px solid #d5d0c8",
-                                          borderRadius: 4,
-                                          background: isSelectedTerm ? "rgba(179, 13, 13,0.06)" : "#fff",
-                                          cursor: "pointer",
-                                          transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                                          transform: isSelectedTerm ? "translateX(3px)" : "none",
-                                        }}
-                                      >
-                                        <input
-                                          type="radio"
-                                          name="pickupTerminal"
-                                          checked={isSelectedTerm}
-                                          onChange={() => update("pickupTerminal", terminal)}
-                                          style={{ accentColor: "var(--pink)", cursor: "pointer", flexShrink: 0 }}
-                                        />
-                                        <span style={{ fontSize: 12, color: isSelectedTerm ? "var(--pink)" : "#333", fontWeight: isSelectedTerm ? 700 : 400 }}>
-                                          {terminal}
-                                        </span>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              </>
-                            )}
-
-                            <label>
-                              Anything we should know about your pickup? (optional)
+                            <label style={{ display: "block", marginTop: 14 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: "#333", display: "block", marginBottom: 6 }}>
+                                Anything we should know about your pickup? (optional)
+                              </span>
                               <input
                                 value={form.pickupNote}
                                 onChange={(e) => update("pickupNote", e.target.value)}
-                                placeholder="e.g. I will pick up on Friday afternoon"
+                                placeholder="e.g. I will pick up on Friday afternoon, preferred branch landmark..."
+                                style={{
+                                  width: "100%",
+                                  padding: "10px 12px",
+                                  border: "1px solid #d5d0c8",
+                                  borderRadius: 4,
+                                  fontSize: 13,
+                                  color: "#111",
+                                }}
                               />
                             </label>
                           </div>
                         </div>
                       )}
 
-                      {/* ─── NOT MENTIONED ACCORDION PANEL ─── */}
+                      {/* ─── FOR FURTHER ENQUIRY ACCORDION PANEL ─── */}
                       {method.id === "not_mentioned" && isSelected && (
                         <div
                           className="accordion-smooth-enter"
@@ -1202,8 +1201,12 @@ export default function Checkout() {
                         >
                           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                             <PhoneCall size={16} color="var(--pink)" style={{ flexShrink: 0, marginTop: 2 }} />
-                            <p style={{ margin: 0, fontSize: 12, color: "#444", lineHeight: 1.5 }}>
-                              Your town, city, or state isn't listed here? Send us a quick WhatsApp message and our support team will organize a custom delivery directly to you.
+                            <p style={{ margin: 0, fontSize: 12, color: "#444", lineHeight: 1.6 }}>
+                              <strong style={{ color: "var(--pink)", display: "block", marginBottom: 4 }}>
+                                We deliver to every state in Nigeria.
+                              </strong>
+                              If your town or state is not listed above, don't worry — just send us a message on WhatsApp.
+                              Tell us where you are, and we will work out the best way to get your order to you.
                             </p>
                           </div>
                           <a
@@ -1225,7 +1228,7 @@ export default function Checkout() {
                               textDecoration: "none",
                             }}
                           >
-                            <MessageSquare size={16} /> Chat with us on WhatsApp (+234 9020711737)
+                            <MessageSquare size={16} /> Message us on WhatsApp (+234 9020711737)
                           </a>
                         </div>
                       )}

@@ -24,6 +24,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { nanoid } from "nanoid";
 import type { CheckoutDraft } from "./Checkout";
 
+import { addOrderToStore } from "@/lib/ordersStore";
+
 const MARK = "/zoid-logo.svg";
 const JERSEY_CUSTOMIZATION_COST = 2000;
 
@@ -46,7 +48,12 @@ function resolveAddress(draft: CheckoutDraft): string {
     return `${draft.expressAddress}, ${draft.expressCity}, ${draft.expressState}`;
   }
   if (draft.deliveryOption === "pickup") {
-    return `GUO Terminal — ${draft.pickupTerminal || "Lagos Hub"} (${draft.pickupState || "Lagos"})`;
+    const term = draft.pickupTerminal
+      ? draft.pickupTerminal
+      : draft.isTerminalPending
+      ? `GUO Hub (${draft.pickupCity ? `${draft.pickupCity}, ` : ""}${draft.pickupState} — Branch Confirmation Pending)`
+      : `GUO Central Terminal (${draft.pickupState || "Nigeria"})`;
+    return `GUO Terminal — ${term}`;
   }
   return "Custom / Not listed — via WhatsApp";
 }
@@ -66,9 +73,10 @@ function resolveDeliveryLabel(draft: CheckoutDraft): { label: string; icon: Reac
     return { label: "Express — Get it faster", icon: <Zap size={14} /> };
   }
   if (draft.deliveryOption === "pickup") {
-    return { label: `GUO Self-Pickup · ${draft.pickupState || "Lagos"}`, icon: <Building2 size={14} /> };
+    const statusNote = draft.isTerminalPending ? " (Branch Conf. Pending)" : "";
+    return { label: `GUO Self-Pickup · ${draft.pickupState || "Selected State"}${statusNote}`, icon: <Building2 size={14} /> };
   }
-  return { label: "Custom Location", icon: <MapPin size={14} /> };
+  return { label: "Custom Interstate Inquiry", icon: <MapPin size={14} /> };
 }
 
 /** Compute per-item price including any customization cost */
@@ -187,6 +195,52 @@ export default function OrderReview() {
       isStudent: draft.standardSubType === "university",
     });
 
+    // Also persist to authoritative Admin store
+    const todayStr = new Date().toISOString().split("T")[0];
+    let fulfillmentType: "hand_delivery" | "guo_pickup" | "custom_support" = "hand_delivery";
+    if (draft.deliveryOption === "pickup") {
+      fulfillmentType = "guo_pickup";
+    } else if (draft.deliveryOption === "not_mentioned") {
+      fulfillmentType = "custom_support";
+    }
+
+    addOrderToStore({
+      orderId: orderNumber,
+      date: todayStr,
+      customerName: draft.name || user?.name || "Customer",
+      customerEmail: draft.email || user?.email || "customer@zoid.ng",
+      customerPhone: draft.phone || user?.phone || "+234 000 000 0000",
+      status: "Processing",
+      paymentStatus: "Paid",
+      fulfillmentType,
+      fulfillmentLocation: draft.deliveryOption === "pickup" ? (draft.pickupState || draft.contactState) : (draft.state || draft.contactState),
+      terminalDetails: draft.deliveryOption === "pickup" ? {
+        state: draft.pickupState || draft.contactState,
+        city: draft.pickupCity || "",
+        terminalName: draft.pickupTerminal || (draft.isTerminalPending ? "Pending Confirmation" : "Central Hub"),
+        isPendingConfirmation: Boolean(draft.isTerminalPending),
+        notes: draft.isTerminalPending ? `Customer requested GUO pickup in ${draft.pickupCity ? `${draft.pickupCity}, ` : ""}${draft.pickupState}. Branch confirmation required.` : undefined,
+      } : undefined,
+      items: storedBag.map((item) => {
+        const numericPrice = Number(item.price.replace(/[^0-9]/g, "")) || 0;
+        return {
+          productSlug: item.slug,
+          productName: item.name,
+          category: item.style || "CURATED JERSEY",
+          size: item.size,
+          quantity: item.quantity,
+          unitPrice: numericPrice,
+          lineTotal: numericPrice * item.quantity,
+          image: item.image,
+        };
+      }),
+      subtotal: storedTotal,
+      deliveryFee,
+      total: grandTotal,
+      formattedTotal: formatNaira(grandTotal),
+      deliveryAddress,
+    });
+
     // Clear session data
     sessionStorage.removeItem("zoid_checkout_draft");
     sessionStorage.removeItem("zoid_checkout_bag");
@@ -251,13 +305,15 @@ export default function OrderReview() {
           style={{
             color: "#888",
             fontSize: 14,
-            maxWidth: 380,
+            maxWidth: 440,
             lineHeight: 1.6,
             margin: "0 0 36px",
             animation: "fadeUp 0.5s ease 0.3s both",
           }}
         >
-          Your order has been placed. Our team will reach out shortly to confirm payment and dispatch.
+          {draft.deliveryOption === "pickup"
+            ? `Your order ${orderNumber} has been recorded for GUO Terminal Pickup in ${draft.pickupState || "your selected state"}${draft.isTerminalPending ? " (terminal branch confirmation pending)" : ""}. Our operations team will contact you with pickup waybill coordinates.`
+            : `Your order ${orderNumber} has been placed. Our team will reach out shortly to confirm payment and dispatch.`}
         </p>
 
         <div

@@ -31,174 +31,29 @@ import {
   Image as ImageIcon,
   Minus,
   CheckCircle,
+  RefreshCw,
+  MapPin,
+  Calendar,
+  Building2,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  type SalesOrder,
+  type SalesOrderItem,
+  type OrderStatus,
+  type DailySalesPoint,
+  calculateDashboardMetrics,
+} from "@/lib/salesMetrics";
+import {
+  getStoredOrders,
+  saveOrders,
+  updateOrderStatusInStore,
+  confirmOrderTerminal,
+  subscribeToOrders,
+} from "@/lib/ordersStore";
 
 const MARK = "/zoid-logo.svg";
-
-// ── TYPES & INTERFACES ────────────────────────────────────────────────────────
-interface SalesOrderItem {
-  productSlug: string;
-  productName: string;
-  category: string;
-  size: string;
-  quantity: number;
-  unitPrice: number;
-  lineTotal: number;
-  image?: string;
-}
-
-interface SalesOrder {
-  orderId: string;
-  date: string;
-  customerName: string;
-  status: "Processing" | "In Transit" | "Delivered";
-  items: SalesOrderItem[];
-  subtotal: number;
-  deliveryFee: number;
-  total: number;
-  formattedTotal: string;
-  deliveryAddress: string;
-}
-
-// Initial Mock Orders (Frontend State)
-const INITIAL_ORDERS: SalesOrder[] = [
-  {
-    orderId: "ZD-A7K2M1",
-    date: "2026-09-24",
-    customerName: "Tunde Okonkwo",
-    status: "Processing",
-    items: [
-      {
-        productSlug: "ac-milan-2526",
-        productName: "AC Milan / 25—26",
-        category: "CURATED JERSEY",
-        size: "L",
-        quantity: 1,
-        unitPrice: 58500,
-        lineTotal: 58500,
-        image: "/manus-storage/ac-milan-2526_b917ea29.jpg",
-      },
-    ],
-    subtotal: 58500,
-    deliveryFee: 3500,
-    total: 62000,
-    formattedTotal: "₦62,000",
-    deliveryAddress: "12 Adeola Odeku St, Victoria Island, Lagos",
-  },
-  {
-    orderId: "ZD-B3P9N4",
-    date: "2026-09-23",
-    customerName: "Amina Bello",
-    status: "In Transit",
-    items: [
-      {
-        productSlug: "barcelona-away",
-        productName: "Barcelona / Away",
-        category: "ARCHIVE EDITION",
-        size: "M",
-        quantity: 1,
-        unitPrice: 62000,
-        lineTotal: 62000,
-        image: "/manus-storage/barcelona_9a244f02.jpg",
-      },
-      {
-        productSlug: "manchester-united-2526",
-        productName: "Manchester United / 25—26",
-        category: "CURATED JERSEY",
-        size: "XL",
-        quantity: 1,
-        unitPrice: 60500,
-        lineTotal: 60500,
-        image: "/manus-storage/manchester-united-2526_2aca202f.jpg",
-      },
-    ],
-    subtotal: 122500,
-    deliveryFee: 3500,
-    total: 126000,
-    formattedTotal: "₦126,000",
-    deliveryAddress: "5 Ajose Adeogun St, Victoria Island, Lagos",
-  },
-  {
-    orderId: "ZD-C6R1Q8",
-    date: "2026-09-22",
-    customerName: "Chidi Eze",
-    status: "Delivered",
-    items: [
-      {
-        productSlug: "liverpool-2526",
-        productName: "Liverpool / 25—26",
-        category: "HERITAGE DROP",
-        size: "L",
-        quantity: 2,
-        unitPrice: 61500,
-        lineTotal: 123000,
-        image: "/manus-storage/liverpool-2526_78e5ffc7.jpg",
-      },
-    ],
-    subtotal: 123000,
-    deliveryFee: 3500,
-    total: 126500,
-    formattedTotal: "₦126,500",
-    deliveryAddress: "38 Ozumba Mbadiwe Ave, Lekki Phase 1, Lagos",
-  },
-  {
-    orderId: "ZD-D4T7W5",
-    date: "2026-09-21",
-    customerName: "Fatima Suleiman",
-    status: "Delivered",
-    items: [
-      {
-        productSlug: "inter-milan-2526",
-        productName: "Inter Milan / 25—26",
-        category: "CURATED JERSEY",
-        size: "M",
-        quantity: 1,
-        unitPrice: 59500,
-        lineTotal: 59500,
-        image: "/manus-storage/inter-milan-2526_65e7cadc.jpg",
-      },
-      {
-        productSlug: "newcastle-2526",
-        productName: "Newcastle / 25—26",
-        category: "HERITAGE DROP",
-        size: "L",
-        quantity: 1,
-        unitPrice: 57500,
-        lineTotal: 57500,
-        image: "/manus-storage/newcastle-2526_802db4b3.jpg",
-      },
-    ],
-    subtotal: 117000,
-    deliveryFee: 3500,
-    total: 120500,
-    formattedTotal: "₦120,500",
-    deliveryAddress: "21 Awolowo Rd, Ikoyi, Lagos",
-  },
-  {
-    orderId: "ZD-E9S3L2",
-    date: "2026-09-20",
-    customerName: "Emeka Okafor",
-    status: "Delivered",
-    items: [
-      {
-        productSlug: "manchester-city-2324",
-        productName: "Manchester City / 23—24",
-        category: "ARCHIVE EDITION",
-        size: "XL",
-        quantity: 1,
-        unitPrice: 55000,
-        lineTotal: 55000,
-        image: "/manus-storage/manchester-city-2324_a2693d41.jpg",
-      },
-    ],
-    subtotal: 55000,
-    deliveryFee: 3500,
-    total: 58500,
-    formattedTotal: "₦58,500",
-    deliveryAddress: "7 Bisola Durosinmi-Etti St, Lekki Phase 1, Lagos",
-  },
-];
 
 // Curated stock images presets
 const imagePresets = [
@@ -217,8 +72,8 @@ function StatusDropdown({
   currentStatus,
   onSelect,
 }: {
-  currentStatus: "Processing" | "In Transit" | "Delivered";
-  onSelect: (status: "Processing" | "In Transit" | "Delivered") => void;
+  currentStatus: OrderStatus;
+  onSelect: (status: OrderStatus) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -252,9 +107,20 @@ function StatusDropdown({
       border: "rgba(41,163,106,0.35)",
       icon: <CheckCircle2 size={12} />,
     },
-  }[currentStatus];
+    Cancelled: {
+      color: "#ef4444",
+      bg: "rgba(239,68,68,0.12)",
+      border: "rgba(239,68,68,0.35)",
+      icon: <X size={12} />,
+    },
+  }[currentStatus] || {
+    color: "#e7a619",
+    bg: "rgba(231,166,25,0.12)",
+    border: "rgba(231,166,25,0.35)",
+    icon: <Clock size={12} />,
+  };
 
-  const options: Array<"Processing" | "In Transit" | "Delivered"> = ["Processing", "In Transit", "Delivered"];
+  const options: OrderStatus[] = ["Processing", "In Transit", "Delivered", "Cancelled"];
 
   return (
     <div ref={dropdownRef} style={{ position: "relative", display: "inline-block" }}>
@@ -353,16 +219,44 @@ function StatusDropdown({
 
 export default function Admin() {
   const [catalog, setCatalog] = useState<Product[]>(products);
-  const [orders, setOrders] = useState<SalesOrder[]>(INITIAL_ORDERS);
+  const [orders, setOrders] = useState<SalesOrder[]>(() => getStoredOrders());
+  const [lastRefreshed, setLastRefreshed] = useState<string>(() => new Date().toLocaleTimeString());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
   const [stockStatusFilter, setStockStatusFilter] = useState<"all" | "in-stock" | "low-stock" | "out-of-stock">("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState<"all" | "Processing" | "In Transit" | "Delivered">("all");
+  const [orderFulfillmentFilter, setOrderFulfillmentFilter] = useState<"all" | "hand_delivery" | "guo_pickup">("all");
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
-  const [activeTab, setActiveTab] = useState<"inventory" | "add" | "sales">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "add" | "sales" | "weekly-stats" | "accounting-stats" | "fulfillment-stats">("inventory");
+  const [selectedStatView, setSelectedStatView] = useState<"weekly" | "accounting" | "fulfillment" | "inventory" | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+
+  // Subscribe to live orders changes across components/tabs
+  useEffect(() => {
+    const unsub = subscribeToOrders((newOrders) => {
+      setOrders(newOrders);
+    });
+    return unsub;
+  }, []);
+
+  function handleRefresh() {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      const fresh = getStoredOrders();
+      setOrders(fresh);
+      setLastRefreshed(new Date().toLocaleTimeString());
+      setIsRefreshing(false);
+      toast.success("Metrics & store orders refreshed");
+    }, 300);
+  }
+
+  // Dashboard Metrics & Accounting Engine
+  const dashboardMetrics = useMemo(() => calculateDashboardMetrics(orders), [orders]);
+  const weekly = dashboardMetrics.weekly;
+  const accounting = dashboardMetrics.accounting;
 
   // New product form state
   const [newName, setNewName] = useState("");
@@ -411,26 +305,17 @@ export default function Admin() {
     return { totalItems, totalUnits, totalValue, lowStockCount, outOfStockCount, bestsellerCount, specialCount };
   }, [catalog]);
 
-  // ── SALES ANALYTICS ──────────────────────────────────────────────
-  const salesAnalytics = useMemo(() => {
-    const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-    const totalOrders = orders.length;
-    const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
-    const processingCount = orders.filter((o) => o.status === "Processing").length;
-    const inTransitCount = orders.filter((o) => o.status === "In Transit").length;
-    const deliveredCount = orders.filter((o) => o.status === "Delivered").length;
-
-    return {
-      totalRevenue,
-      formattedRevenue: `₦${totalRevenue.toLocaleString("en-NG")}`,
-      totalOrders,
-      averageOrderValue,
-      formattedAvgOrderValue: `₦${averageOrderValue.toLocaleString("en-NG")}`,
-      processingCount,
-      inTransitCount,
-      deliveredCount,
-    };
-  }, [orders]);
+  // Backward compatibility alias for salesAnalytics
+  const salesAnalytics = useMemo(() => ({
+    totalRevenue: dashboardMetrics.accounting.grossSales,
+    formattedRevenue: dashboardMetrics.accounting.formattedGrossSales,
+    totalOrders: dashboardMetrics.operational.totalOrders,
+    averageOrderValue: dashboardMetrics.accounting.allTimeAOV,
+    formattedAvgOrderValue: dashboardMetrics.accounting.formattedAllTimeAOV,
+    processingCount: dashboardMetrics.operational.processingCount,
+    inTransitCount: dashboardMetrics.operational.inTransitCount,
+    deliveredCount: dashboardMetrics.operational.deliveredCount,
+  }), [dashboardMetrics]);
 
   // ── FILTERED CATALOG ─────────────────────────────────────────────
   const filteredCatalog = useMemo(() => {
@@ -456,14 +341,18 @@ export default function Admin() {
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       const matchesStatus = orderStatusFilter === "all" || o.status === orderStatusFilter;
+      const matchesFulfillment =
+        orderFulfillmentFilter === "all" || o.fulfillmentType === orderFulfillmentFilter;
       const matchesSearch =
         !orderSearchQuery ||
         o.orderId.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
         o.customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+        (o.fulfillmentLocation && o.fulfillmentLocation.toLowerCase().includes(orderSearchQuery.toLowerCase())) ||
+        (o.terminalDetails?.terminalName && o.terminalDetails.terminalName.toLowerCase().includes(orderSearchQuery.toLowerCase())) ||
         o.items.some((item) => item.productName.toLowerCase().includes(orderSearchQuery.toLowerCase()));
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesFulfillment && matchesSearch;
     });
-  }, [orders, orderStatusFilter, orderSearchQuery]);
+  }, [orders, orderStatusFilter, orderFulfillmentFilter, orderSearchQuery]);
 
   // ── HANDLERS ─────────────────────────────────────────────────────
   function handleStockChange(slug: string, size: string, newCount: number) {
@@ -553,11 +442,33 @@ export default function Admin() {
     }
   }
 
-  function handleUpdateOrderStatus(orderId: string, newStatus: "Processing" | "In Transit" | "Delivered") {
+  function handleUpdateOrderStatus(orderId: string, newStatus: OrderStatus) {
+    updateOrderStatusInStore(orderId, newStatus);
     setOrders((prev) =>
       prev.map((o) => (o.orderId === orderId ? { ...o, status: newStatus } : o))
     );
     toast.success(`Order ${orderId} status set to ${newStatus}`);
+  }
+
+  function handleConfirmTerminal(orderId: string, terminalName: string) {
+    confirmOrderTerminal(orderId, terminalName);
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.orderId === orderId) {
+          return {
+            ...o,
+            terminalDetails: {
+              ...o.terminalDetails,
+              state: o.terminalDetails?.state || "Nigeria",
+              terminalName,
+              isPendingConfirmation: false,
+            },
+          };
+        }
+        return o;
+      })
+    );
+    toast.success(`GUO Terminal branch confirmed: ${terminalName}`);
   }
 
   function toggleOrderExpanded(orderId: string) {
@@ -755,6 +666,35 @@ export default function Admin() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            style={{
+              fontSize: 10,
+              padding: "6px 12px",
+              height: 32,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#ded8d0",
+              borderRadius: 4,
+              cursor: isRefreshing ? "wait" : "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontWeight: 600,
+              transition: "all 0.15s ease",
+            }}
+            title={`Last updated at ${lastRefreshed}`}
+          >
+            <RefreshCw
+              size={12}
+              style={{
+                animation: isRefreshing ? "spin 0.8s linear infinite" : "none",
+              }}
+            />
+            <span>{isRefreshing ? "Refreshing..." : "Refresh Store"}</span>
+          </button>
           <Link
             href="/collection"
             className="ghost-button"
@@ -794,109 +734,399 @@ export default function Admin() {
 
       {/* ── MAIN CONTAINER ────────────────────────────────────────── */}
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "28px clamp(16px, 4vw, 40px) 80px" }}>
-        {/* ── TOP KPI CARDS (Clearer subtitle contrast & high readability) ── */}
+        {/* ── FOREFRONT KPI CARDS & WEEKLY SALES OVERVIEW ──────────────── */}
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
             gap: 12,
-            marginBottom: 28,
+            marginBottom: 16,
           }}
         >
-          {/* Card 1: Revenue */}
+          {/* Card 1: Weekly Sales (Forefront Primary KPI) */}
           <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setActiveTab("weekly-stats");
+              setSelectedStatView("weekly");
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (setActiveTab("weekly-stats"), setSelectedStatView("weekly"))}
+            title="Click to view full Weekly Sales analytics & daily metrics"
             style={{
-              background: "linear-gradient(145deg, rgba(26,26,26,0.7) 0%, rgba(14,14,14,0.9) 100%)",
-              border: "1px solid rgba(255,255,255,0.09)",
+              background: activeTab === "weekly-stats" 
+                ? "linear-gradient(145deg, rgba(60,20,20,0.9) 0%, rgba(20,14,14,0.98) 100%)" 
+                : "linear-gradient(145deg, rgba(32,18,18,0.7) 0%, rgba(14,14,14,0.95) 100%)",
+              border: activeTab === "weekly-stats" ? "1.5px solid var(--pink)" : "1px solid rgba(179,13,13,0.35)",
               padding: "18px 20px",
               borderRadius: 8,
               backdropFilter: "blur(12px)",
+              position: "relative",
+              overflow: "hidden",
+              cursor: "pointer",
+              boxShadow: activeTab === "weekly-stats" ? "0 0 24px rgba(179,13,13,0.25)" : "none",
+              transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--pink)";
+              e.currentTarget.style.boxShadow = "0 0 20px rgba(179,13,13,0.18)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = activeTab === "weekly-stats" ? "var(--pink)" : "rgba(179,13,13,0.35)";
+              e.currentTarget.style.boxShadow = activeTab === "weekly-stats" ? "0 0 24px rgba(179,13,13,0.25)" : "none";
+              e.currentTarget.style.transform = "none";
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 10, color: "#aaa69d", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
-                TOTAL REVENUE
+              <span style={{ fontSize: 10, color: "#f87171", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                <Calendar size={12} /> WEEKLY SALES (MON–SUN)
               </span>
-              <DollarSign size={16} color="var(--pink)" />
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {weekly.weekOverWeekChangePercent != null && (
+                  <span
+                    style={{
+                      fontSize: 9,
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      background: weekly.weekOverWeekChangePercent >= 0 ? "rgba(41,163,106,0.18)" : "rgba(239,68,68,0.18)",
+                      color: weekly.weekOverWeekChangePercent >= 0 ? "#34d399" : "#f87171",
+                      fontWeight: 700,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 3,
+                    }}
+                  >
+                    <TrendingUp size={10} style={{ transform: weekly.weekOverWeekChangePercent < 0 ? "rotate(180deg)" : "none" }} />
+                    {weekly.weekOverWeekChangePercent >= 0 ? `+${weekly.weekOverWeekChangePercent}%` : `${weekly.weekOverWeekChangePercent}%`}
+                  </span>
+                )}
+                <span style={{ fontSize: 9, color: "var(--pink)", fontWeight: 700, opacity: 0.8 }}>OPEN ›</span>
+              </div>
             </div>
-            <strong style={{ fontFamily: "Anton", fontSize: 26, color: "var(--pink)", display: "block", letterSpacing: "0.02em" }}>
-              {salesAnalytics.formattedRevenue}
+            <strong style={{ fontFamily: "Anton", fontSize: 28, color: "var(--pink)", display: "block", letterSpacing: "0.02em" }}>
+              {weekly.formattedWeeklyRevenue}
             </strong>
-            <span style={{ fontSize: 11, color: "#ded8d0", marginTop: 4, display: "block", fontWeight: 500 }}>
-              {salesAnalytics.totalOrders} total store orders recorded
-            </span>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 11, color: "#ded8d0", fontWeight: 500 }}>
+                {weekly.weeklyOrdersCount} orders · {weekly.weeklyUnitsSold} units · AOV: {weekly.formattedWeeklyAOV}
+              </span>
+              <span style={{ fontSize: 9, color: "#888" }}>
+                Window: {weekly.currentWeekStart} – {weekly.currentWeekEnd} (vs {weekly.formattedPreviousWeekRevenue} prev week)
+              </span>
+            </div>
           </div>
 
-          {/* Card 2: Catalog Products */}
+          {/* Card 2: Accounting & Collected Revenue */}
           <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setActiveTab("accounting-stats");
+              setSelectedStatView("accounting");
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (setActiveTab("accounting-stats"), setSelectedStatView("accounting"))}
+            title="Click to view Accounting & Revenue breakdown page"
             style={{
-              background: "linear-gradient(145deg, rgba(26,26,26,0.7) 0%, rgba(14,14,14,0.9) 100%)",
-              border: "1px solid rgba(255,255,255,0.09)",
+              background: activeTab === "accounting-stats"
+                ? "linear-gradient(145deg, rgba(20,40,24,0.9) 0%, rgba(14,18,14,0.98) 100%)"
+                : "linear-gradient(145deg, rgba(22,26,22,0.7) 0%, rgba(14,14,14,0.95) 100%)",
+              border: activeTab === "accounting-stats" ? "1.5px solid #34d399" : "1px solid rgba(41,163,106,0.25)",
               padding: "18px 20px",
               borderRadius: 8,
               backdropFilter: "blur(12px)",
+              cursor: "pointer",
+              boxShadow: activeTab === "accounting-stats" ? "0 0 24px rgba(52,211,153,0.25)" : "none",
+              transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#34d399";
+              e.currentTarget.style.boxShadow = "0 0 20px rgba(41,163,106,0.18)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = activeTab === "accounting-stats" ? "#34d399" : "rgba(41,163,106,0.25)";
+              e.currentTarget.style.boxShadow = activeTab === "accounting-stats" ? "0 0 24px rgba(52,211,153,0.25)" : "none";
+              e.currentTarget.style.transform = "none";
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 10, color: "#aaa69d", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
-                LIVE CATALOG
+              <span style={{ fontSize: 10, color: "#34d399", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                <Wallet size={12} /> ACCOUNTING & CASH
               </span>
-              <PackageCheck size={16} color="#3b82f6" />
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <DollarSign size={15} color="#34d399" />
+                <span style={{ fontSize: 9, color: "#34d399", fontWeight: 700, opacity: 0.8 }}>OPEN ›</span>
+              </div>
             </div>
-            <strong style={{ fontFamily: "Anton", fontSize: 26, color: "#fff", display: "block", letterSpacing: "0.02em" }}>
-              {analytics.totalItems} Items
+            <strong style={{ fontFamily: "Anton", fontSize: 28, color: "#34d399", display: "block", letterSpacing: "0.02em" }}>
+              {accounting.formattedCollectedPayments}
             </strong>
-            <span style={{ fontSize: 11, color: "#ded8d0", marginTop: 4, display: "block", fontWeight: 500 }}>
-              {analytics.bestsellerCount} Bestsellers · {analytics.specialCount} Special Kits
-            </span>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 11, color: "#ded8d0", fontWeight: 500 }}>
+                Collected: {accounting.formattedCollectedPayments} · {accounting.formattedOutstandingBalances} Pending
+              </span>
+              <span style={{ fontSize: 9, color: "#888" }}>
+                Gross: {accounting.formattedGrossSales} · Net: {accounting.formattedNetSales}
+              </span>
+            </div>
           </div>
 
-          {/* Card 3: Stock Units */}
+          {/* Card 3: Fulfillment & Logistics */}
           <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setActiveTab("fulfillment-stats");
+              setSelectedStatView("fulfillment");
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (setActiveTab("fulfillment-stats"), setSelectedStatView("fulfillment"))}
+            title="Click to view Fulfillment & Logistics statistics"
             style={{
-              background: "linear-gradient(145deg, rgba(26,26,26,0.7) 0%, rgba(14,14,14,0.9) 100%)",
-              border: "1px solid rgba(255,255,255,0.09)",
+              background: activeTab === "fulfillment-stats"
+                ? "linear-gradient(145deg, rgba(24,32,56,0.9) 0%, rgba(14,16,24,0.98) 100%)"
+                : "linear-gradient(145deg, rgba(24,24,32,0.7) 0%, rgba(14,14,14,0.95) 100%)",
+              border: activeTab === "fulfillment-stats" ? "1.5px solid #60a5fa" : "1px solid rgba(59,130,246,0.25)",
               padding: "18px 20px",
               borderRadius: 8,
               backdropFilter: "blur(12px)",
+              cursor: "pointer",
+              boxShadow: activeTab === "fulfillment-stats" ? "0 0 24px rgba(96,165,250,0.25)" : "none",
+              transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#60a5fa";
+              e.currentTarget.style.boxShadow = "0 0 20px rgba(59,130,246,0.18)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = activeTab === "fulfillment-stats" ? "#60a5fa" : "rgba(59,130,246,0.25)";
+              e.currentTarget.style.boxShadow = activeTab === "fulfillment-stats" ? "0 0 24px rgba(96,165,250,0.25)" : "none";
+              e.currentTarget.style.transform = "none";
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 10, color: "#aaa69d", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
-                UNITS IN STOCK
+              <span style={{ fontSize: 10, color: "#60a5fa", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                <Truck size={12} /> FULFILLMENT PIPELINE
               </span>
-              <Layers size={16} color="#29a36a" />
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {dashboardMetrics.operational.pendingTerminalConfirmationCount > 0 && (
+                  <span
+                    style={{
+                      fontSize: 8,
+                      background: "rgba(231,166,25,0.18)",
+                      border: "1px solid rgba(231,166,25,0.4)",
+                      color: "#f59e0b",
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {dashboardMetrics.operational.pendingTerminalConfirmationCount} Pending
+                  </span>
+                )}
+                <span style={{ fontSize: 9, color: "#60a5fa", fontWeight: 700, opacity: 0.8 }}>OPEN ›</span>
+              </div>
             </div>
-            <strong style={{ fontFamily: "Anton", fontSize: 26, color: "#29a36a", display: "block", letterSpacing: "0.02em" }}>
+            <strong style={{ fontFamily: "Anton", fontSize: 28, color: "#fff", display: "block", letterSpacing: "0.02em" }}>
+              {dashboardMetrics.operational.handDeliveryCount} Direct · {dashboardMetrics.operational.guoPickupCount} GUO
+            </strong>
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 11, color: "#ded8d0", fontWeight: 500 }}>
+                Hand Delivery: Lagos, Ogun, Port Harcourt
+              </span>
+              <span style={{ fontSize: 9, color: "#888" }}>
+                Interstate: GUO Terminals & Custom WhatsApp Dispatch
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Live Inventory & Stock Alerts */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              setActiveTab("inventory");
+              setSelectedStatView("inventory");
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (setActiveTab("inventory"), setSelectedStatView("inventory"))}
+            title="Click to view Catalog Inventory and stock breakdown"
+            style={{
+              background: activeTab === "inventory"
+                ? "linear-gradient(145deg, rgba(36,36,36,0.95) 0%, rgba(18,18,18,0.98) 100%)"
+                : (analytics.lowStockCount > 0 ? "rgba(231,166,25,0.06)" : "linear-gradient(145deg, rgba(26,26,26,0.7) 0%, rgba(14,14,14,0.9) 100%)"),
+              border: activeTab === "inventory"
+                ? "1.5px solid var(--pink)"
+                : (analytics.lowStockCount > 0 ? "1px solid rgba(231,166,25,0.3)" : "1px solid rgba(255,255,255,0.09)"),
+              padding: "18px 20px",
+              borderRadius: 8,
+              backdropFilter: "blur(12px)",
+              cursor: "pointer",
+              boxShadow: activeTab === "inventory" ? "0 0 20px rgba(179,13,13,0.2)" : "none",
+              transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = analytics.lowStockCount > 0 ? "#f59e0b" : "var(--pink)";
+              e.currentTarget.style.boxShadow = analytics.lowStockCount > 0 ? "0 0 20px rgba(231,166,25,0.18)" : "0 0 20px rgba(179,13,13,0.15)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = activeTab === "inventory" ? "var(--pink)" : (analytics.lowStockCount > 0 ? "rgba(231,166,25,0.3)" : "rgba(255,255,255,0.09)");
+              e.currentTarget.style.boxShadow = activeTab === "inventory" ? "0 0 20px rgba(179,13,13,0.2)" : "none";
+              e.currentTarget.style.transform = "none";
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: "#aaa69d", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                <PackageCheck size={12} /> LIVE CATALOG & STOCK
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <AlertTriangle size={15} color={analytics.lowStockCount > 0 ? "#f59e0b" : "#888"} />
+                <span style={{ fontSize: 9, color: "#aaa", fontWeight: 700 }}>OPEN ›</span>
+              </div>
+            </div>
+            <strong style={{ fontFamily: "Anton", fontSize: 28, color: "#fff", display: "block", letterSpacing: "0.02em" }}>
               {analytics.totalUnits} Units
             </strong>
-            <span style={{ fontSize: 11, color: "#ded8d0", marginTop: 4, display: "block", fontWeight: 500 }}>
-              Est. inventory value: ₦{analytics.totalValue.toLocaleString("en-NG")}
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 11, color: analytics.lowStockCount > 0 ? "#f59e0b" : "#ded8d0", fontWeight: 500 }}>
+                {analytics.lowStockCount} low stock · {analytics.outOfStockCount} sold out
+              </span>
+              <span style={{ fontSize: 9, color: "#888" }}>
+                {analytics.totalItems} catalog pieces · Est. Value: ₦{analytics.totalValue.toLocaleString("en-NG")}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FOREFRONT WEEKLY PERFORMANCE BAR VISUALIZER (Mon–Sun) ──── */}
+        <section
+          style={{
+            background: "rgba(18, 18, 18, 0.75)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 28,
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#ded8d0" }}>
+                CALENDAR WEEK CADENCE
+              </span>
+              <span style={{ fontSize: 9, color: "#888" }}>
+                ({weekly.currentWeekStart} — {weekly.currentWeekEnd})
+              </span>
+            </div>
+            <span style={{ fontSize: 10, color: "#888" }}>
+              Live Store Sync · Auto-aggregating checkout transactions
             </span>
           </div>
 
-          {/* Card 4: Low Stock Alert */}
+          {/* 7-Day Columns (Mon -> Sun) */}
           <div
             style={{
-              background: analytics.lowStockCount > 0 ? "rgba(231,166,25,0.08)" : "linear-gradient(145deg, rgba(26,26,26,0.7) 0%, rgba(14,14,14,0.9) 100%)",
-              border: analytics.lowStockCount > 0 ? "1px solid rgba(231,166,25,0.35)" : "1px solid rgba(255,255,255,0.09)",
-              padding: "18px 20px",
-              borderRadius: 8,
-              backdropFilter: "blur(12px)",
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 8,
+              alignItems: "end",
+              minHeight: 110,
+              paddingTop: 10,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontSize: 10, color: "#aaa69d", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
-                STOCK ALERTS
-              </span>
-              <AlertTriangle size={16} color={analytics.lowStockCount > 0 ? "#e7a619" : "#888"} />
-            </div>
-            <strong style={{ fontFamily: "Anton", fontSize: 26, color: analytics.lowStockCount > 0 ? "#e7a619" : "#fff", display: "block", letterSpacing: "0.02em" }}>
-              {analytics.lowStockCount} Low
-            </strong>
-            <span style={{ fontSize: 11, color: "#ded8d0", marginTop: 4, display: "block", fontWeight: 500 }}>
-              {analytics.outOfStockCount} completely sold out variants
-            </span>
+            {(() => {
+              const maxRevenue = Math.max(...weekly.dailyBreakdown.map((d: DailySalesPoint) => d.revenue), 1);
+              const todayStr = new Date().toISOString().split("T")[0];
+
+              return weekly.dailyBreakdown.map((day: DailySalesPoint) => {
+                const isToday = day.isToday || day.dateStr === todayStr;
+                const heightPercent = day.revenue > 0 ? Math.max(16, Math.round((day.revenue / maxRevenue) * 60)) : 8;
+
+                return (
+                  <div
+                    key={day.dateStr}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      padding: "8px 4px",
+                      borderRadius: 6,
+                      background: isToday ? "rgba(179,13,13,0.08)" : "rgba(255,255,255,0.02)",
+                      border: isToday ? "1px solid rgba(179,13,13,0.4)" : "1px solid rgba(255,255,255,0.04)",
+                      position: "relative",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    {isToday && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: -7,
+                          background: "var(--pink)",
+                          color: "#fff",
+                          fontSize: 7,
+                          padding: "1px 5px",
+                          borderRadius: 3,
+                          fontWeight: 700,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        TODAY
+                      </span>
+                    )}
+
+                    {/* Revenue amount above bar */}
+                    <span
+                      style={{
+                        fontSize: 9,
+                        color: day.revenue > 0 ? "#fff" : "#555",
+                        fontWeight: day.revenue > 0 ? 700 : 500,
+                        marginBottom: 6,
+                        textAlign: "center",
+                      }}
+                    >
+                      {day.revenue > 0 ? `₦${Math.round(day.revenue / 1000)}k` : "—"}
+                    </span>
+
+                    {/* Visual Bar */}
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: 32,
+                        height: `${heightPercent}px`,
+                        background: day.revenue > 0 ? "linear-gradient(180deg, var(--pink) 0%, rgba(179,13,13,0.5) 100%)" : "rgba(255,255,255,0.05)",
+                        borderRadius: 3,
+                        boxShadow: day.revenue > 0 ? "0 0 10px rgba(179,13,13,0.3)" : "none",
+                        marginBottom: 8,
+                        transition: "height 0.3s ease",
+                      }}
+                    />
+
+                    {/* Day & Date Labels */}
+                    <strong style={{ fontSize: 10, color: isToday ? "var(--pink)" : "#ded8d0", letterSpacing: "0.04em" }}>
+                      {day.dayName}
+                    </strong>
+                    <span style={{ fontSize: 8, color: "#666", marginTop: 1 }}>
+                      {day.dateStr.slice(5).replace("-", "/")}
+                    </span>
+                    <span style={{ fontSize: 8, color: day.ordersCount > 0 ? "#aaa" : "#444", marginTop: 2 }}>
+                      {day.ordersCount} {day.ordersCount === 1 ? "ord" : "ords"}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </section>
 
@@ -928,17 +1158,26 @@ export default function Admin() {
               { id: "inventory", label: "Catalog Inventory", count: catalog.length, icon: <LayoutGrid size={14} /> },
               { id: "add", label: "Add Product", icon: <Plus size={14} /> },
               { id: "sales", label: "Orders & Sales", count: orders.length, icon: <ShoppingBag size={14} /> },
+              { id: "weekly-stats", label: "Weekly Sales Stats", count: weekly.weeklyOrdersCount, icon: <Calendar size={14} /> },
+              { id: "accounting-stats", label: "Accounting & Cash", icon: <Wallet size={14} /> },
+              { id: "fulfillment-stats", label: "Fulfillment Pipeline", count: dashboardMetrics.operational.pendingTerminalConfirmationCount > 0 ? `${dashboardMetrics.operational.pendingTerminalConfirmationCount} pending` : undefined, icon: <Truck size={14} /> },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    if (tab.id === "weekly-stats") setSelectedStatView("weekly");
+                    else if (tab.id === "accounting-stats") setSelectedStatView("accounting");
+                    else if (tab.id === "fulfillment-stats") setSelectedStatView("fulfillment");
+                    else setSelectedStatView(null);
+                  }}
                   style={{
                     position: "relative",
-                    padding: "7px 16px",
+                    padding: "7px 14px",
                     fontSize: 10,
-                    letterSpacing: "0.12em",
+                    letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     fontWeight: 700,
                     borderRadius: 4,
@@ -950,6 +1189,7 @@ export default function Admin() {
                     alignItems: "center",
                     gap: 6,
                     transition: "all 0.2s ease",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {tab.icon}
@@ -1939,64 +2179,93 @@ export default function Admin() {
         {/* ── TAB 3: SALES & ORDERS ─────────────────────────────────── */}
         {activeTab === "sales" && (
           <div>
-            {/* Sales Subheader & Status Pipeline */}
+            {/* Sales Subheader & Status + Fulfillment Filters */}
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                flexDirection: "column",
+                gap: 12,
                 background: "rgba(18,18,18,0.7)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                padding: "12px 16px",
+                padding: "14px 16px",
                 borderRadius: 8,
                 marginBottom: 20,
-                flexWrap: "wrap",
-                gap: 12,
               }}
             >
-              {/* Order Search */}
-              <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-                <Search size={14} style={{ position: "absolute", left: 12, top: 11, color: "#666" }} />
-                <input
-                  value={orderSearchQuery}
-                  onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  placeholder="Search by Order ID, customer name, or kit..."
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px 8px 34px",
-                    background: "#141414",
-                    border: "1px solid #282828",
-                    color: "#fff",
-                    fontSize: 12,
-                    borderRadius: 4,
-                    outline: "none",
-                  }}
-                />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                {/* Order Search */}
+                <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+                  <Search size={14} style={{ position: "absolute", left: 12, top: 11, color: "#666" }} />
+                  <input
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    placeholder="Search by Order ID, customer, terminal, state..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px 8px 34px",
+                      background: "#141414",
+                      border: "1px solid #282828",
+                      color: "#fff",
+                      fontSize: 12,
+                      borderRadius: 4,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Status Filters */}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  {[
+                    { id: "all", label: `All Status (${orders.length})` },
+                    { id: "Processing", label: `Processing (${dashboardMetrics.operational.processingCount})`, color: "#e7a619" },
+                    { id: "In Transit", label: `In Transit (${dashboardMetrics.operational.inTransitCount})`, color: "#3b82f6" },
+                    { id: "Delivered", label: `Delivered (${dashboardMetrics.operational.deliveredCount})`, color: "#29a36a" },
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => setOrderStatusFilter(st.id as any)}
+                      style={{
+                        padding: "6px 10px",
+                        fontSize: 10,
+                        borderRadius: 4,
+                        background: orderStatusFilter === st.id ? "rgba(179, 13, 13,0.15)" : "#141414",
+                        border: orderStatusFilter === st.id ? "1px solid var(--pink)" : "1px solid #242424",
+                        color: orderStatusFilter === st.id ? "var(--pink)" : st.color || "#888",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Status Filters */}
-              <div style={{ display: "flex", gap: 4 }}>
+              {/* Fulfillment Filters Row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 9, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+                  Fulfillment:
+                </span>
                 {[
-                  { id: "all", label: `All (${orders.length})` },
-                  { id: "Processing", label: `Processing (${salesAnalytics.processingCount})`, color: "#e7a619" },
-                  { id: "In Transit", label: `In Transit (${salesAnalytics.inTransitCount})`, color: "#3b82f6" },
-                  { id: "Delivered", label: `Delivered (${salesAnalytics.deliveredCount})`, color: "#29a36a" },
-                ].map((st) => (
+                  { id: "all", label: "All Methods" },
+                  { id: "hand_delivery", label: `Hand Delivery (${dashboardMetrics.operational.handDeliveryCount})` },
+                  { id: "guo_pickup", label: `GUO Terminal Pickup (${dashboardMetrics.operational.guoPickupCount})` },
+                ].map((f) => (
                   <button
-                    key={st.id}
-                    onClick={() => setOrderStatusFilter(st.id as any)}
+                    key={f.id}
+                    onClick={() => setOrderFulfillmentFilter(f.id as any)}
                     style={{
-                      padding: "6px 10px",
-                      fontSize: 10,
+                      padding: "4px 9px",
+                      fontSize: 9,
                       borderRadius: 4,
-                      background: orderStatusFilter === st.id ? "rgba(179, 13, 13,0.15)" : "#141414",
-                      border: orderStatusFilter === st.id ? "1px solid var(--pink)" : "1px solid #242424",
-                      color: orderStatusFilter === st.id ? "var(--pink)" : st.color || "#888",
-                      fontWeight: 600,
+                      background: orderFulfillmentFilter === f.id ? "rgba(255,255,255,0.12)" : "transparent",
+                      border: orderFulfillmentFilter === f.id ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
+                      color: orderFulfillmentFilter === f.id ? "#fff" : "#777",
                       cursor: "pointer",
+                      fontWeight: 600,
                     }}
                   >
-                    {st.label}
+                    {f.label}
                   </button>
                 ))}
               </div>
@@ -2046,15 +2315,80 @@ export default function Admin() {
                       </div>
 
                       {/* Customer */}
-                      <div style={{ flex: 1, minWidth: 140 }}>
+                      <div style={{ flex: 1, minWidth: 150 }}>
                         <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", display: "block" }}>
-                          CUSTOMER
+                          CUSTOMER & CONTACT
                         </span>
-                        <strong style={{ fontSize: 12, color: "#fff" }}>{order.customerName}</strong>
+                        <strong style={{ fontSize: 12, color: "#fff", display: "block" }}>{order.customerName}</strong>
+                        <span style={{ fontSize: 10, color: "#888" }}>{order.customerPhone || order.customerEmail || "—"}</span>
+                      </div>
+
+                      {/* Fulfillment Method Badge */}
+                      <div style={{ minWidth: 160 }}>
+                        <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 3 }}>
+                          FULFILLMENT
+                        </span>
+                        {order.fulfillmentType === "guo_pickup" ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                fontSize: 9,
+                                padding: "2px 7px",
+                                borderRadius: 4,
+                                background: "rgba(168, 85, 247, 0.14)",
+                                border: "1px solid rgba(168, 85, 247, 0.35)",
+                                color: "#c084fc",
+                                fontWeight: 700,
+                                width: "fit-content",
+                              }}
+                            >
+                              <Building2 size={11} /> GUO PICKUP · {order.terminalDetails?.state || order.fulfillmentLocation || "Interstate"}
+                            </span>
+                            {order.terminalDetails?.isPendingConfirmation ? (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 3,
+                                  fontSize: 8,
+                                  color: "#f59e0b",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                <AlertTriangle size={10} /> Pending Branch Confirmation
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 9, color: "#aaa" }}>
+                                {order.terminalDetails?.terminalName || "Branch Assigned"}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontSize: 9,
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                              background: "rgba(41, 163, 106, 0.14)",
+                              border: "1px solid rgba(41, 163, 106, 0.35)",
+                              color: "#34d399",
+                              fontWeight: 700,
+                              width: "fit-content",
+                            }}
+                          >
+                            <Truck size={11} /> HAND DELIVERY · {order.fulfillmentLocation || "Doorstep"}
+                          </span>
+                        )}
                       </div>
 
                       {/* Items Preview */}
-                      <div style={{ minWidth: 100 }}>
+                      <div style={{ minWidth: 80 }}>
                         <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", display: "block" }}>
                           ITEMS
                         </span>
@@ -2064,14 +2398,14 @@ export default function Admin() {
                       </div>
 
                       {/* Total */}
-                      <div style={{ minWidth: 110, textAlign: "right" }}>
+                      <div style={{ minWidth: 100, textAlign: "right" }}>
                         <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", display: "block" }}>
                           TOTAL
                         </span>
                         <strong style={{ fontFamily: "Anton", fontSize: 16, color: "#fff" }}>{order.formattedTotal}</strong>
                       </div>
 
-                      {/* Custom Status Dropdown (Zero White Space / Dark Theme) */}
+                      {/* Custom Status Dropdown */}
                       <div>
                         <StatusDropdown
                           currentStatus={order.status}
@@ -2097,6 +2431,61 @@ export default function Admin() {
                     {/* Order Details Accordion */}
                     {isExpanded && (
                       <div style={{ borderTop: "1px solid #222", padding: "16px 20px", background: "#141414" }}>
+                        {/* GUO Terminal Action Box */}
+                        {order.fulfillmentType === "guo_pickup" && (
+                          <div
+                            style={{
+                              background: "rgba(168, 85, 247, 0.08)",
+                              border: "1px solid rgba(168, 85, 247, 0.25)",
+                              borderRadius: 6,
+                              padding: "10px 14px",
+                              marginBottom: 14,
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: 8,
+                            }}
+                          >
+                            <div>
+                              <strong style={{ fontSize: 11, color: "#c084fc", display: "block" }}>
+                                GUO Logistics Dispatch ({order.terminalDetails?.state || "State"})
+                              </strong>
+                              <span style={{ fontSize: 10, color: "#ded8d0" }}>
+                                Terminal: {order.terminalDetails?.terminalName || "Branch not confirmed"}
+                                {order.terminalDetails?.city ? ` · City: ${order.terminalDetails.city}` : ""}
+                              </span>
+                            </div>
+
+                            {order.terminalDetails?.isPendingConfirmation && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const name = prompt(
+                                    `Enter confirmed GUO Terminal branch for ${order.terminalDetails?.state}:`,
+                                    `${order.terminalDetails?.city || order.terminalDetails?.state} Main GUO Terminal`
+                                  );
+                                  if (name && name.trim()) {
+                                    handleConfirmTerminal(order.orderId, name.trim());
+                                  }
+                                }}
+                                style={{
+                                  background: "#9333ea",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  padding: "5px 12px",
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Confirm Terminal Branch
+                              </button>
+                            )}
+                          </div>
+                        )}
+
                         <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.14em", textTransform: "uppercase", display: "block", marginBottom: 10 }}>
                           ORDER LINE ITEMS
                         </span>
@@ -2136,7 +2525,7 @@ export default function Admin() {
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, borderTop: "1px solid #222", paddingTop: 12 }}>
                           <div>
                             <span style={{ fontSize: 8, color: "#888", letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
-                              DELIVERY ADDRESS
+                              DELIVERY ADDRESS & INSTRUCTIONS
                             </span>
                             <p style={{ margin: 0, fontSize: 11, color: "#ded8d0" }}>{order.deliveryAddress}</p>
                           </div>
@@ -2148,7 +2537,7 @@ export default function Admin() {
                               Subtotal: ₦{order.subtotal.toLocaleString("en-NG")} · Delivery: ₦{order.deliveryFee.toLocaleString("en-NG")}
                             </span>
                             <strong style={{ fontSize: 14, color: "var(--pink)", display: "block", marginTop: 2 }}>
-                              Total Paid: {order.formattedTotal}
+                              Total: {order.formattedTotal}
                             </strong>
                           </div>
                         </div>
@@ -2157,6 +2546,466 @@ export default function Admin() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: DEDICATED WEEKLY SALES STATS VIEW ─────────────── */}
+        {activeTab === "weekly-stats" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Header banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(32,18,18,0.9) 0%, rgba(14,14,14,0.98) 100%)",
+                border: "1px solid rgba(179,13,13,0.35)",
+                borderRadius: 8,
+                padding: "20px 24px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Calendar size={18} color="var(--pink)" />
+                  <span style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--pink)", fontWeight: 700 }}>
+                    WEEKLY SALES PERFORMANCE & ANALYTICS
+                  </span>
+                </div>
+                <h2 style={{ fontFamily: "Anton", fontSize: 28, margin: 0, color: "#fff", letterSpacing: "0.04em" }}>
+                  {weekly.formattedWeeklyRevenue}
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#888" }}>
+                  Calendar week window: <strong style={{ color: "#ded8d0" }}>{weekly.currentWeekStart}</strong> to <strong style={{ color: "#ded8d0" }}>{weekly.currentWeekEnd}</strong> (vs {weekly.formattedPreviousWeekRevenue} previous week)
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sales")}
+                  className="ghost-button"
+                  style={{ fontSize: 11, padding: "8px 14px" }}
+                >
+                  <ShoppingBag size={14} /> View All Orders
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("inventory")}
+                  className="ghost-button"
+                  style={{ fontSize: 11, padding: "8px 14px" }}
+                >
+                  <LayoutGrid size={14} /> Back to Catalog
+                </button>
+              </div>
+            </div>
+
+            {/* Key KPI breakdown grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  TOTAL ORDERS THIS WEEK
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#fff" }}>
+                  {weekly.weeklyOrdersCount}
+                </strong>
+                <span style={{ fontSize: 10, color: "#34d399", display: "block", marginTop: 4 }}>
+                  {weekly.weeklyPaidCount} paid orders
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  UNITS SOLD
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#fff" }}>
+                  {weekly.weeklyUnitsSold}
+                </strong>
+                <span style={{ fontSize: 10, color: "#ded8d0", display: "block", marginTop: 4 }}>
+                  Jerseys & activewear pieces
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  AVERAGE ORDER VALUE (AOV)
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "var(--pink)" }}>
+                  {weekly.formattedWeeklyAOV}
+                </strong>
+                <span style={{ fontSize: 10, color: "#ded8d0", display: "block", marginTop: 4 }}>
+                  Per completed transaction
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  WEEK-OVER-WEEK GROWTH
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: (weekly.weekOverWeekChangePercent ?? 0) >= 0 ? "#34d399" : "#f87171" }}>
+                  {weekly.weekOverWeekChangePercent != null ? `${weekly.weekOverWeekChangePercent > 0 ? "+" : ""}${weekly.weekOverWeekChangePercent}%` : "N/A"}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Vs previous calendar week
+                </span>
+              </div>
+            </div>
+
+            {/* Daily Breakdown Table */}
+            <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 8, padding: "20px 22px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontFamily: "Anton", fontSize: 16, margin: 0, color: "#fff", letterSpacing: "0.06em" }}>
+                  DAILY BREAKDOWN (MON — SUN)
+                </h3>
+                <span style={{ fontSize: 10, color: "#888" }}>
+                  Auto-syncing real checkout logs
+                </span>
+              </div>
+
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #282828", color: "#888", textAlign: "left", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      <th style={{ padding: "10px 14px" }}>DAY</th>
+                      <th style={{ padding: "10px 14px" }}>DATE</th>
+                      <th style={{ padding: "10px 14px" }}>ORDERS</th>
+                      <th style={{ padding: "10px 14px" }}>UNITS</th>
+                      <th style={{ padding: "10px 14px" }}>REVENUE</th>
+                      <th style={{ padding: "10px 14px" }}>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weekly.dailyBreakdown.map((day: DailySalesPoint) => (
+                      <tr
+                        key={day.dateStr}
+                        style={{
+                          borderBottom: "1px solid #202020",
+                          background: day.isToday ? "rgba(179,13,13,0.06)" : "transparent",
+                        }}
+                      >
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: day.isToday ? "var(--pink)" : "#fff" }}>
+                          {day.dayName} {day.isToday && <span style={{ fontSize: 8, background: "var(--pink)", color: "#fff", padding: "1px 5px", borderRadius: 3, marginLeft: 6 }}>TODAY</span>}
+                        </td>
+                        <td style={{ padding: "12px 14px", color: "#888" }}>{day.dateStr}</td>
+                        <td style={{ padding: "12px 14px", color: "#ded8d0" }}>{day.ordersCount} orders</td>
+                        <td style={{ padding: "12px 14px", color: "#ded8d0" }}>{day.unitsCount} units</td>
+                        <td style={{ padding: "12px 14px", color: day.revenue > 0 ? "var(--pink)" : "#666", fontWeight: 700 }}>
+                          ₦{day.revenue.toLocaleString("en-NG")}
+                        </td>
+                        <td style={{ padding: "12px 14px" }}>
+                          <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 3, background: day.revenue > 0 ? "rgba(41,163,106,0.12)" : "rgba(255,255,255,0.04)", color: day.revenue > 0 ? "#34d399" : "#666" }}>
+                            {day.revenue > 0 ? "Active Sales" : "No Transactions"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Top selling products in this window */}
+            <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 8, padding: "20px 22px" }}>
+              <h3 style={{ fontFamily: "Anton", fontSize: 16, margin: "0 0 14px", color: "#fff", letterSpacing: "0.06em" }}>
+                TOP PERFORMING PRODUCTS
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+                {dashboardMetrics.operational.topSellingProducts.map((p) => (
+                  <div key={p.productSlug} style={{ display: "flex", gap: 12, alignItems: "center", background: "#181818", padding: 12, borderRadius: 6, border: "1px solid #282828" }}>
+                    {p.image && <img src={p.image} alt={p.productName} style={{ width: 44, height: 50, objectFit: "cover", borderRadius: 4 }} />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ fontSize: 12, color: "#fff", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {p.productName}
+                      </strong>
+                      <span style={{ fontSize: 10, color: "#888" }}>{p.category}</span>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                        <span style={{ fontSize: 10, color: "#34d399" }}>{p.unitsSold} units</span>
+                        <strong style={{ fontSize: 11, color: "var(--pink)" }}>₦{p.revenue.toLocaleString("en-NG")}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 5: DEDICATED ACCOUNTING & CASH STATS VIEW ─────────── */}
+        {activeTab === "accounting-stats" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Header banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(20,40,24,0.9) 0%, rgba(14,18,14,0.98) 100%)",
+                border: "1px solid rgba(41,163,106,0.3)",
+                borderRadius: 8,
+                padding: "20px 24px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Wallet size={18} color="#34d399" />
+                  <span style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#34d399", fontWeight: 700 }}>
+                    ACCOUNTING & REVENUE CONSOLE
+                  </span>
+                </div>
+                <h2 style={{ fontFamily: "Anton", fontSize: 28, margin: 0, color: "#34d399", letterSpacing: "0.04em" }}>
+                  {accounting.formattedCollectedPayments} Collected
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#888" }}>
+                  Gross Revenue: <strong style={{ color: "#ded8d0" }}>{accounting.formattedGrossSales}</strong> · Net Revenue: <strong style={{ color: "#34d399" }}>{accounting.formattedNetSales}</strong>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sales")}
+                  className="ghost-button"
+                  style={{ fontSize: 11, padding: "8px 14px" }}
+                >
+                  <ShoppingBag size={14} /> Review Transactions
+                </button>
+              </div>
+            </div>
+
+            {/* Financial breakdown cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12 }}>
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  GROSS STORE SALES
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#fff" }}>
+                  {accounting.formattedGrossSales}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Before deductions & refunds
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  DELIVERY CHARGES COLLECTED
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#60a5fa" }}>
+                  {accounting.formattedDeliveryCharges}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Logistics hand delivery fees
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  DISCOUNTS APPLIED
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#f59e0b" }}>
+                  {accounting.formattedDiscounts}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Coupons & promo savings
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  PENDING BALANCES
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: accounting.outstandingBalances > 0 ? "#f87171" : "#34d399" }}>
+                  {accounting.formattedOutstandingBalances}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  {accounting.pendingPaymentOrdersCount} unpaid / pending orders
+                </span>
+              </div>
+            </div>
+
+            {/* Payment status distribution */}
+            <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 8, padding: "20px 22px" }}>
+              <h3 style={{ fontFamily: "Anton", fontSize: 16, margin: "0 0 14px", color: "#fff", letterSpacing: "0.06em" }}>
+                PAYMENT STATUS BREAKDOWN
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                <div style={{ padding: 14, background: "rgba(41,163,106,0.08)", border: "1px solid rgba(41,163,106,0.25)", borderRadius: 6 }}>
+                  <span style={{ fontSize: 10, color: "#34d399", fontWeight: 700, textTransform: "uppercase", display: "block" }}>
+                    PAID TRANSACTIONS
+                  </span>
+                  <strong style={{ fontSize: 22, color: "#fff", display: "block", marginTop: 4 }}>
+                    {accounting.paidOrdersCount} Orders
+                  </strong>
+                  <span style={{ fontSize: 11, color: "#34d399", marginTop: 2, display: "block" }}>
+                    {accounting.formattedCollectedPayments} settled
+                  </span>
+                </div>
+
+                <div style={{ padding: 14, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 6 }}>
+                  <span style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, textTransform: "uppercase", display: "block" }}>
+                    PENDING PAYMENT
+                  </span>
+                  <strong style={{ fontSize: 22, color: "#fff", display: "block", marginTop: 4 }}>
+                    {accounting.pendingPaymentOrdersCount} Orders
+                  </strong>
+                  <span style={{ fontSize: 11, color: "#f59e0b", marginTop: 2, display: "block" }}>
+                    {accounting.formattedOutstandingBalances} awaiting deposit
+                  </span>
+                </div>
+
+                <div style={{ padding: 14, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 6 }}>
+                  <span style={{ fontSize: 10, color: "#f87171", fontWeight: 700, textTransform: "uppercase", display: "block" }}>
+                    REFUNDS RECORDED
+                  </span>
+                  <strong style={{ fontSize: 22, color: "#fff", display: "block", marginTop: 4 }}>
+                    {accounting.refundedOrdersCount} Orders
+                  </strong>
+                  <span style={{ fontSize: 11, color: "#f87171", marginTop: 2, display: "block" }}>
+                    {accounting.formattedRefunds} refunded
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 6: DEDICATED FULFILLMENT STATS VIEW ──────────────── */}
+        {activeTab === "fulfillment-stats" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Header banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(24,32,56,0.9) 0%, rgba(14,16,24,0.98) 100%)",
+                border: "1px solid rgba(59,130,246,0.3)",
+                borderRadius: 8,
+                padding: "20px 24px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Truck size={18} color="#60a5fa" />
+                  <span style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#60a5fa", fontWeight: 700 }}>
+                    LOGISTICS & FULFILLMENT PIPELINE
+                  </span>
+                </div>
+                <h2 style={{ fontFamily: "Anton", fontSize: 28, margin: 0, color: "#fff", letterSpacing: "0.04em" }}>
+                  {dashboardMetrics.operational.totalOrders} Total Orders Handled
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#888" }}>
+                  Direct Hand Delivery: <strong style={{ color: "#fff" }}>{dashboardMetrics.operational.handDeliveryCount}</strong> · GUO Terminal Pickups: <strong style={{ color: "#60a5fa" }}>{dashboardMetrics.operational.guoPickupCount}</strong>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("sales");
+                    setOrderFulfillmentFilter("guo_pickup");
+                  }}
+                  className="ghost-button"
+                  style={{ fontSize: 11, padding: "8px 14px" }}
+                >
+                  <MapPin size={14} /> Filter GUO Orders
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("sales");
+                    setOrderFulfillmentFilter("hand_delivery");
+                  }}
+                  className="ghost-button"
+                  style={{ fontSize: 11, padding: "8px 14px" }}
+                >
+                  <Truck size={14} /> Filter Hand Deliveries
+                </button>
+              </div>
+            </div>
+
+            {/* Pipeline status distribution */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#e7a619", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  PROCESSING DISPATCH
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#e7a619" }}>
+                  {dashboardMetrics.operational.processingCount}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Being sorted & packed
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#3b82f6", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  IN TRANSIT / ON ROAD
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#3b82f6" }}>
+                  {dashboardMetrics.operational.inTransitCount}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Out with dispatch riders / buses
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#29a36a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  DELIVERED & COLLECTED
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#29a36a" }}>
+                  {dashboardMetrics.operational.deliveredCount}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Successfully received by customer
+                </span>
+              </div>
+
+              <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 6, padding: "16px 18px" }}>
+                <span style={{ fontSize: 9, color: "#f59e0b", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                  GUO TERMINAL CONFIRMATIONS
+                </span>
+                <strong style={{ fontFamily: "Anton", fontSize: 24, color: "#f59e0b" }}>
+                  {dashboardMetrics.operational.pendingTerminalConfirmationCount}
+                </strong>
+                <span style={{ fontSize: 10, color: "#888", display: "block", marginTop: 4 }}>
+                  Branch confirmations pending
+                </span>
+              </div>
+            </div>
+
+            {/* Service Area Policies Details */}
+            <div style={{ background: "#141414", border: "1px solid #282828", borderRadius: 8, padding: "20px 22px" }}>
+              <h3 style={{ fontFamily: "Anton", fontSize: 16, margin: "0 0 14px", color: "#fff", letterSpacing: "0.06em" }}>
+                TERRITORY & DISPATCH RULES
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+                <div style={{ padding: 14, background: "#181818", border: "1px solid #282828", borderRadius: 6 }}>
+                  <strong style={{ fontSize: 12, color: "var(--pink)", display: "block", marginBottom: 4 }}>
+                    DIRECT DOORSTEP HAND DELIVERY
+                  </strong>
+                  <p style={{ fontSize: 11, color: "#aaa", margin: 0, lineHeight: 1.5 }}>
+                    Available exclusively in <strong>Lagos State</strong>, <strong>Ogun State</strong>, and metropolitan <strong>Port Harcourt</strong> (Rivers State). Dispatched with fast tracking via regional motorcycle and vehicle couriers.
+                  </p>
+                </div>
+
+                <div style={{ padding: 14, background: "#181818", border: "1px solid #282828", borderRadius: 6 }}>
+                  <strong style={{ fontSize: 12, color: "#60a5fa", display: "block", marginBottom: 4 }}>
+                    GUO TRANSPORT INTERSTATE TERMINALS
+                  </strong>
+                  <p style={{ fontSize: 11, color: "#aaa", margin: 0, lineHeight: 1.5 }}>
+                    Customers outside the hand-delivery perimeter collect their orders directly from the verified <strong>GUO Transport Terminal</strong> in their state. The closest branch is confirmed prior to dispatch.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
