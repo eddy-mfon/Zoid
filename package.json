@@ -95,6 +95,7 @@
       "wouter@3.7.1": "patches/wouter@3.7.1.patch"
     },
     "overrides": {
+      "dompurify": "3.4.17",
       "tailwindcss>nanoid": "3.3.12"
     }
   }
