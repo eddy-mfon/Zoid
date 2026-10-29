@@ -24,7 +24,7 @@ export default function Footer() {
           </span>
         </div>
         <Link className="footer-cta" href="/collection">
-          Enter the edit <ArrowDownRight size={16} />
+          Shop now <ArrowDownRight size={16} />
         </Link>
       </div>
       <div className="footer-bottom">

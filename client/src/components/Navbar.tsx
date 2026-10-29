@@ -292,7 +292,16 @@ export default function Navbar({
                       href={tab.href}
                       className={`mobile-bottom-tab ${tab.match ? "active" : ""}`}
                       aria-label={tab.label}
-                      style={{ position: "relative", zIndex: 1, touchAction: "manipulation" }}
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        touchAction: "manipulation",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                      }}
                       onClick={(e) => {
                         if (tab.match && location === tab.href) {
                           e.preventDefault();
@@ -300,9 +309,21 @@ export default function Navbar({
                         }
                       }}
                     >
-                      <span className="mobile-tab-icon-wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, pointerEvents: "none" }}>
-                        <Icon size={17} color={tab.iconColor} />
-                        <span>{tab.label}</span>
+                      <span
+                        className="mobile-tab-icon-wrap"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          textAlign: "center",
+                          gap: 3,
+                          width: "100%",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <Icon size={17} color={tab.iconColor} style={{ display: "block", margin: "0 auto" }} />
+                        <span style={{ display: "block", textAlign: "center", width: "100%" }}>{tab.label}</span>
                       </span>
                     </Link>
                   );

@@ -1165,12 +1165,13 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
   .mobile-bottom-tab {
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 8px 4px !important;
+    padding: 6px 4px !important;
     border-radius: 14px !important;
     color: #8e8a85 !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em !important;
     text-decoration: none !important;
@@ -1183,14 +1184,31 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
     user-select: none !important;
     -webkit-user-select: none !important;
     transition: color 0.15s ease !important;
+    text-align: center !important;
   }
 
   .mobile-tab-icon-wrap {
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 5px !important;
+    gap: 3px !important;
     pointer-events: none !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .mobile-tab-icon-wrap svg {
+    margin: 0 auto !important;
+    display: block !important;
+  }
+
+  .mobile-tab-icon-wrap > span {
+    display: block !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    font-size: 10px !important;
+    margin: 0 auto !important;
   }
 
   .mobile-bottom-tab-bg {
@@ -1275,26 +1293,29 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
   }
 }
 
-/* Icon-Only Mode on <= 480px (small phones) */
+/* Icon + Text centered column on small phones */
 @media (max-width: 480px) {
-  /* Hide text label — show icon only */
   .mobile-bottom-tab .mobile-tab-icon-wrap > span:last-child {
-    display: none !important;
+    display: block !important;
+    font-size: 9.5px !important;
+    text-align: center !important;
   }
 
   .mobile-bottom-tab {
-    height: 46px !important;
-    padding: 8px 0 !important;
+    height: auto !important;
+    min-height: 48px !important;
+    padding: 6px 2px !important;
   }
 }
 
 /* Icon + Text Label Mode when screen width > 480px */
 @media (min-width: 481px) and (max-width: 800px) {
   .mobile-bottom-tab span {
-    display: inline-block !important;
-    font-size: 11px !important;
+    display: block !important;
+    font-size: 10.5px !important;
     font-weight: 600 !important;
     color: inherit !important;
+    text-align: center !important;
   }
 }
 
@@ -1474,4 +1495,643 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 
 .add-to-cart-action-btn:active {
   transform: scale(0.98);
+}
+
+
+/* ==========================================================================
+   ADIDAS-INSPIRED PRODUCT DETAIL PAGE UI
+   ========================================================================== */
+
+.adi-detail-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.5vw, 40px);
+}
+
+.adi-breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  font-size: 11px;
+  color: #888;
+}
+
+.adi-breadcrumb-bar a {
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+.adi-breadcrumb-bar a:hover {
+  color: var(--pink);
+}
+
+.adi-crumb-sep {
+  color: #555;
+  margin: 0 4px;
+}
+
+/* 2-Column Adidas Layout */
+.adi-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.85fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+
+/* Left Column: Multi-image / Media Grid */
+.adi-media-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adi-media-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.adi-media-tile {
+  position: relative;
+  background: #141414;
+  aspect-ratio: 1 / 1.18;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  border: 1px solid #1f1f1f;
+}
+
+.adi-media-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.adi-media-tile:hover img {
+  transform: scale(1.03);
+}
+
+.adi-badge-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Right Sticky Info Panel */
+.adi-info-column {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+.adi-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #999;
+}
+
+.adi-tag-badge {
+  display: inline-block;
+  background: #202020;
+  color: #ccc;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  width: fit-content;
+  border: 1px solid #2e2e2e;
+}
+
+.adi-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #ddd;
+}
+
+.adi-product-title {
+  font-family: Anton, Impact, sans-serif !important;
+  font-size: clamp(26px, 2.8vw, 40px) !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: #fff;
+}
+
+.adi-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.adi-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.adi-orig-price {
+  font-size: 16px;
+  text-decoration: line-through;
+  color: #777;
+}
+
+.adi-discount-tag {
+  background: var(--pink);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.adi-promo-notice {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* Jersey Type Cards (Home / Authentic) */
+.adi-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: capitalize;
+  margin-bottom: 8px;
+}
+
+.adi-edition-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adi-edition-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #141414;
+  border: 1px solid #282828;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.adi-edition-card.selected {
+  border: 2px solid #fff;
+  background: #1a1a1a;
+}
+
+.adi-edition-info strong {
+  display: block;
+  font-size: 13px;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.adi-edition-info small {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  line-height: 1.3;
+}
+
+.adi-edition-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 2px;
+  background: #202020;
+}
+
+/* Personalization / Customization Box */
+.adi-personalization-box {
+  background: #141414;
+  border: 1px solid #282828;
+  padding: 16px;
+  border-radius: 2px;
+}
+
+.adi-pers-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.adi-pers-desc {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.adi-pers-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.adi-radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.adi-radio-option input[type="radio"] {
+  accent-color: var(--pink);
+}
+
+.adi-player-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  color: #fff;
+  font-size: 13px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.adi-custom-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adi-custom-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  color: #fff;
+  font-size: 13px;
+  border-radius: 2px;
+  outline: none;
+}
+
+.adi-custom-input:focus {
+  border-color: #777;
+}
+
+/* Size Grid (Adidas Box Matrix) */
+.adi-sizes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.adi-size-guide-btn {
+  background: none;
+  border: none;
+  color: #ddd;
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.adi-sizes-matrix {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.adi-size-box {
+  background: #161616;
+  border: 1px solid #282828;
+  color: #eee;
+  padding: 14px 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.adi-size-box:hover:not(:disabled) {
+  border-color: #666;
+}
+
+.adi-size-box.selected {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.adi-size-box:disabled {
+  background: #111;
+  color: #444;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  border-color: #1e1e1e;
+}
+
+.adi-fit-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #282828;
+  background: #131313;
+  font-size: 12px;
+  color: #bbb;
+  border-radius: 2px;
+}
+
+.adi-fit-recommendation strong {
+  color: #fff;
+}
+
+/* Actions: Add to Bag + Wishlist */
+.adi-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+.adi-btn-add {
+  flex: 1;
+  height: 52px;
+  background: #fff;
+  color: #000;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.adi-btn-add:hover:not(:disabled) {
+  background: #e5e5e5;
+}
+
+.adi-btn-add.added {
+  background: var(--pink);
+  color: #fff;
+}
+
+.adi-btn-add:disabled {
+  background: #252525;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.adi-btn-wishlist {
+  width: 52px;
+  height: 52px;
+  background: #161616;
+  border: 1px solid #2e2e2e;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.adi-btn-wishlist:hover {
+  border-color: #666;
+  background: #202020;
+}
+
+/* Trust Perks (Delivery, adiClub, returns) */
+.adi-perks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+  padding: 16px 0;
+}
+
+.adi-perk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.adi-perk-item strong {
+  color: #fff;
+  display: block;
+}
+
+.adi-perk-item a,
+.adi-perk-item button {
+  color: #fff;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Feature Icon Strip (Fit: SLIM, Home, Soccer) */
+.adi-specs-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24px 0;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+  margin: 32px 0 16px;
+}
+
+.adi-spec-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.adi-spec-item svg {
+  color: #aaa;
+}
+
+.adi-spec-item span {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.adi-spec-item strong {
+  font-family: Anton, Impact, sans-serif;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Accordions (Reviews, Size & fit, Description, Details, Care) */
+.adi-accordion-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.adi-accordion-item {
+  border-bottom: 1px solid #222;
+}
+
+.adi-accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.adi-accordion-header:hover {
+  color: var(--pink);
+}
+
+.adi-accordion-content {
+  padding-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #aaa;
+}
+
+/* Complete the Look section */
+.adi-related-section {
+  margin: 48px 0 60px;
+}
+
+.adi-related-title {
+  font-family: Anton, Impact, sans-serif !important;
+  font-size: 26px !important;
+  text-transform: uppercase;
+  color: #fff;
+  letter-spacing: 0.04em;
+  margin-bottom: 20px;
+}
+
+.adi-related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.adi-related-card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.adi-related-card:hover {
+  transform: translateY(-4px);
+  border-color: #444;
+}
+
+.adi-related-thumb {
+  aspect-ratio: 1 / 1.1;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.adi-related-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.adi-related-card:hover .adi-related-thumb img {
+  transform: scale(1.05);
+}
+
+.adi-related-meta {
+  padding: 12px;
+}
+
+.adi-related-meta h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adi-related-meta span {
+  font-size: 12px;
+  color: #999;
+}
+
+@media (max-width: 900px) {
+  .adi-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .adi-info-column {
+    position: static;
+  }
+  .adi-media-grid {
+    grid-template-columns: 1fr;
+  }
+  .adi-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .adi-specs-strip {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px 12px;
+  }
 }
