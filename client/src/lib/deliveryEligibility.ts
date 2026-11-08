@@ -157,8 +157,9 @@ export function normalizeStateName(rawState: string): string {
   }
 
   if (lower.includes("lagos")) return "Lagos State";
+  if (lower.includes("cross river") || lower.includes("calabar")) return "Cross River State";
   if (lower.includes("ogun")) return "Ogun State";
-  if (lower.includes("river") || lower.includes("port harcourt") || lower.includes("ph")) return "Rivers State";
+  if (lower.includes("rivers") || lower.includes("port harcourt") || lower.includes("ph")) return "Rivers State";
   if (lower.includes("abuja") || lower.includes("fct")) return "FCT - Abuja";
   if (lower.includes("oyo") || lower.includes("ibadan")) return "Oyo State";
   if (lower.includes("anambra")) return "Anambra State";

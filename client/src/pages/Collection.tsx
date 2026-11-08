@@ -155,24 +155,27 @@ export default function Collection() {
       {/* ── IMAGE 3 REFERENCE: FEATURED SHOP SECTIONS & DISCOUNTS BLOCKS ── */}
       {style === "All" && color === "All" && size === "All" && (
         <>
-          {/* ── BLOCK 1: BESTSELLERS SECTION ── */}
+          {/* ── TOP SECTION: ALL FOOTBALL KITS & JERSEYS ── */}
           <section style={{ background: "#111113", borderBottom: "1px solid #222", padding: "50px clamp(20px, 5vw, 72px)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
               <div>
                 <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                  <Flame size={14} /> BESTSELLERS / COMMUNITY FAVORITES
+                  <Flame size={14} /> GIFTING FOOTBALL KITS & JERSEYS
                 </p>
                 <h2 style={{ fontFamily: "Anton", fontSize: "clamp(28px, 4vw, 48px)", margin: 0, textTransform: "uppercase", color: "#fff" }}>
-                  TOP RATED KITS
+                  FOOTBALL KITS & JERSEYS
                 </h2>
               </div>
               <span style={{ fontSize: 10, color: "#888", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-                MOST WANTED THIS MONTH
+                CURATED EDITIONS & MATCH-DAY DROPS
               </span>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 18 }}>
-              {bestsellers.slice(0, 4).map((item) => (
+              {products
+                .filter((p) => p.style === "Jersey" || p.style === "Archive" || p.category.includes("JERSEY") || p.category.includes("TEAM"))
+                .slice(0, 4)
+                .map((item) => (
                 <div
                   key={`bestseller-${item.slug}`}
                   style={{
@@ -188,7 +191,7 @@ export default function Collection() {
                   <Link href={`/product/${item.slug}`} style={{ display: "block", position: "relative", height: 230, background: "#0c0c0e" }}>
                     <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 12 }} />
                     <span style={{ position: "absolute", top: 10, left: 10, background: "var(--pink)", color: "#fff", fontSize: 8, fontWeight: 700, padding: "4px 8px", borderRadius: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                      <Flame size={10} /> BESTSELLER
+                      <Flame size={10} /> FOOTBALL KIT
                     </span>
                     {item.discountBadge && (
                       <span style={{ position: "absolute", top: 10, right: 10, background: "#10b981", color: "#fff", fontSize: 8, fontWeight: 700, padding: "4px 7px", borderRadius: 2 }}>
@@ -560,7 +563,7 @@ export default function Collection() {
               <h2>
                 NOTHING
                 <br />
-                <span>YET.</span>
+                <span>YET</span>
               </h2>
               <button className="pink-button" onClick={clearFilters}>
                 Reset filters <ArrowDownRight size={16} />
@@ -574,23 +577,14 @@ export default function Collection() {
       <footer className="footer">
         <div className="footer-topline">
           <span>ZOID / LAGOS</span>
-          <span>CURATING BEFORE CREATING</span>
+          <span>KEEP IT GOING</span>
         </div>
         <div className="footer-core">
           <Link className="footer-wordmark" href="/">
             <img src={MARK} alt="" />
             <span>ZOID</span>
           </Link>
-          <p>
-            For the ones still rising.
-            <br />
-            Archive-led sportwear from Lagos.
-          </p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
-              HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
-            </span>
-          </div>
+          <p>Archive-led sportswear from Lagos</p>
           <Link className="footer-cta" href="/collection">
             Shop now <ArrowDownRight size={16} />
           </Link>
@@ -598,10 +592,7 @@ export default function Collection() {
         <div className="footer-bottom">
           <span>© ZOID / 2026</span>
           <span>Lagos — Nigeria</span>
-          <span>Hotline: <a href="tel:09020711737" style={{ color: "inherit", textDecoration: "none" }}>09020711737</a></span>
-          <span>
-            Built on grit <b>•</b> Worn with intent
-          </span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a></span>
         </div>
       </footer>
 

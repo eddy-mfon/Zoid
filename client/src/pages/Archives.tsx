@@ -77,12 +77,26 @@ const initialStories: ArchiveStory[] = [
 
 export default function Archives() {
   const [stories, setStories] = useState<ArchiveStory[]>(initialStories);
+  const [activeCategory, setActiveCategory] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [submitOpen, setSubmitOpen] = useState(false);
   const [readingStory, setReadingStory] = useState<ArchiveStory | null>(null);
   const [editingStory, setEditingStory] = useState<ArchiveStory | null>(null);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [mobileMenu, setMobileMenu] = useState(false);
   const { count: cartCount } = useShop();
+
+  const categories = ["ALL", "MATCH DAY", "COLLECTOR STORY", "COMMUNITY", "HERITAGE"];
+
+  const filteredStories = stories.filter((s) => {
+    const matchesCat = activeCategory === "ALL" || s.category.toUpperCase().includes(activeCategory);
+    const matchesQuery = !searchQuery.trim() || 
+      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesQuery;
+  });
 
   // Form state for new story
   const [title, setTitle] = useState("");
@@ -205,20 +219,64 @@ export default function Archives() {
             <ArrowLeft size={15} /> Back to Home
           </Link>
           <p className="eyebrow">COMMUNITY & FOOTBALL MEMORY</p>
-          <h1>ZOID<br /><span>ARCHIVES.</span></h1>
+          <h1>ZOID<br /><span>ARCHIVES</span></h1>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <p className="collection-note">
             <strong>Stories from the pitch and the street.</strong> Every jersey carries a memory. Click any story card to read full accounts, reply, or submit your own.
           </p>
-          <button
-            className="pink-button"
-            onClick={() => setSubmitOpen(true)}
-            style={{ width: "fit-content" }}
-          >
-            Tell Your Story <Plus size={16} />
-          </button>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <button
+              className="pink-button"
+              onClick={() => setSubmitOpen(true)}
+              style={{ width: "fit-content" }}
+            >
+              Tell Your Story <Plus size={16} />
+            </button>
+            <div style={{ display: "inline-flex", alignItems: "center", background: "#1a1a1a", border: "1px solid #333", borderRadius: 4, padding: "6px 12px", gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Search archive stories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 12, minWidth: 160 }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} style={{ background: "transparent", border: "none", color: "#888", cursor: "pointer", padding: 0 }}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Category Pills Bar */}
+      <div style={{ padding: "0 clamp(24px, 6vw, 96px)", display: "flex", gap: 8, overflowX: "auto", background: "#0e0e0e", borderBottom: "1px solid #1f1f1f", paddingBottom: 16, paddingTop: 16 }}>
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              style={{
+                background: isActive ? "var(--pink)" : "#161616",
+                color: isActive ? "#fff" : "#aaa",
+                border: isActive ? "1px solid var(--pink)" : "1px solid #2a2a2a",
+                padding: "8px 16px",
+                borderRadius: 20,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {cat}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── REDESIGNED ARCHIVE GRID ─────────────────── */}
@@ -228,7 +286,7 @@ export default function Archives() {
           gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
           gap: 28,
         }}>
-          {stories.map((item) => (
+          {filteredStories.map((item) => (
             <article
               key={item.id}
               style={{
@@ -650,27 +708,22 @@ export default function Archives() {
       <footer className="footer">
         <div className="footer-topline">
           <span>ZOID / LAGOS</span>
-          <span>COMMUNITY ARCHIVES</span>
+          <span>KEEP IT GOING</span>
         </div>
         <div className="footer-core">
           <Link className="footer-wordmark" href="/">
             <img src={MARK} alt="" />
             <span>ZOID</span>
           </Link>
-          <p>Stories from the pitch and the street.</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
-              HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
-            </span>
-          </div>
+          <p>Archive-led sportswear from Lagos</p>
           <Link className="footer-cta" href="/collection">
-            Shop the Edit <ArrowDownRight size={16} />
+            Shop now <ArrowDownRight size={16} />
           </Link>
         </div>
         <div className="footer-bottom">
-          <span>© ZOID STUDIOS / 2026</span>
-          <span>Hotline: <a href="tel:09020711737" style={{ color: "inherit", textDecoration: "none" }}>09020711737</a></span>
-          <span>Built on grit • Worn with intent</span>
+          <span>© ZOID / 2026</span>
+          <span>Lagos — Nigeria</span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a></span>
         </div>
       </footer>
     </main>

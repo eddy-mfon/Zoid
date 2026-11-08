@@ -344,7 +344,7 @@ export default function ProductDetail() {
 
         {/* 2-Column Product Layout */}
         <section className="adi-detail-grid">
-          {/* Left Column: Pure Jersey Multi-Angle Views (Front, Back, Side Profile, Crest & Fabric Detail) */}
+          {/* Left Column: Pure Jersey Views (Front and Back view only) */}
           <div className="adi-media-column">
             <div className="adi-media-grid">
               {/* View 1: Full Front View of Jersey */}
@@ -359,7 +359,7 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* View 2: Back Profile View of Jersey (Clean jersey back for squad printing) */}
+              {/* View 2: Back Profile View of Jersey */}
               <div className="adi-media-tile">
                 <img
                   src={product.image}
@@ -367,45 +367,12 @@ export default function ProductDetail() {
                   style={{
                     objectFit: "contain",
                     padding: "12px",
-                    transform: "scale(1.08) translateY(-2%)",
-                    filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.6)) saturate(0.95)"
-                  }}
-                />
-                <div className="adi-badge-overlay">
-                  Back View
-                </div>
-              </div>
-
-              {/* View 3: Side Angle & Sleeve Profile */}
-              <div className="adi-media-tile">
-                <img
-                  src={product.image}
-                  alt={`${product.name} Side Profile`}
-                  style={{
-                    objectFit: "contain",
-                    padding: "12px",
-                    transform: "scale(1.22) translateX(6%)",
+                    transform: "scale(1.04)",
                     filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.6))"
                   }}
                 />
                 <div className="adi-badge-overlay">
-                  Side & Sleeve View
-                </div>
-              </div>
-
-              {/* View 4: Close-up Crest Embroidery & Material Texture */}
-              <div className="adi-media-tile">
-                <img
-                  src={product.image}
-                  alt={`${product.name} Crest & Jacquard Close-up`}
-                  style={{
-                    objectFit: "contain",
-                    transform: "scale(2.0) translate(-4%, 4%)",
-                    filter: "contrast(1.08) drop-shadow(0 10px 20px rgba(0,0,0,0.6))"
-                  }}
-                />
-                <div className="adi-badge-overlay">
-                  <Sparkles size={12} style={{ color: "var(--pink)" }} /> Crest & Fabric Detail
+                  Back View
                 </div>
               </div>
             </div>
@@ -862,23 +829,14 @@ export default function ProductDetail() {
       <footer className="footer detail-footer">
         <div className="footer-topline">
           <span>ZOID / LAGOS</span>
-          <span>CURATING BEFORE CREATING</span>
+          <span>KEEP IT GOING</span>
         </div>
         <div className="footer-core">
           <Link className="footer-wordmark" href="/">
             <img src={MARK} alt="" />
             <span>ZOID</span>
           </Link>
-          <p>
-            For the ones still rising.
-            <br />
-            Archive-led sportwear from Lagos.
-          </p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", borderRadius: 4, marginTop: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 10, letterSpacing: "0.08em", color: "#aaa" }}>
-              HOTLINE / EMERGENCIES: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a>
-            </span>
-          </div>
+          <p>Archive-led sportswear from Lagos</p>
           <Link className="footer-cta" href="/collection">
             Shop now <ArrowDownRight size={16} />
           </Link>
@@ -886,10 +844,7 @@ export default function ProductDetail() {
         <div className="footer-bottom">
           <span>© ZOID / 2026</span>
           <span>Lagos — Nigeria</span>
-          <span>Hotline: <a href="tel:09020711737" style={{ color: "inherit", textDecoration: "none" }}>09020711737</a></span>
-          <span>
-            Built on grit <b>•</b> Worn with intent
-          </span>
+          <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", fontWeight: 700, textDecoration: "none" }}>09020711737</a></span>
         </div>
       </footer>
 

@@ -69,21 +69,21 @@ const testimonials = [
 /* ── Hero slides ── */
 const heroSlides = [
   {
-    kicker: "LAGOS / COMMUNITY & CULTURE",
-    title: "MORE THAN\nJERSEYS.",
-    sub: "ZOID connects football nostalgia, African perspective, and street culture into a shared identity.",
+    kicker: "04 / PILLAR OF GRIT",
+    title: "BUILT ON\nGRIT",
+    sub: "Won with intent, nothing meaningful is built in a single moment. Grit lives in the hours of practice, the difficult days, and the choice to show up when giving up feels easier. ZOID represents more than movement. It represents the mindset, effort, and determination behind every step forward.",
     img: "/manus-storage/ac-milan-2526_b917ea29.jpg",
   },
   {
-    kicker: "ZOID COMMUNITY ARCHIVES",
-    title: "EVERY SHIRT\nHAS A STORY.",
-    sub: "We collect memories from match days, local pitches, and urban streets across Africa and beyond.",
+    kicker: "05 / COMMUNITY MEMORIES",
+    title: "THE\nARCHIVES",
+    sub: "Every piece carries a story. Every story deserves to be heard. Behind every jersey, every design, and every ZOID piece is a story worth preserving. A collection of the people, memories, struggles, and milestones woven into what we wear.",
     img: "/manus-storage/zoid-story_425b40db.jpg",
   },
   {
-    kicker: "NEW DROPS & NUMERICALS",
-    title: "KEEP RISING.\nNEVER STOP.",
-    sub: "Fresh releases, rare cuts, and performance gym kits crafted for the ones still rising.",
+    kicker: "ZOID ATHLETES",
+    title: "THE IDENTITY\nOF A ZOID ATHLETE",
+    sub: "Grit. Discipline. Purpose. Every piece we make reflects who you are",
     img: "/jerseys/National/Brazil 1998 home vintage jersey.jpg",
   },
 ];
@@ -118,9 +118,24 @@ const archiveSnippets = [
 
 /* ── Brand pillars ── */
 const pillars = [
-  { num: "01", title: "CURATE", text: "Every piece earns its place through story, provenance, and material honesty." },
-  { num: "02", title: "ARCHIVE", text: "We preserve football memory — from dusty Lagos pitches to European stadiums." },
-  { num: "03", title: "RISE", text: "Crafted for the ones who grind without guarantee. Built on grit, worn with intent." },
+  {
+    num: "01",
+    title: "IDENTITY",
+    headline: "Before the world gives you a title, you already possess an identity.",
+    body: "Every athlete has a story beyond the name and number on their jersey. Identity is where we come from, what shapes us, and the values we carry into everything we do. Before the performance, before the recognition, there is you.",
+  },
+  {
+    num: "02",
+    title: "ENVIRONMENT",
+    headline: "Where we come from shapes how we move.",
+    body: "From the landscapes we hail from to the cultures that ground us, our environment leaves its mark on who we become. It is a reminder that beauty, strength, and inspiration have always existed in the places we call home.",
+  },
+  {
+    num: "03",
+    title: "RISE",
+    headline: "The decision to keep moving even when victory isn't certain.",
+    body: "The work no one sees. The early mornings, the setbacks, the discipline to begin again. RISE and stand and refuse to let a difficult beginning decide how your story ends.",
+  },
 ];
 
 export default function Home() {
@@ -365,7 +380,17 @@ export default function Home() {
             {heroSlides[heroIndex].kicker}
           </p>
           <h1 style={{ whiteSpace: "pre-line", transition: "opacity 0.4s ease" }}>{heroSlides[heroIndex].title}</h1>
-          <p className="hero-intro" style={{ transition: "opacity 0.4s ease" }}>
+          <p
+            className="hero-intro"
+            style={{
+              transition: "opacity 0.4s ease",
+              fontSize: "clamp(14px, 1.4vw, 17px)",
+              lineHeight: 1.7,
+              maxWidth: 580,
+              color: "#d8d5ce",
+              margin: "24px 0 28px",
+            }}
+          >
             {heroSlides[heroIndex].sub}
           </p>
           <div className="hero-actions">
@@ -435,9 +460,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BRAND PILLARS ───────────────────────────── */}
+      {/* ── RED ANNOUNCEMENT TICKER BANNER ── */}
+      <div
+        style={{
+          background: "var(--pink)",
+          color: "#fff",
+          padding: "12px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          overflow: "hidden",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.25)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ background: "#000", color: "#fff", fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", padding: "3px 8px", borderRadius: 2 }}>
+            NOTICE
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            2-Week Global Express Delivery from Lagos Hub • 100% Authenticated Drops
+          </span>
+        </div>
+        <Link
+          href="/collection"
+          style={{
+            color: "#fff",
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            whiteSpace: "nowrap",
+            borderBottom: "1px solid rgba(255,255,255,0.6)",
+            paddingBottom: 2,
+          }}
+        >
+          View Collection <ArrowRight size={12} />
+        </Link>
+      </div>
+
+      {/* ── BRAND PILLARS: EDITORIAL BRUTALIST GRID ── */}
       <section
-        style={{ background: "#0d0d0d", borderBottom: "1px solid #1f1f1f", padding: "72px clamp(24px,8vw,120px)" }}
+        style={{
+          background: "#0a0a0c",
+          borderBottom: "1px solid #1f1f24",
+          padding: "90px clamp(24px, 8vw, 120px)",
+          position: "relative",
+          overflow: "hidden",
+        }}
         ref={(el) => {
           if (!el) return;
           const observer = new IntersectionObserver(
@@ -449,116 +522,308 @@ export default function Home() {
                     setTimeout(() => {
                       (card as HTMLElement).style.opacity = "1";
                       (card as HTMLElement).style.transform = "translateY(0)";
-                    }, i * 130);
+                    }, i * 150);
                   });
                   observer.disconnect();
                 }
               });
             },
-            { threshold: 0.18 }
+            { threshold: 0.15 }
           );
           observer.observe(el);
         }}
       >
-        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 32 }}>
-          WHAT ZOID STANDS FOR
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 0, border: "1px solid #222" }}>
-          {pillars.map((p, i) => (
-            <div
-              key={p.num}
-              className={`pillar-card ${activePillar === i ? "active-pillar" : ""}`}
-              onMouseEnter={() => setActivePillar(i)}
-              onClick={() => setActivePillar(i)}
+        {/* Subtle background ambient red glow */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "25%",
+            width: "50%",
+            height: 300,
+            background: "radial-gradient(ellipse at center, rgba(179, 13, 13, 0.08) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Section Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            flexWrap: "wrap",
+            gap: 20,
+            marginBottom: 48,
+            borderBottom: "1px solid #1c1c22",
+            paddingBottom: 24,
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "var(--pink)",
+                  boxShadow: "0 0 10px var(--pink)",
+                }}
+              />
+              <p className="eyebrow" style={{ color: "var(--pink)", margin: 0, letterSpacing: "0.22em" }}>
+                CORE PRINCIPLES // ARCHIVE ETHOS
+              </p>
+            </div>
+            <h2
               style={{
-                padding: "40px 36px",
-                borderRight: i < pillars.length - 1 ? "1px solid #222" : "none",
-                cursor: "pointer",
-                background: activePillar === i ? "rgba(179, 13, 13,0.07)" : "transparent",
-                borderTop: activePillar === i ? "2px solid var(--pink)" : "2px solid transparent",
-                transition: "background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
-                boxShadow: activePillar === i ? "inset 0 0 60px rgba(179, 13, 13,0.04)" : "none",
-                /* scroll-reveal initial state */
-                opacity: 0,
-                transform: "translateY(28px)",
+                fontFamily: "Anton",
+                fontSize: "clamp(38px, 6vw, 76px)",
+                margin: 0,
+                textTransform: "uppercase",
+                color: "#fff",
+                lineHeight: 0.95,
+                letterSpacing: "-0.01em",
               }}
             >
-              {/* Animated number indicator */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              WHAT ZOID <span style={{ color: "var(--pink)" }}>STANDS FOR</span>
+            </h2>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ fontSize: 10, color: "#666", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+              HOVER TO ENGAGE PILLAR
+            </span>
+            <div style={{ display: "flex", gap: 6 }}>
+              {pillars.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActivePillar(idx)}
+                  style={{
+                    width: activePillar === idx ? 28 : 10,
+                    height: 5,
+                    borderRadius: 2,
+                    background: activePillar === idx ? "var(--pink)" : "#333",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                  }}
+                  aria-label={`Select Pillar 0${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Pillars Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))",
+            gap: 20,
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          {pillars.map((p, i) => {
+            const isSelected = activePillar === i;
+            return (
+              <div
+                key={p.num}
+                className={`pillar-card ${isSelected ? "active-pillar" : ""}`}
+                onMouseEnter={() => setActivePillar(i)}
+                onClick={() => setActivePillar(i)}
+                style={{
+                  padding: "40px 32px 36px",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  position: "relative",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  background: isSelected
+                    ? "linear-gradient(180deg, #181214 0%, #100d0e 100%)"
+                    : "#111115",
+                  border: isSelected
+                    ? "1px solid rgba(179, 13, 13, 0.55)"
+                    : "1px solid #1c1c24",
+                  boxShadow: isSelected
+                    ? "0 20px 45px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(179, 13, 13, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)"
+                    : "0 6px 20px rgba(0, 0, 0, 0.3)",
+                  transform: isSelected ? "translateY(-4px)" : "none",
+                  transition: "all 0.35s cubic-bezier(0.23, 1, 0.32, 1)",
+                  opacity: 0,
+                }}
+              >
+                {/* Top Glowing Edge Bar when active */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: isSelected ? 3 : 1,
+                    background: isSelected
+                      ? "linear-gradient(90deg, var(--pink) 0%, #ff4b4b 100%)"
+                      : "transparent",
+                    transition: "height 0.3s ease, background 0.3s ease",
+                  }}
+                />
+
+                {/* Big Background Ghost Numeral */}
                 <span
                   style={{
-                    fontSize: 9,
-                    color: activePillar === i ? "var(--pink)" : "#444",
-                    letterSpacing: "0.18em",
-                    fontWeight: 700,
-                    transition: "color 0.3s ease",
+                    position: "absolute",
+                    right: 18,
+                    top: 10,
+                    fontFamily: "Anton",
+                    fontSize: "clamp(88px, 9vw, 130px)",
+                    lineHeight: 0.8,
+                    color: isSelected ? "rgba(179, 13, 13, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    fontWeight: 900,
+                    transition: "color 0.35s ease",
                   }}
                 >
                   {p.num}
                 </span>
-                {activePillar === i && (
-                  <span
+
+                <div>
+                  {/* Category Chip + Status */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                    <span
+                      style={{
+                        fontSize: 9,
+                        letterSpacing: "0.22em",
+                        fontWeight: 800,
+                        color: isSelected ? "var(--pink)" : "#666",
+                        background: isSelected ? "rgba(179, 13, 13, 0.15)" : "#18181e",
+                        border: isSelected ? "1px solid rgba(179, 13, 13, 0.35)" : "1px solid #23232c",
+                        padding: "5px 12px",
+                        borderRadius: 2,
+                        textTransform: "uppercase",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      PILLAR // {p.num}
+                    </span>
+
+                    {isSelected && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          letterSpacing: "0.16em",
+                          fontWeight: 700,
+                          color: "var(--pink)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "var(--pink)",
+                            boxShadow: "0 0 8px var(--pink)",
+                          }}
+                        />
+                        FOCUSED
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title */}
+                  <h3
                     style={{
-                      display: "inline-block",
-                      width: 18,
-                      height: 2,
-                      background: "var(--pink)",
-                      borderRadius: 2,
-                      animation: "pillar-line-in 0.4s cubic-bezier(.23,1,.32,1) both",
+                      fontFamily: "Anton",
+                      fontSize: "clamp(32px, 3.8vw, 50px)",
+                      margin: "0 0 16px",
+                      color: isSelected ? "#fff" : "#999",
+                      transition: "color 0.35s ease",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 0.95,
+                      textTransform: "uppercase",
                     }}
-                  />
-                )}
-              </div>
-              <h3
-                style={{
-                  fontFamily: "Anton",
-                  fontSize: "clamp(28px,3vw,42px)",
-                  margin: "0 0 16px",
-                  color: activePillar === i ? "#fff" : "#777",
-                  transition: "color 0.35s ease",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {p.title}
-              </h3>
-              <p
-                style={{
-                  color: activePillar === i ? "#a9a49d" : "#555",
-                  fontSize: 13,
-                  lineHeight: 1.75,
-                  margin: 0,
-                  transition: "color 0.35s ease",
-                }}
-              >
-                {p.text}
-              </p>
-              {/* Active dot */}
-              {activePillar === i && (
+                  >
+                    {p.title}
+                  </h3>
+
+                  {/* Bold Quote/Headline */}
+                  <p
+                    style={{
+                      color: isSelected ? "#fff" : "#a8a29a",
+                      fontSize: "clamp(15px, 1.35vw, 17.5px)",
+                      lineHeight: 1.5,
+                      fontWeight: 600,
+                      margin: "0 0 18px",
+                      transition: "color 0.35s ease",
+                      borderLeft: isSelected ? "2px solid var(--pink)" : "2px solid #282832",
+                      paddingLeft: 14,
+                    }}
+                  >
+                    "{p.headline}"
+                  </p>
+
+                  {/* Body Paragraph */}
+                  <p
+                    style={{
+                      color: isSelected ? "#c5bfb6" : "#6c6861",
+                      fontSize: "clamp(13px, 1.1vw, 14.5px)",
+                      lineHeight: 1.8,
+                      margin: 0,
+                      transition: "color 0.35s ease",
+                    }}
+                  >
+                    {p.body}
+                  </p>
+                </div>
+
+                {/* Footer of card */}
                 <div
                   style={{
-                    marginTop: 22,
+                    borderTop: isSelected ? "1px solid rgba(179, 13, 13, 0.3)" : "1px solid #1a1a22",
+                    paddingTop: 18,
+                    marginTop: 28,
                     display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    gap: 6,
-                    animation: "pillar-line-in 0.4s cubic-bezier(.23,1,.32,1) both",
                   }}
                 >
                   <span
                     style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "var(--pink)",
-                      boxShadow: "0 0 10px var(--pink)",
+                      fontSize: 10,
+                      letterSpacing: "0.16em",
+                      textTransform: "uppercase",
+                      color: isSelected ? "#fff" : "#555",
+                      fontWeight: 700,
                     }}
-                  />
-                  <span style={{ fontSize: 8, color: "var(--pink)", letterSpacing: "0.2em", fontWeight: 700 }}>
-                    ACTIVE
+                  >
+                    ZOID ETHOS // 2026
+                  </span>
+                  <span
+                    style={{
+                      color: isSelected ? "var(--pink)" : "#444",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.12em",
+                      transition: "color 0.3s ease",
+                    }}
+                  >
+                    {isSelected ? "EXPLORING" : "EXPLORE"} <ArrowRight size={13} />
                   </span>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -570,7 +835,7 @@ export default function Home() {
               <Star size={14} fill="var(--pink)" color="var(--pink)" /> WHAT THE COMMUNITY SAYS
             </p>
             <h2 style={{ fontFamily: "Anton", fontSize: "clamp(36px, 6vw, 72px)", margin: 0, textTransform: "uppercase", color: "#fff", lineHeight: 0.95 }}>
-              TESTIMONIALS & <span style={{ color: "var(--pink)" }}>REVIEWS.</span>
+              TESTIMONIALS & <span style={{ color: "var(--pink)" }}>REVIEWS</span>
             </h2>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(179, 13, 13,0.08)", border: "1px solid rgba(179, 13, 13,0.25)", padding: "10px 18px", borderRadius: 4 }}>
@@ -644,89 +909,153 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ABOUT TEASER ── */}
+      {/* ── HIGH-IMPACT RED STATEMENT SECTION ── */}
       <section
         style={{
-          background: "var(--bone)",
-          color: "#111",
-          padding: "80px clamp(24px,8vw,120px)",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 48,
-          alignItems: "center",
+          background: "linear-gradient(135deg, #b30d0d 0%, #800707 60%, #570000 100%)",
+          color: "#fff",
+          padding: "70px clamp(24px, 8vw, 120px)",
+          position: "relative",
+          overflow: "hidden",
+          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.4)",
         }}
       >
-        <div>
-          <p className="eyebrow" style={{ color: "#777" }}>
-            ABOUT ZOID / INTERNATIONAL AFRICAN
+        <div
+          style={{
+            position: "absolute",
+            right: "2%",
+            top: "50%",
+            transform: "translateY(-50%)",
+            pointerEvents: "none",
+            userSelect: "none",
+            opacity: 0.14,
+            filter: "brightness(0)",
+          }}
+        >
+          <img
+            src={MARK}
+            alt=""
+            style={{
+              width: "clamp(180px, 24vw, 320px)",
+              height: "auto",
+              display: "block",
+            }}
+          />
+        </div>
+        <div style={{ maxWidth: 840, position: "relative", zIndex: 2 }}>
+          <p
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.26em",
+              textTransform: "uppercase",
+              fontWeight: 800,
+              color: "rgba(255, 255, 255, 0.8)",
+              marginBottom: 14,
+            }}
+          >
+            LAGOS ARCHIVE // STREET CULTURE // NEVER SETTLE
           </p>
           <h2
             style={{
               fontFamily: "Anton",
-              fontSize: "clamp(40px,6vw,80px)",
-              lineHeight: 0.9,
-              margin: "16px 0 24px",
+              fontSize: "clamp(38px, 6.5vw, 84px)",
+              lineHeight: 0.92,
+              margin: "0 0 20px",
               textTransform: "uppercase",
+              color: "#fff",
+              letterSpacing: "-0.02em",
             }}
           >
-            BUILT ON GRIT.
-            <br />
-            WORN WITH
-            <br />
-            INTENT.
+            KEEP IT GOING.<br />
+            NO MATTER THE ODDS.
           </h2>
-          <p style={{ color: "#555", lineHeight: 1.75, fontSize: 14, marginBottom: 28 }}>
-            ZOID is an archive-led sports brand from Lagos. We collect, curate, and create pieces that honor football heritage while celebrating the grit of those who keep rising — regardless of circumstance.
-          </p>
-          <Link className="pink-button" href="/about">
-            Read Our Story <ArrowDownRight size={17} />
-          </Link>
-        </div>
-        <div style={{ position: "relative" }}>
-          <img src={STORY_IMG} alt="ZOID story" style={{ width: "100%", height: 420, objectFit: "cover" }} />
-          <div
+          <p
             style={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              background: "rgba(12, 12, 12, 0.88)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(179, 13, 13,0.6)",
-              borderRadius: 6,
-              padding: "14px 20px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+              color: "rgba(255, 255, 255, 0.9)",
+              fontSize: "clamp(14px, 1.8vw, 17px)",
+              lineHeight: 1.7,
+              maxWidth: 600,
+              margin: "0 0 32px",
             }}
           >
-            <img src={MARK} alt="ZOID Logo" style={{ height: 26, width: "auto" }} />
-            <div>
-              <span style={{ color: "#fff", fontFamily: "Anton", fontSize: 18, letterSpacing: "0.14em", display: "block", lineHeight: 1 }}>
-                ZOID
-              </span>
-              <span style={{ color: "var(--pink)", fontSize: 8, letterSpacing: "0.18em", fontWeight: 700, textTransform: "uppercase" }}>
-                LAGOS ARCHIVE
-              </span>
-            </div>
+            ZOID connects football nostalgia, African perspective, and modern sportswear into an unapologetic identity. Made for the ones still rising.
+          </p>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
+            <Link
+              href="/collection"
+              style={{
+                background: "#090909",
+                color: "#fff",
+                padding: "0 32px",
+                minHeight: 50,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                borderRadius: 2,
+                boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
+              }}
+            >
+              Shop Curated Edits <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/archives"
+              style={{
+                border: "1px solid rgba(255, 255, 255, 0.4)",
+                color: "#fff",
+                padding: "0 28px",
+                minHeight: 50,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                borderRadius: 2,
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              Read Archives
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ── ZOID ARCHIVES TEASER ────────────────────── */}
-      <section style={{ padding: "80px clamp(24px,8vw,120px)", background: "#0d0d0d", borderTop: "1px solid #1f1f1f" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 20, marginBottom: 40 }}>
-          <div>
-            <p className="eyebrow" style={{ color: "var(--pink)" }}>COMMUNITY MEMORIES & STORIES</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(40px,6vw,80px)", margin: "8px 0 0", textTransform: "uppercase", color: "#fff" }}>
-              ZOID ARCHIVES.
-            </h2>
-          </div>
-          <Link className="pink-button" href="/archives">
-            Explore All Stories <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}>
+      {/* ── EXPLORE O STORIES — Prominent CTA Section ────────────────────── */}
+      <section style={{
+        padding: "80px clamp(24px,8vw,120px)",
+        background: "linear-gradient(135deg, #0d0d0d 0%, #1a0a10 50%, #0d0d0d 100%)",
+        borderTop: "1px solid #1f1f1f",
+        textAlign: "center",
+      }}>
+        <p className="eyebrow" style={{ color: "var(--pink)", marginBottom: 16 }}>COMMUNITY MEMORIES & STORIES</p>
+        <h2 style={{
+          fontFamily: "Anton",
+          fontSize: "clamp(40px,6vw,80px)",
+          margin: "0 auto 20px",
+          textTransform: "uppercase",
+          color: "#fff",
+          lineHeight: 0.95,
+        }}>
+          EXPLORE <span style={{ color: "var(--pink)" }}>ALL THE STORIES</span>
+        </h2>
+        <p style={{
+          color: "#999",
+          fontSize: "clamp(14px,1.6vw,17px)",
+          lineHeight: 1.7,
+          maxWidth: 560,
+          margin: "0 auto 40px",
+        }}>
+          Every jersey carries a memory. Discover stories from match days, local pitches, and urban streets across Africa and beyond
+        </p>
+
+        {/* Story preview cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20, marginBottom: 48 }}>
           {archiveSnippets.map((s) => (
             <Link
               key={s.id}
@@ -736,13 +1065,14 @@ export default function Home() {
               style={{
                 background: "#161616",
                 border: "1px solid #222",
-                borderRadius: 2,
+                borderRadius: 6,
                 display: "block",
                 overflow: "hidden",
                 transform: hoveredArchive === s.id ? "translateY(-6px)" : "none",
                 boxShadow: hoveredArchive === s.id ? "0 16px 40px rgba(0,0,0,0.5)" : "none",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
                 borderTop: hoveredArchive === s.id ? "2px solid var(--pink)" : "2px solid transparent",
+                textAlign: "left",
               }}
             >
               <img src={s.img} alt={s.title} style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }} />
@@ -759,65 +1089,126 @@ export default function Home() {
             </Link>
           ))}
         </div>
+
+        {/* Prominent CTA button */}
+        <Link
+          className="pink-button"
+          href="/archives"
+          style={{
+            fontSize: 13,
+            padding: "0 48px",
+            minHeight: 56,
+            boxShadow: "0 8px 32px rgba(179, 13, 13, 0.45)",
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+          }}
+        >
+          EXPLORE ALL STORIES <ArrowRight size={18} />
+        </Link>
       </section>
 
-      {/* ── HIGH-IMPACT BRAND CTA (Tag Removed & Elevated Design) ────── */}
+      {/* ── HIGH-IMPACT BRAND CTA ────── */}
       <section
         style={{
-          padding: "120px clamp(24px,8vw,120px)",
-          background: "radial-gradient(circle at 50% 30%, #1f0b12 0%, #0c0c0c 80%)",
-          borderTop: "1px solid #221217",
+          padding: "110px clamp(24px,8vw,120px)",
+          background: "linear-gradient(135deg, #b30d0d 0%, #800707 55%, #4a0000 100%)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.5)",
           position: "relative",
           overflow: "hidden",
           textAlign: "center",
         }}
       >
         <div style={{ maxWidth: 880, margin: "0 auto", position: "relative", zIndex: 2 }}>
+          {/* Logo badge before headline */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              background: "rgba(0, 0, 0, 0.35)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
+              padding: "8px 20px",
+              borderRadius: 40,
+              marginBottom: 28,
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)",
+            }}
+          >
+            <img src={MARK} alt="ZOID Logo" style={{ height: 20, width: "auto" }} />
+            <span
+              style={{
+                fontFamily: "Anton",
+                fontSize: 14,
+                letterSpacing: "0.22em",
+                color: "#fff",
+                lineHeight: 1,
+              }}
+            >
+              ZOID
+            </span>
+          </div>
+
           <h2
             style={{
               fontFamily: "Anton",
-              fontSize: "clamp(48px, 8vw, 104px)",
+              fontSize: "clamp(48px, 8.5vw, 108px)",
               margin: "0 0 24px",
               textTransform: "uppercase",
               color: "#fff",
               lineHeight: 0.9,
               letterSpacing: "-0.02em",
+              textShadow: "0 4px 30px rgba(0,0,0,0.35)",
             }}
           >
-            YOUR RISE HAS NO CEILING.
-            <br />
-            <span style={{ color: "var(--pink)" }}>WORN WITH INTENT.</span>
+            KEEP ON GOING
           </h2>
 
           <p
             style={{
-              color: "#aaa",
-              maxWidth: 600,
+              color: "rgba(255, 255, 255, 0.92)",
+              maxWidth: 620,
               margin: "0 auto 40px",
-              fontSize: "clamp(14px, 1.8vw, 17px)",
+              fontSize: "clamp(15px, 1.8vw, 18px)",
               lineHeight: 1.7,
             }}
           >
             Step into the complete ZOID edit. Rare retro cuts, national team grails, and high-performance gym gear — backed by our 2-week delivery promise from Lagos.
           </p>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", alignItems: "center" }}>
             <Link
-              className="pink-button"
               href="/collection"
               style={{
+                background: "#090909",
+                color: "#fff",
                 fontSize: 12,
                 padding: "0 44px",
                 minHeight: 56,
-                boxShadow: "0 8px 32px rgba(179, 13, 13, 0.45)",
                 fontWeight: 700,
                 letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                borderRadius: 2,
+                boxShadow: "0 12px 36px rgba(0, 0, 0, 0.6)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                transition: "transform 0.2s ease, background 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#141414";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#090909";
+                e.currentTarget.style.transform = "none";
               }}
             >
               EXPLORE SHOP EDIT <ArrowDownRight size={18} />
             </Link>
             <Link
-              className="ghost-button"
               href="/archives"
               style={{
                 fontSize: 12,
@@ -825,7 +1216,24 @@ export default function Home() {
                 minHeight: 56,
                 fontWeight: 700,
                 letterSpacing: "0.16em",
-                borderColor: "rgba(255,255,255,0.3)",
+                textTransform: "uppercase",
+                color: "#fff",
+                border: "1px solid rgba(255, 255, 255, 0.45)",
+                background: "rgba(0, 0, 0, 0.2)",
+                backdropFilter: "blur(8px)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                borderRadius: 2,
+                transition: "transform 0.2s ease, background 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(0, 0, 0, 0.2)";
+                e.currentTarget.style.transform = "none";
               }}
             >
               ZOID ARCHIVES <ArrowRight size={16} />
@@ -844,9 +1252,9 @@ export default function Home() {
               ZOID
             </Link>
             <p style={{ color: "#666", fontSize: 12, lineHeight: 1.7, margin: "0 0 20px" }}>
-              Curating before creating.
+              Keep it going
               <br />
-              Archive sportswear & community identity from Lagos.
+              Archive sportswear & community identity from Lagos
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               {["IG", "TW", "TT"].map((s) => (
@@ -963,7 +1371,7 @@ export default function Home() {
           <span>Lagos — Nigeria</span>
           <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", textDecoration: "none", fontWeight: 700 }}>09020711737</a></span>
           <span>
-            Built on grit <b style={{ color: "var(--pink)" }}>•</b> Worn with intent
+            Keep it going <b style={{ color: "var(--pink)" }}>•</b> Worn with intent
           </span>
         </div>
       </footer>

@@ -87,6 +87,7 @@ const HAND_DELIVERY_UNIVERSITIES = [
   "PAMO University of Medical Sciences, Port Harcourt",
 ];
 
+// Delivery methods definition helper based on delivery calculation
 interface DeliveryMethod {
   id: DeliveryOptionType;
   title: string;
@@ -95,36 +96,66 @@ interface DeliveryMethod {
   icon: React.ReactNode;
 }
 
-const deliveryMethods: DeliveryMethod[] = [
-  {
-    id: "standard",
-    title: "Straight to your doorstep",
-    subtitle: "Direct hand delivery to your door or university campus in Lagos, Ogun, or Port Harcourt",
-    fee: 2500,
-    icon: <Home size={18} />,
-  },
-  {
-    id: "express",
-    title: "Express — Get it faster",
-    subtitle: "Prioritized hand dispatch in Lagos, Ogun, or Port Harcourt",
-    fee: 4500,
-    icon: <Zap size={18} />,
-  },
-  {
-    id: "pickup",
-    title: "GUO Terminal Pickup",
-    subtitle: "Collect at a GUO Terminal in your selected state",
-    fee: 0,
-    icon: <MapPin size={18} />,
-  },
-  {
-    id: "not_mentioned",
-    title: "For Further Enquiry",
-    subtitle: "Not sure about delivery to your area? Chat with us on WhatsApp and we'll sort it out",
-    fee: 0,
-    icon: <PhoneCall size={18} />,
-  },
-];
+// Covenant University coordinates or base location: Ota, Ogun State
+// Base fee within Covenant University = ₦5,000
+// Outside Covenant University = ₦6,500 base + ₦50/km distance surcharge
+export function calculateDeliveryFee(
+  deliveryOption: DeliveryOptionType,
+  standardSubType: StandardSubType,
+  schoolName: string,
+  state: string,
+  city: string,
+  distanceKmInput?: number
+): { fee: number; isWithinCU: boolean; distanceKm: number; description: string } {
+  if (deliveryOption === "pickup" || deliveryOption === "not_mentioned") {
+    return { fee: 0, isWithinCU: false, distanceKm: 0, description: "Self-Pickup / Free" };
+  }
+
+  const isCU =
+    standardSubType === "university" &&
+    (schoolName.toLowerCase().includes("covenant") || schoolName.toLowerCase().includes("cu"));
+
+  if (isCU) {
+    return {
+      fee: 5000,
+      isWithinCU: true,
+      distanceKm: 0,
+      description: "Direct doorstep delivery",
+    };
+  }
+
+  // Base fee + distance calculation
+  let estimatedKm = distanceKmInput && distanceKmInput > 0 ? distanceKmInput : 15;
+  const cleanState = (state || "").toLowerCase();
+  const cleanCity = (city || "").toLowerCase();
+
+  if (cleanCity.includes("ota") || cleanCity.includes("sango")) {
+    estimatedKm = 8;
+  } else if (cleanCity.includes("ikeja") || cleanCity.includes("agege") || cleanCity.includes("alimosho")) {
+    estimatedKm = 25;
+  } else if (cleanCity.includes("surulere") || cleanCity.includes("yaba") || cleanCity.includes("lekki") || cleanCity.includes("island") || cleanState.includes("lagos")) {
+    estimatedKm = 45;
+  } else if (cleanState.includes("ogun") || cleanCity.includes("abeokuta")) {
+    estimatedKm = 55;
+  } else if (cleanState.includes("oyo") || cleanCity.includes("ibadan")) {
+    estimatedKm = 110;
+  } else if (cleanState.includes("rivers") || cleanCity.includes("port harcourt")) {
+    estimatedKm = 600;
+  } else if (cleanState.includes("abuja") || cleanState.includes("fct")) {
+    estimatedKm = 720;
+  }
+
+  const perKmRate = 50;
+  const surcharge = estimatedKm * perKmRate;
+  const fee = 6500 + surcharge;
+
+  return {
+    fee,
+    isWithinCU: false,
+    distanceKm: estimatedKm,
+    description: "Standard courier delivery to your address",
+  };
+}
 
 /** Lightweight form-data type passed to the review page */
 export interface CheckoutDraft {
@@ -261,6 +292,52 @@ export default function Checkout() {
     return HAND_DELIVERY_UNIVERSITIES;
   }, [form.contactState]);
 
+  // Dynamic calculation based on Covenant University rule:
+  // Inside CU = ₦5,000 flat
+  // Outside CU = ₦6,500 base + ₦50/km distance increase
+  const deliveryCalc = useMemo(() => {
+    return calculateDeliveryFee(
+      deliveryOption,
+      standardSubType,
+      form.schoolName,
+      form.contactState || form.state,
+      form.city
+    );
+  }, [deliveryOption, standardSubType, form.schoolName, form.contactState, form.state, form.city]);
+
+  const deliveryMethods: DeliveryMethod[] = useMemo(() => [
+    {
+      id: "standard",
+      title: "Straight to your doorstep",
+      subtitle: deliveryCalc.isWithinCU
+        ? "Direct campus delivery to your hall / room"
+        : "Direct delivery to your doorstep via courier",
+      fee: deliveryCalc.fee,
+      icon: <Home size={18} />,
+    },
+    {
+      id: "express",
+      title: "Express — Get it faster",
+      subtitle: "Prioritized dispatch & express courier routing",
+      fee: deliveryCalc.fee + 2000,
+      icon: <Zap size={18} />,
+    },
+    {
+      id: "pickup",
+      title: "GUO Terminal Pickup",
+      subtitle: "Collect at a GUO Terminal in your selected state",
+      fee: 0,
+      icon: <MapPin size={18} />,
+    },
+    {
+      id: "not_mentioned",
+      title: "For Further Enquiry",
+      subtitle: "Not sure about delivery to your area? Chat with us on WhatsApp and we'll sort it out",
+      fee: 0,
+      icon: <PhoneCall size={18} />,
+    },
+  ], [deliveryCalc]);
+
   // Delivery methods available based on location eligibility
   const availableDeliveryMethods = useMemo(() => {
     if (stateEntered && !deliveryAvailable) {
@@ -268,7 +345,7 @@ export default function Checkout() {
       return deliveryMethods.filter((m) => m.id === "pickup" || m.id === "not_mentioned");
     }
     return deliveryMethods.filter((m) => m.id !== "not_mentioned");
-  }, [stateEntered, deliveryAvailable]);
+  }, [stateEntered, deliveryAvailable, deliveryMethods]);
 
   const selectedMethod = availableDeliveryMethods.find((m) => m.id === deliveryOption) || availableDeliveryMethods[0] || deliveryMethods[0];
   const deliveryFee = (deliveryAvailable && deliveryOption !== "pickup") ? selectedMethod.fee : 0;
@@ -349,7 +426,7 @@ export default function Checkout() {
           <h1>
             ALMOST
             <br />
-            <span>THERE.</span>
+            <span>THERE</span>
           </h1>
           <p>
             Choose how you would like your package delivered, enter your address details, and review your order.
@@ -1359,6 +1436,11 @@ export default function Checkout() {
                   {deliveryFee > 0 ? formatNaira(deliveryFee) : (deliveryOption === "pickup" ? "Self-Pickup" : "Contact")}
                 </strong>
               </div>
+              {deliveryFee > 0 && (
+                <div style={{ fontSize: 10, color: "#777", marginBottom: 8, textAlign: "right" }}>
+                  {deliveryCalc.description}
+                </div>
+              )}
               <div
                 className="summary-total"
                 style={{ borderTop: "1px solid #d5d0c8", paddingTop: 12, marginTop: 12 }}

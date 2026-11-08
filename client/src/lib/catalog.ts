@@ -89,17 +89,24 @@ const tokenSimilarity = (queryToken: string, productToken: string) => {
 export const searchProducts = (query: string): SearchableProduct[] => {
   const normalized = normalizeSearch(query);
   if (!normalized) return products;
+
+  // If searching for "jersey" or "kit", match all football jerseys & kits
+  if (normalized === "jersey" || normalized === "jerseys" || normalized === "kit" || normalized === "kits") {
+    return products.filter((p) => p.style !== "Gym Kit" || p.category.includes("JERSEY") || p.category.includes("TEAM") || p.category.includes("KIT"));
+  }
+
   const queryTokens = normalized.split(/\s+/).filter(Boolean);
   return products
     .map((product, index) => {
-      const searchable = normalizeSearch(`${product.name} ${product.category} ${product.color} ${product.style} ${product.tone}`);
+      // Include tags like "jersey football kit shirt" in searchable text
+      const searchable = normalizeSearch(`${product.name} ${product.category} ${product.color} ${product.style} ${product.tone} jersey kit football shirt`);
       const productTokens = searchable.split(/\s+/);
       const tokenScores = queryTokens.map((queryToken) => Math.max(...productTokens.map((productToken) => tokenSimilarity(queryToken, productToken)), 0));
       const matched = tokenScores.filter((score) => score > 0).length;
       const score = tokenScores.reduce((sum, value) => sum + value, 0) / queryTokens.length + (matched === queryTokens.length ? 0.18 : 0) - index * 0.0005;
       return { product, score };
     })
-    .filter(({ score }) => score >= 0.3)
+    .filter(({ score }) => score >= 0.25)
     .sort((a, b) => b.score - a.score)
     .map(({ product }) => product);
 };

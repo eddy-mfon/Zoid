@@ -829,9 +829,18 @@ export function getUniversityState(universityName: string): string | null {
     return "FCT - Abuja";
   }
   if (
+    lower.includes("unical") ||
+    lower.includes("unicross") ||
+    lower.includes("calabar") ||
+    lower.includes("cross river") ||
+    lower.includes("arthur jarvis")
+  ) {
+    return "Cross River State";
+  }
+  if (
     lower.includes("uniport") ||
     lower.includes("port harcourt") ||
-    lower.includes("rivers") ||
+    (lower.includes("rivers") && !lower.includes("cross river")) ||
     lower.includes("rsu") ||
     lower.includes("iaue") ||
     lower.includes("pamo") ||

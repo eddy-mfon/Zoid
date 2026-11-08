@@ -1,55 +1,23 @@
 /* ZOID About Page — Brand Philosophy, Vision, Mission & Dossier */
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Target } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUp, Compass, Globe, Target, Layers, ShieldCheck } from "lucide-react";
 import { useShop } from "@/contexts/ShopContext";
 import Navbar from "@/components/Navbar";
 
 const MARK = "/zoid-logo.svg";
 const STORY_IMG = "/manus-storage/zoid-story_425b40db.jpg";
 
-const brandDossier = [
-  { label: "FOUNDED / ORIGIN", val: "Lagos, Nigeria (2026)" },
-  { label: "BRAND CORE", val: "Archive Sportswear & Community Memories" },
-  { label: "DELIVERY GUARANTEE", val: "2-Week Global Delivery from Lagos Hub" },
-  { label: "CURATION STANDARD", val: "Authentication, Scarcity & Material Inspection" },
-  { label: "CURATED CATAGORIES", val: "Curated Retro, Special Kits, Gym Activewear" },
-];
-
 export default function About() {
   const { count } = useShop();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [activeTab, setActiveTab] = useState<"vision" | "mission">("vision");
-
-  // Refs for vision & mission section detection
-  const visionRef = useRef<HTMLDivElement>(null);
-  const missionRef = useRef<HTMLDivElement>(null);
-  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 30);
       setShowScrollTop(window.scrollY > 400);
-
-      // Determine which card is more visible
-      if (visionRef.current && missionRef.current) {
-        const visionRect = visionRef.current.getBoundingClientRect();
-        const missionRect = missionRef.current.getBoundingClientRect();
-        const midWindow = window.innerHeight / 2;
-
-        const visionDist = Math.abs(visionRect.top + visionRect.height / 2 - midWindow);
-        const missionDist = Math.abs(missionRect.top + missionRect.height / 2 - midWindow);
-
-        if (sectionRef.current) {
-          const sectionRect = sectionRef.current.getBoundingClientRect();
-          // Only switch tabs when the section is actually in view
-          if (sectionRect.top < window.innerHeight && sectionRect.bottom > 0) {
-            setActiveTab(missionDist < visionDist ? "mission" : "vision");
-          }
-        }
-      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -64,7 +32,7 @@ export default function About() {
         setMobileMenu={setMobileMenu}
       />
 
-      {/* ── HERO BANNER (EDITORIAL WIREFRAME) ───────── */}
+      {/* ── HERO BANNER ───────── */}
       <section style={{
         padding: "130px clamp(24px, 8vw, 120px) 70px",
         background: "linear-gradient(180deg, #141414 0%, #0b0b0b 100%)",
@@ -86,75 +54,47 @@ export default function About() {
             fontFamily: "Anton", fontSize: "clamp(54px, 9vw, 112px)",
             lineHeight: 0.88, textTransform: "uppercase", margin: "0 0 28px", color: "#fff"
           }}>
-            CURATING<br />BEFORE <span style={{ color: "var(--pink)" }}>CREATING.</span>
+            KEEP IT <span style={{ color: "var(--pink)" }}>GOING</span>
           </h1>
 
           <p style={{
             color: "#b5b0a8", fontSize: "clamp(15px, 2vw, 18px)",
-            lineHeight: 1.7, maxWidth: 640, margin: "0 0 40px"
+            lineHeight: 1.7, maxWidth: 640, margin: 0
           }}>
             ZOID is an archive-led sportswear house born in Lagos, Nigeria. We connect football nostalgia, African street perspective, and contemporary design into an enduring brand identity.
           </p>
-
-          <div style={{
-            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 20, paddingTop: 28, borderTop: "1px solid #222"
-          }}>
-            <div>
-              <span style={{ fontSize: 9, color: "var(--pink)", letterSpacing: "0.18em", display: "block", marginBottom: 4 }}>ORIGIN</span>
-              <strong style={{ fontSize: 14, color: "#fff", display: "block" }}>Lagos, Nigeria</strong>
-            </div>
-            <div>
-              <span style={{ fontSize: 9, color: "var(--pink)", letterSpacing: "0.18em", display: "block", marginBottom: 4 }}>ESTABLISHED</span>
-              <strong style={{ fontSize: 14, color: "#fff", display: "block" }}>2026 Edition</strong>
-            </div>
-            <div>
-              <span style={{ fontSize: 9, color: "var(--pink)", letterSpacing: "0.18em", display: "block", marginBottom: 4 }}>PURPOSE</span>
-              <strong style={{ fontSize: 14, color: "#fff", display: "block" }}>Football & Street grails</strong>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ── VISION & MISSION DUAL WIREFRAME — scroll-driven ────────── */}
+      {/* ── STRATEGIC DIRECTION: VISION, MISSION, PRODUCT MISSION, CORE INTERNAL VALUES ────────── */}
       <section
-        ref={sectionRef}
         style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#0d0d0d", borderBottom: "1px solid #1a1a1a" }}
       >
         <div style={{ marginBottom: 48 }}>
           <p className="eyebrow" style={{ color: "var(--pink)" }}>STRATEGIC DIRECTION</p>
           <h2 style={{ fontFamily: "Anton", fontSize: "clamp(38px, 6vw, 76px)", margin: "8px 0 0", textTransform: "uppercase", color: "#fff" }}>
-            OUR VISION & MISSION.
+            PILLARS & DIRECTION
           </h2>
-          <p style={{ marginTop: 12, fontSize: 12, color: "#555" }}>
-            Scroll down to see each card highlight as it comes into view.
-          </p>
         </div>
 
-        {/* Dual Wireframe Cards Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28 }}>
+        {/* 4 Pillars Grid: Vision, Mission, Product Mission, Core Internal Values */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 28 }}>
           {/* Vision Card */}
           <div
-            ref={visionRef}
             style={{
-              background: activeTab === "vision" ? "#161616" : "#121212",
-              border: activeTab === "vision" ? "1px solid var(--pink)" : "1px solid #222",
+              background: "#141414",
+              border: "1px solid #222",
               padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
-              transition: "all 0.5s ease",
-              boxShadow: activeTab === "vision" ? "0 12px 35px rgba(179, 13, 13,0.15)" : "none"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Globe size={20} />
               </div>
-              <div>
-                <span style={{ fontSize: 9, letterSpacing: "0.16em", color: "var(--pink)", display: "block" }}>THE HORIZON</span>
-                <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>OUR VISION</h3>
-              </div>
+              <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>OUR VISION</h3>
             </div>
 
-            <p style={{ color: "#ccc", fontSize: 15, lineHeight: 1.75, margin: "0 0 24px" }}>
+            <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.75, margin: "0 0 24px" }}>
               To establish ZOID as the global benchmark for African sportswear identity — proving that football nostalgia, street culture, and archive curation from Lagos can inspire communities worldwide.
             </p>
 
@@ -174,32 +114,26 @@ export default function About() {
 
           {/* Mission Card */}
           <div
-            ref={missionRef}
             style={{
-              background: activeTab === "mission" ? "#161616" : "#121212",
-              border: activeTab === "mission" ? "1px solid var(--pink)" : "1px solid #222",
+              background: "#141414",
+              border: "1px solid #222",
               padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
-              transition: "all 0.5s ease",
-              boxShadow: activeTab === "mission" ? "0 12px 35px rgba(179, 13, 13,0.15)" : "none"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
                 <Target size={20} />
               </div>
-              <div>
-                <span style={{ fontSize: 9, letterSpacing: "0.16em", color: "var(--pink)", display: "block" }}>THE PLEDGE</span>
-                <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>OUR MISSION</h3>
-              </div>
+              <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>OUR MISSION</h3>
             </div>
 
-            <p style={{ color: "#ccc", fontSize: 15, lineHeight: 1.75, margin: "0 0 24px" }}>
+            <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.75, margin: "0 0 24px" }}>
               To collect, curate, and distribute sportswear pieces with narrative honesty, material quality, and dependable fulfillment — honoring the grit of those who wear them.
             </p>
 
             <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "grid", gap: 12 }}>
               {[
-                "Strict 2-week delivery promise from our Lagos hub",
+                "Dependable delivery promise from our Lagos hub",
                 "Authentic curation of retro grails and special gym sets",
                 "Building a living digital community archive of fan stories"
               ].map((item, idx) => (
@@ -210,47 +144,71 @@ export default function About() {
               ))}
             </ul>
           </div>
-        </div>
-      </section>
 
+          {/* Product Mission Card */}
+          <div
+            style={{
+              background: "#141414",
+              border: "1px solid #222",
+              padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
+                <Layers size={20} />
+              </div>
+              <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>PRODUCT MISSION</h3>
+            </div>
 
-      {/* ── TECHNICAL BRAND DOSSIER ─────────────────── */}
-      <section style={{ padding: "90px clamp(24px, 8vw, 120px)", background: "#0b0b0b", borderTop: "1px solid #1a1a1a" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 48, alignItems: "center" }}>
-          <div>
-            <p className="eyebrow" style={{ color: "var(--pink)" }}>AUTHENTICITY & SPECIFICATIONS</p>
-            <h2 style={{ fontFamily: "Anton", fontSize: "clamp(36px, 5vw, 68px)", margin: "12px 0 24px", lineHeight: 0.9, textTransform: "uppercase", color: "#fff" }}>
-              ZOID TECHNICAL<br /><span style={{ color: "var(--pink)" }}>DOSSIER.</span>
-            </h2>
-            <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, marginBottom: 32 }}>
-              Every product in our storefront is verified for material feel, color accuracy, and fit integrity. We believe in transparency — from our Lagos studio directly to your doorstep.
+            <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.75, margin: "0 0 24px" }}>
+              To engineer and curate sportswear that marries athletic performance with street heritage. Every thread, stitch, and fabric choice honors durability, breathability, and timeless silhouette.
             </p>
 
-            {/* Specification Table */}
-            <div style={{ display: "grid", gap: 0, border: "1px solid #222", borderRadius: 4 }}>
-              {brandDossier.map((item, idx) => (
-                <div key={item.label} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "14px 20px", background: idx % 2 === 0 ? "#141414" : "#111",
-                  borderBottom: idx < brandDossier.length - 1 ? "1px solid #222" : "none"
-                }}>
-                  <span style={{ fontSize: 9, color: "#777", letterSpacing: "0.14em", textTransform: "uppercase" }}>{item.label}</span>
-                  <strong style={{ fontSize: 12, color: "#fff", textTransform: "uppercase" }}>{item.val}</strong>
-                </div>
+            <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "grid", gap: 12 }}>
+              {[
+                "High-performance materials crafted for endurance and comfort",
+                "Authentic retro silhouettes and verified archive pieces",
+                "Uncompromising quality inspection on every single release"
+              ].map((item, idx) => (
+                <li key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#aaa" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--pink)" }} />
+                  {item}
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
-          <div style={{ position: "relative" }}>
-            <img src={STORY_IMG} alt="ZOID Dossier" style={{ width: "100%", height: 500, objectFit: "cover", borderRadius: 4, filter: "brightness(0.9)" }} />
-            <div style={{
-              position: "absolute", bottom: 24, left: 24,
-              background: "rgba(10,10,10,0.9)", border: "1px solid var(--pink)",
-              padding: "16px 20px", color: "#fff", borderRadius: 4
-            }}>
-              <span style={{ fontSize: 9, color: "var(--pink)", letterSpacing: "0.18em", display: "block", marginBottom: 4 }}>BRAND PROMISE</span>
-              <strong style={{ fontSize: 13, display: "block" }}>100% Curation & 2-Week Delivery</strong>
+          {/* Core Internal Values Card */}
+          <div
+            style={{
+              background: "#141414",
+              border: "1px solid #222",
+              padding: 40, borderRadius: 6, position: "relative", overflow: "hidden",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(179, 13, 13,0.15)", display: "grid", placeItems: "center", color: "var(--pink)" }}>
+                <ShieldCheck size={20} />
+              </div>
+              <h3 style={{ fontFamily: "Anton", fontSize: 24, margin: 0, color: "#fff" }}>CORE INTERNAL VALUES</h3>
             </div>
+
+            <p style={{ color: "#ccc", fontSize: 14, lineHeight: 1.75, margin: "0 0 24px" }}>
+              Our internal compass shapes how we create, operate, and engage our community. Rooted in grit, transparency, and relentlessly keeping it going.
+            </p>
+
+            <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "grid", gap: 12 }}>
+              {[
+                "Grit & Intent — Doing the hard work without shortcuts",
+                "Material Honesty — Transparency in sourcing, quality, and design",
+                "Community First — Uplifting athlete culture and shared stories"
+              ].map((item, idx) => (
+                <li key={idx} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#aaa" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--pink)" }} />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
@@ -264,7 +222,7 @@ export default function About() {
         <div>
           <p className="eyebrow" style={{ color: "rgba(255,255,255,0.7)", marginBottom: 12 }}>READY TO EXPLORE THE EDIT?</p>
           <h2 style={{ fontFamily: "Anton", fontSize: "clamp(36px, 5vw, 68px)", color: "#fff", margin: 0, textTransform: "uppercase", lineHeight: 0.9 }}>
-            WORN WITH INTENT.
+            WORN WITH INTENT
           </h2>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -304,10 +262,26 @@ export default function About() {
           <span>© ZOID STUDIOS / 2026</span>
           <span>Lagos — Nigeria</span>
           <span>Hotline: <a href="tel:09020711737" style={{ color: "var(--pink)", textDecoration: "none", fontWeight: 700 }}>09020711737</a></span>
-          <span>Built on grit • Worn with intent</span>
         </div>
       </footer>
 
+      {/* ── SCROLL-TO-TOP FAB ───────────────────────── */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Back to top"
+          style={{
+            position: "fixed", bottom: 28, right: 28, zIndex: 50,
+            width: 44, height: 44, borderRadius: "50%",
+            background: "var(--pink)", color: "#fff",
+            display: "grid", placeItems: "center",
+            boxShadow: "0 4px 20px rgba(179, 13, 13,0.4)",
+            border: "none", cursor: "pointer"
+          }}
+        >
+          <ArrowUp size={18} />
+        </button>
+      )}
       {/* ── SCROLL-TO-TOP FAB ───────────────────────── */}
       {showScrollTop && (
         <button

@@ -2116,22 +2116,69 @@ html, body { overflow-x: hidden !important; max-width: 100% !important; }
 }
 
 @media (max-width: 900px) {
+  .adi-detail-container {
+    padding: 12px 14px 40px;
+  }
+  .adi-breadcrumb-bar {
+    margin-bottom: 14px;
+    font-size: 11px;
+  }
   .adi-detail-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   .adi-info-column {
     position: static;
+    gap: 16px;
+    padding-bottom: 20px;
   }
   .adi-media-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .adi-media-tile {
+    aspect-ratio: 1 / 1.1;
+    border-radius: 4px;
+  }
+  .adi-badge-overlay {
+    font-size: 9px;
+    padding: 2px 6px;
+    bottom: 6px;
+    left: 6px;
   }
   .adi-related-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .adi-specs-strip {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    padding: 18px 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+  .adi-spec-item {
+    font-size: 11px;
+  }
+  .adi-spec-item svg {
+    width: 20px;
+    height: 20px;
+  }
+  .adi-product-title {
+    font-size: 26px !important;
+  }
+  .adi-personalization-box {
+    padding: 14px;
+  }
+  .adi-sizes-matrix {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .adi-size-box {
+    height: 40px;
+    font-size: 12px;
+  }
+  .adi-btn-add {
+    min-height: 48px;
+    font-size: 13px;
   }
 }
